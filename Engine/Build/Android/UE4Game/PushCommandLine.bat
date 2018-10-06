@@ -1,1 +1,0 @@
-adb push UE4CommandLine.txt /mnt/sdcard/UE4Game/UE4CommandLine.txt
