@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "VrmSkeleton.h"
+#include "Engine/SkeletalMesh.h"
 
 #include <assimp/scene.h>       // Output data structure
 
@@ -141,6 +142,13 @@ void UVrmSkeleton::Proc(const aiScene* s, int &boneOffset) {
 			}
 			pose.SetFromMatrix(m);
 
+			if (ReferenceSkeleton.FindRawBoneIndex(info.Name) != INDEX_NONE) {
+				info.Name = *(info.Name.ToString() + FString(TEXT("_DUP")));
+				//continue;
+			}
+			if (totalBoneCount > 0 && info.ParentIndex == INDEX_NONE) {
+				continue;
+			}
 			RefSkelModifier.Add(info, pose);
 			totalBoneCount++;
 		}
