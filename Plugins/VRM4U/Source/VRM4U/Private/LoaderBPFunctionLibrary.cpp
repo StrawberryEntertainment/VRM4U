@@ -4,6 +4,7 @@
 #include "VrmSkeleton.h"
 #include "VrmSkeletalMesh.h"
 #include "VrmModelActor.h"
+#include "VrmAssetListObject.h"
 
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
@@ -34,7 +35,7 @@ FString baseFileName;
 static bool saveObject(UObject *u) {
 	package->MarkPackageDirty();
 	FAssetRegistryModule::AssetCreated(u);
-	bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
 
 	return true;
 }
@@ -148,9 +149,9 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 	ct->DefaultInstance.ConstraintBone2 = con2;
 
 
-	ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 0);
-	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 0);
-	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 0);
+	ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 5);
+	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 5);
+	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 5);
 
 	ct->DefaultInstance.ProfileInstance.ConeLimit.Stiffness = 100.f;
 	ct->DefaultInstance.ProfileInstance.TwistLimit.Stiffness = 100.f;
@@ -177,10 +178,30 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 		tb = p;
 	}
 
+	auto b = BoneTransform1;
+	ct->DefaultInstance.Pos1 = FVector::ZeroVector;
+	ct->DefaultInstance.PriAxis1 = FVector(1, 0, 0);
+	ct->DefaultInstance.SecAxis1 = FVector(0, 1, 0);
+
+
+	auto r = BoneTransform2;// .GetRelativeTransform(BoneTransform2);
+//	auto r = BoneTransform1.GetRelativeTransform(BoneTransform2);
+	auto twis = r.GetLocation().GetSafeNormal();
+	auto p1 = twis;
+	p1.X = p1.Z = 0.f;
+	auto p2 = FVector::CrossProduct(twis, p1).GetSafeNormal();
+	p1 = FVector::CrossProduct(p2, twis).GetSafeNormal();
+	
+	ct->DefaultInstance.Pos2 = -r.GetLocation();
+	//ct->DefaultInstance.PriAxis2 = p1;
+	//ct->DefaultInstance.SecAxis2 = p2;
+	ct->DefaultInstance.PriAxis2 = r.GetUnitAxis(EAxis::X);
+	ct->DefaultInstance.SecAxis2 = r.GetUnitAxis(EAxis::Y);
+
 	// child 
-	ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame1, FTransform::Identity);
+	//ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame1, FTransform::Identity);
 	// parent
-	ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame2, BoneTransform1.GetRelativeTransform(BoneTransform2));
+	//ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame2, BoneTransform1.GetRelativeTransform(BoneTransform2));
 
 	ct->SetDefaultProfile(ct->DefaultInstance);
 	//ct->DefaultInstance.InitConstraint();
@@ -227,7 +248,7 @@ static UTexture2D* createTex(int32 InSizeX, int32 InSizeY, FString name) {
 }
 
 
-static bool readTex(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
+static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 
 	TArray<UTexture2D*> texArray;
 	if (mScenePtr->HasTextures()) {
@@ -251,8 +272,12 @@ static bool readTex(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 
 				ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, RawData);
 			}
+			FString baseName = t.mFilename.C_Str();
+			if (baseName.Len() == 0) {
+				baseName = FString::FromInt(i);
+			}
 
-			UTexture2D* NewTexture2D = createTex(Width, Height, t.mFilename.C_Str());
+			UTexture2D* NewTexture2D = createTex(Width, Height, FString(TEXT("T_")) +baseName);
 			//UTexture2D* NewTexture2D = _CreateTransient(Width, Height, PF_B8G8R8A8, t.mFilename.C_Str());
 
 			// Fill in the base mip for the texture we created
@@ -292,21 +317,21 @@ static bool readTex(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 			texArray.Push(NewTexture2D);
 		}
 	}
-	modelActor->Textures = texArray;
+	vrmAssetList->Textures = texArray;
 
 	TArray<UMaterialInterface*> matArray;
 	if (mScenePtr->HasMaterials()) {
 
-		modelActor->Materials.SetNum(mScenePtr->mNumMaterials);
+		vrmAssetList->Materials.SetNum(mScenePtr->mNumMaterials);
 		for (uint32_t i = 0; i < mScenePtr->mNumMaterials; ++i) {
 			auto &m = *mScenePtr->mMaterials[i];
 
 			UMaterialInterface *baseM = nullptr;;
 			if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTransparent")) >= 0) {
-				baseM = modelActor->BaseTransparentMaterial;
+				baseM = vrmAssetList->BaseTransparentMaterial;
 			}
 			else {
-				baseM = modelActor->BaseOpaqueMaterial;
+				baseM = vrmAssetList->BaseOpaqueMaterial;
 			}
 			//if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTexture"))) {
 
@@ -342,8 +367,8 @@ static bool readTex(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 				}
 			}
 
-			//UMaterialInstanceDynamic* dm = UMaterialInstanceDynamic::Create(baseM, modelActor, m.GetName().C_Str());
-			//UMaterialInstanceDynamic* dm = UMaterialInstance::Create(baseM, modelActor, m.GetName().C_Str());
+			//UMaterialInstanceDynamic* dm = UMaterialInstanceDynamic::Create(baseM, vrmAssetList, m.GetName().C_Str());
+			//UMaterialInstanceDynamic* dm = UMaterialInstance::Create(baseM, vrmAssetList, m.GetName().C_Str());
 			//MaterialInstance->TextureParameterValues
 
 			//set paramater with Set***ParamaterValue
@@ -351,43 +376,35 @@ static bool readTex(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 			//MyComponent1->SetMaterial(0, DynMaterial);
 			//MyComponent2->SetMaterial(0, DynMaterial);
 
-			if (index >= 0 && index < modelActor->Textures.Num()) {
-				UMaterialInstanceDynamic* dm = UMaterialInstanceDynamic::Create(baseM, modelActor, m.GetName().C_Str());
-				//UMaterialInstanceConstant* dm = NewObject<UMaterialInstanceConstant>(package, NAME_None, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			if (index >= 0 && index < vrmAssetList->Textures.Num()) {
+				//UMaterialInstanceDynamic* dm = UMaterialInstanceDynamic::Create(baseM, vrmAssetList, m.GetName().C_Str());
+				UMaterialInstanceConstant* dm = NewObject<UMaterialInstanceConstant>(package, *(FString(TEXT("M_"))+m.GetName().C_Str()), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+				dm->Parent = baseM;
+				//dm->SetParentEditorOnly
 
 				if (dm) {
-					//FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
-					//v->ParameterInfo.Index
-					//v->ParameterValue = modelActor->Textures[index];
-					//dm->TextureParameterValues(
-					dm->SetTextureParameterValue(TEXT("vrm_diffuse"), modelActor->Textures[index]);
+					FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
+					v->ParameterInfo.Index = INDEX_NONE;
+					v->ParameterInfo.Name = TEXT("vrm_diffuse");
+					v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+					v->ParameterValue = vrmAssetList->Textures[index];
+					dm->InitStaticPermutation();
+
+					//dm->SetTextureParameterValue(TEXT("vrm_diffuse"), vrmAssetList->Textures[index]);
 					matArray.Add(dm);
 				}
 			}
 		}
-		modelActor->Materials = matArray;
-	}
-
-	for (auto &t : texArray) {
-		saveObject(t);
-		//package->MarkPackageDirty();
-		//FAssetRegistryModule::AssetCreated(t);
-		//bool bSaved = UPackage::SavePackage(package, t, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
-	}
-	for (auto &t : matArray) {
-		saveObject(t);
-		//package->MarkPackageDirty();
-		//FAssetRegistryModule::AssetCreated(t);
-		//bool bSaved = UPackage::SavePackage(package, t, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+		vrmAssetList->Materials = matArray;
 	}
 
 	return true;
 }
 
-static bool readMorph(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
+static bool readMorph(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 
 
-	USkeletalMesh *sk = modelActor->SkeletalMesh;
+	USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 
 	{
 		///sk->MarkPackageDirty();
@@ -418,7 +435,7 @@ static bool readMorph(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 			UMorphTarget *mt = NewObject<UMorphTarget>(sk, *sss);
 			//mt->name
 			if (m == 18) {
-				UE_LOG(LogTemp, Warning, TEXT("Runtime Mesh Loader: Read mesh file failure.\n"));
+				UE_LOG(LogTemp, Warning, TEXT("test18.\n"));
 			}
 			TArray<FMorphTargetDelta> MorphDeltas;
 			MorphDeltas.SetNum(aiA.mNumVertices);
@@ -466,8 +483,8 @@ static bool readMorph(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 }
 
 
-static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
-	if (modelActor == nullptr) {
+static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+	if (vrmAssetList == nullptr) {
 		return nullptr;
 	}
 
@@ -479,7 +496,7 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 
 		if (mScenePtr == nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Runtime Mesh Loader: Read mesh file failure.\n"));
+			UE_LOG(LogTemp, Warning, TEXT("test null.\n"));
 		}
 
 		if (mScenePtr->HasMeshes())
@@ -540,7 +557,7 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 		k->RecreateBoneTree(sk);
 
 
-		modelActor->SkeletalMesh = sk;
+		vrmAssetList->SkeletalMesh = sk;
 
 
 		{
@@ -564,9 +581,9 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 
 		sk->InitResources();
 
-		sk->Materials.SetNum(modelActor->Materials.Num());
+		sk->Materials.SetNum(vrmAssetList->Materials.Num());
 		for (int i = 0; i < sk->Materials.Num(); ++i) {
-			sk->Materials[i].MaterialInterface = modelActor->Materials[i];
+			sk->Materials[i].MaterialInterface = vrmAssetList->Materials[i];
 			sk->Materials[i].UVChannelData = FMeshUVChannelInfo(1);
 			sk->Materials[i].MaterialSlotName = mScenePtr->mMaterials[i]->GetName().C_Str();
 		}
@@ -651,7 +668,9 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 							//s.InfluenceWeights[InfluenceIndex] = 0;
 						}
 						//s.InfluenceBones[0] = 0;// aiS->InfluenceBones[0];// +boneOffset;
+						//meshS->InfluenceBones[0] = 0;
 						//s.InfluenceWeights[0] = 255;
+						//meshS->InfluenceWeights[0] = 255;
 
 						//s.InfluenceWeights[0] = aiS->InfluenceWeights[0];
 						//s.InfluenceWeights[1] = aiS->InfluenceWeights[1];
@@ -683,10 +702,10 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 										continue;
 									}
 									if (jj >= 4) {
-										UE_LOG(LogTemp, Warning, TEXT("Runtime Mesh Loader: Read mesh file failure.\n"));
+										UE_LOG(LogTemp, Warning, TEXT("test >=4.\n"));
 									}
-									if (b == 3) {
-										UE_LOG(LogTemp, Warning, TEXT("Runtime Mesh Loader: Read mesh file failure.\n"));
+									if (b == 3 || b == 4 || b == 5) {
+										UE_LOG(LogTemp, Warning, TEXT("test4.\n"));
 									}
 									s.InfluenceBones[jj] = b;
 									s.InfluenceWeights[jj] = (uint8)(aiW.mWeight * 255.f);
@@ -869,9 +888,10 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 		}
 	}
 
+	UPhysicsAsset *pa = nullptr;
 	{
 		//aa
-		UPhysicsAsset *pa = NewObject<UPhysicsAsset>(package);
+		pa = NewObject<UPhysicsAsset>(package, *(baseFileName + TEXT("_physicsasset")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 		pa->Modify();
 		pa->SetPreviewMesh(sk);
 		sk->PhysicsAsset = pa;
@@ -983,9 +1003,6 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 
 	//NewAsset->FindSocket
 
-	saveObject(k);
-	saveObject(sk);
-
 	return nullptr;
 }// sk, k
 
@@ -995,7 +1012,7 @@ static bool readModel(AVrmModelActor *modelActor, const aiScene *mScenePtr) {
 
 
 ////////////////
-AVrmModelActor* ULoaderBPFunctionLibrary::customActor(AVrmModelActor *src, FString filepath) {
+bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString filepath) {
 
 	Assimp::Importer mImporter;
 	const aiScene* mScenePtr = nullptr;
@@ -1018,7 +1035,8 @@ AVrmModelActor* ULoaderBPFunctionLibrary::customActor(AVrmModelActor *src, FStri
 
 	if (mScenePtr == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Runtime Mesh Loader: Read mesh file failure.\n"));
+		UE_LOG(LogTemp, Warning, TEXT("VRM4U: read failure.\n"));
+		return false;
 	}
 
 	{
@@ -1037,6 +1055,17 @@ AVrmModelActor* ULoaderBPFunctionLibrary::customActor(AVrmModelActor *src, FStri
 	readTex(src, mScenePtr);
 	readModel(src, mScenePtr);
 	readMorph(src, mScenePtr);
+
+	if (src->bAssetSave) {
+		for (auto &t : src->Textures) {
+			saveObject(t);
+		}
+		for (auto &t : src->Materials) {
+			saveObject(t);
+		}
+		saveObject(src->SkeletalMesh);
+		saveObject(src->SkeletalMesh->PhysicsAsset);
+	}
 
 	return nullptr;
 }

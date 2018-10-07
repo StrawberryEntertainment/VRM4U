@@ -2,7 +2,7 @@
 	"BuildId": "4212847",
 	"Modules": 
 	{
-		"RuntimeMeshLoader": "UE4Editor-RuntimeMeshLoader.dll",
+		"VRM4U": "UE4Editor-VRM4U.dll",
 		"VRMImporter": "UE4Editor-VRMImporter.dll"
 	}
 }

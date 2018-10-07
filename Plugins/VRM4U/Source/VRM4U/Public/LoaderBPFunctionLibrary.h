@@ -72,7 +72,6 @@ class VRM4U_API ULoaderBPFunctionLibrary : public UBlueprintFunctionLibrary
 public:
 
 	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "output"))
-	static AVrmModelActor* customActor(class AVrmModelActor *src, FString filepath);
+	static bool LoadVRMFile(class UVrmAssetListObject *VrmAsset, FString filepath);
 
-	
 };
