@@ -26,7 +26,7 @@ public:
 
 	///
 public:
-	void Proc(const struct aiScene* s, int &offset);
+	void Proc(struct aiScene* s, int &offset);
 	
 	//FReferenceSkeleton& getRefSkeleton();
 };

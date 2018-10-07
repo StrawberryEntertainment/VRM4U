@@ -532,10 +532,12 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 	static int boneOffset = 0;
 	{
+		// name dup check
+		{
+		}
 		sk->Skeleton = k;
-
 		//k->MergeAllBonesToBoneTree(src);
-		k->Proc(mScenePtr, boneOffset);
+		k->Proc(const_cast<aiScene*>(mScenePtr), boneOffset);
 
 		sk->RefSkeleton = k->GetReferenceSkeleton();
 		//sk->RefSkeleton.RebuildNameToIndexMap();
@@ -704,7 +706,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 									if (jj >= 4) {
 										UE_LOG(LogTemp, Warning, TEXT("test >=4.\n"));
 									}
-									if (b == 3 || b == 4 || b == 5) {
+									if (b == 3 || b == 4 || b == 5 || b==11) {
 										UE_LOG(LogTemp, Warning, TEXT("test4.\n"));
 									}
 									s.InfluenceBones[jj] = b;

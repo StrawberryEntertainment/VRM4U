@@ -4,6 +4,7 @@
 #include "Engine/SkeletalMesh.h"
 
 #include <assimp/scene.h>       // Output data structure
+#include <assimp/mesh.h>       // Output data structure
 
 
 USkeletalMesh* UVrmSkeleton::GetPreviewMesh(bool bFindIfNotSet)
@@ -77,7 +78,7 @@ void rr(aiNode *node, TArray<aiNode*> &t) {
 	}
 }
 
-void UVrmSkeleton::Proc(const aiScene* s, int &boneOffset) {
+void UVrmSkeleton::Proc(aiScene* s, int &boneOffset) {
 
 	boneOffset = 0;
 	//FBoneNode n;
@@ -108,6 +109,34 @@ void UVrmSkeleton::Proc(const aiScene* s, int &boneOffset) {
 
 		TArray<aiNode*> bone;
 		rr(s->mRootNode, bone);
+
+		{
+
+			TArray<FString> rec;
+			for (auto &a : bone) {
+				FString str = a->mName.C_Str();
+				if (rec.Find(str) >= 0) {
+					aiString origName = a->mName;
+					str += TEXT("_renamed_vrm4u");
+					a->mName.Set(TCHAR_TO_ANSI(*str));
+
+					//add
+					for (uint32_t meshID = 0; meshID < s->mNumMeshes; ++meshID) {
+						auto &aiM = *(s->mMeshes[meshID]);
+						
+						for (uint32_t boneID = 0; boneID < aiM.mNumBones; ++boneID) {
+							auto &aiB = *(aiM.mBones[boneID]);
+							if (strcmp(aiB.mName.C_Str(), origName.C_Str()) == 0) {
+								aiB.mName = a->mName;
+							}
+						}
+					}
+				}
+				rec.Add(str);
+			}
+		}
+
+
 		int totalBoneCount = 0;
 		for (auto &a: bone) {
 			FMeshBoneInfo info;
