@@ -35,7 +35,7 @@ FString baseFileName;
 static bool saveObject(UObject *u) {
 	package->MarkPackageDirty();
 	FAssetRegistryModule::AssetCreated(u);
-	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+	bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
 
 	return true;
 }
@@ -751,6 +751,37 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 					}
 
 					{
+						for (auto &w : meshWeight) {
+							int f = 0;
+							int maxIndex = 0;
+							int maxWeight = 0;
+							for (int i = 0; i < 8; ++i) {
+								f += w.InfluenceWeights[i];
+
+								if (maxWeight < w.InfluenceWeights[i]) {
+									maxWeight = w.InfluenceWeights[i];
+									maxIndex = i;
+								}
+								if (w.InfluenceBones[i] == 3) {
+									UE_LOG(LogTemp, Warning, TEXT("overr"));
+								}
+							}
+							if (f > 255) {
+								UE_LOG(LogTemp, Warning, TEXT("overr"));
+								w.InfluenceWeights[0] -= (uint8)(f - 255);
+							}
+							if (f <= 250) {
+								UE_LOG(LogTemp, Warning, TEXT("bad!"));
+							}
+							if (f <= 254) {
+								UE_LOG(LogTemp, Warning, TEXT("under"));
+								w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
+							}
+
+						}
+					}
+
+					{
 						auto &s = sk->GetImportedModel()->LODModels[0].Sections[meshID];
 
 						TMap<int32, TArray<int32>> OverlappingVertices;
@@ -801,25 +832,30 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 				{
 					for (auto &w : Weight) {
-						float f = 0.f;
-
+						int f = 0;
+						int maxIndex = 0;
+						int maxWeight = 0;
 						for (int i = 0; i < 8; ++i) {
 							f += w.InfluenceWeights[i];
 
+							if (maxWeight < w.InfluenceWeights[i]) {
+								maxWeight = w.InfluenceWeights[i];
+								maxIndex = i;
+							}
 							if (w.InfluenceBones[i] == 3) {
 								UE_LOG(LogTemp, Warning, TEXT("overr"));
 							}
 						}
-						if (f > 255.f) {
+						if (f > 255) {
 							UE_LOG(LogTemp, Warning, TEXT("overr"));
-							w.InfluenceWeights[0] -= (uint8)(f - 255.f);
+							w.InfluenceWeights[0] -= (uint8)(f - 255);
 						}
-						if (f <= 250.f) {
+						if (f <= 250) {
 							UE_LOG(LogTemp, Warning, TEXT("bad!"));
 						}
-						if (f <= 254.f) {
+						if (f <= 254) {
 							UE_LOG(LogTemp, Warning, TEXT("under"));
-							w.InfluenceWeights[0] += (uint8)(255.f - f);
+							w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 						}
 
 					}
