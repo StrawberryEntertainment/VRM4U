@@ -1,50 +1,43 @@
-#include "VRMImporterFactory.h"
-#include "VRMImporterLog.h"
-#include "Dom/JsonObject.h"
-#include "Serialization/JsonSerializer.h"
-#include "PaperJSONHelpers.h"
+#include "VRM4UImporterFactory.h"
+#include "VRM4UImporterLog.h"
 #include "AssetToolsModule.h"
 #include "AssetRegistryModule.h"
 #include "PackageTools.h"
+//#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
+#include "LoaderBPFunctionLibrary.h"
+#include "VrmAssetListObject.h"
 
 #define LOCTEXT_NAMESPACE "VRMImporter"
 
 
-UVRMImporterFactory::UVRMImporterFactory(const FObjectInitializer& ObjectInitializer)
+UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	Formats.Add( TEXT( "vrm;Model" ) );
+
+	bCreateNew = false;
+	bEditorImport = true;
 
 }
 
 
-bool UVRMImporterFactory::FactoryCanImport(const FString& Filename)
+bool UVRM4UImporterFactory::FactoryCanImport(const FString& Filename)
 {
 	const FString Extension = FPaths::GetExtension(Filename);
 
 	if( Extension == TEXT("vrm") || Extension == TEXT("gltf") || Extension == TEXT("glb"))
 	{
+		fullFileName = Filename;
 		return true;
 	}
 	return false;
 }
 
-UClass* UVRMImporterFactory::ResolveSupportedClass()
+UClass* UVRM4UImporterFactory::ResolveSupportedClass()
 {
-	UClass* ImportClass = NULL;
-	/*
-	if (ImportUI->MeshTypeToImport == FBXIT_SkeletalMesh)
-	{
-		ImportClass = USkeletalMesh::StaticClass();
-	}
-	else if (ImportUI->MeshTypeToImport == FBXIT_Animation)
-	{
-		ImportClass = UAnimSequence::StaticClass();
-	}
-	else
-	{
-		ImportClass = UStaticMesh::StaticClass();
-	}
-*/
+	UClass* ImportClass = USkeletalMesh::StaticClass();
+
 	return ImportClass;
 }
 
@@ -65,7 +58,29 @@ UObject* UVRMImporterFactory::FactoryCreateFile
 }
 */
 
-UObject* UVRMImporterFactory::FactoryCreateText(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const TCHAR*& Buffer, const TCHAR* BufferEnd, FFeedbackContext* Warn)
+UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn)
+{
+	//static ConstructorHelpers::FObjectFinder<UVrmAssetListObject> MatClass(TEXT("Class'/VRM4U/VrmObjectListBP.VrmObjectListBP'"));
+	//static ConstructorHelpers::FObjectFinder<UVrmAssetListObject> MatClass(TEXT("Blueprint'/VRM4U/VrmObjectListBP'"));
+
+	//UObject* objFinder = StaticLoadObject(UVrmAssetListObject::StaticClass(), nullptr, TEXT("Blueprint'/VRM4U/VrmObjectListBP'"));
+	UObject* objFinder = NewObject<UVrmAssetListObject>(InParent, NAME_None, RF_Transactional);
+
+	//if (MatClass.Object != NULL)
+	{
+		//auto a = NewObject<UVrmAssetListObject>(MatClass.Object, NAME_None, RF_Transactional);
+		//MatClass.Object; 
+		//ULoaderBPFunctionLibrary::LoadVRMFile(nullptr, fullFileName);
+		ULoaderBPFunctionLibrary::LoadVRMFile(Cast<UVrmAssetListObject>(objFinder), fullFileName);
+
+		//ULoaderBPFunctionLibrary::LoadVRMFile(Cast<UVrmAssetListObject>(objFinder), fullFileName);
+
+		//return a;
+	}
+
+	return objFinder;
+}
+UObject* UVRM4UImporterFactory::FactoryCreateText(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const TCHAR*& Buffer, const TCHAR* BufferEnd, FFeedbackContext* Warn)
 {
 	return nullptr;
 }

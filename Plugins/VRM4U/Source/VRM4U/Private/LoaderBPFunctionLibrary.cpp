@@ -35,8 +35,9 @@ FString baseFileName;
 static bool saveObject(UObject *u) {
 	package->MarkPackageDirty();
 	FAssetRegistryModule::AssetCreated(u);
-	bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
 
+	u->PostEditChange();
 	return true;
 }
 
@@ -140,11 +141,11 @@ void FindMesh(const aiScene* scene, aiNode* node, FReturnedData& retdata)
 
 
 static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, FName con2){
-	UPhysicsConstraintTemplate *ct = NewObject<UPhysicsConstraintTemplate>(package, NAME_None, RF_Transactional);
+	UPhysicsConstraintTemplate *ct = NewObject<UPhysicsConstraintTemplate>(pa, NAME_None, RF_Transactional);
 	pa->ConstraintSetup.Add(ct);
 	//"skirt_01_01"
 	ct->Modify(false);
-	ct->DefaultInstance.JointName = TEXT("tttt");
+	ct->DefaultInstance.JointName = TCHAR_TO_ANSI(*(con1.ToString() + TEXT("_") + con2.ToString()));
 	ct->DefaultInstance.ConstraintBone1 = con1;
 	ct->DefaultInstance.ConstraintBone2 = con2;
 
@@ -1033,6 +1034,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 		}
 
 		RefreshSkelMeshOnPhysicsAssetChange(sk);
+		pa->RefreshPhysicsAssetChange();
 		pa->UpdateBoundsBodiesArray();
 
 		//FSkeletalMeshModel* ImportedResource = sk->GetImportedModel();
@@ -1050,10 +1052,18 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 
 ////////////////
+//static bool LoadVRMPtr(UVrmAssetListObject *src, ) {
+//}
+
 bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString filepath) {
 
 	Assimp::Importer mImporter;
 	const aiScene* mScenePtr = nullptr;
+
+	if (src == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("VRM4U: no UVrmAssetListObject.\n"));
+		return false;
+	}
 
 	if (filepath.IsEmpty())
 	{
@@ -1080,7 +1090,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	{
 		FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
 		FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
-		FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);
+		//FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);
 
 		//path += FPaths::GameDevelopersDir() + TEXT("VRM/");
 
@@ -1088,6 +1098,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		FString name = basepath + baseFileName + TEXT("/") + FPaths::GetBaseFilename(filepath);
 
 		package = CreatePackage(nullptr, *name);
+
 	}
 
 	readTex(src, mScenePtr);
@@ -1103,6 +1114,14 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		}
 		saveObject(src->SkeletalMesh);
 		saveObject(src->SkeletalMesh->PhysicsAsset);
+	}
+
+	{
+		FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
+		FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
+		FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);
+
+		ULevel::LevelDirtiedEvent.Broadcast();
 	}
 
 	return nullptr;

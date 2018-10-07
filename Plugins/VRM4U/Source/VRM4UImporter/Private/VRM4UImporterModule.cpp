@@ -1,17 +1,17 @@
 
 #include "CoreMinimal.h"
-#include "VRMImporterLog.h"
+#include "VRM4UImporterLog.h"
 #include "Modules/ModuleManager.h"
 #include "Internationalization/Internationalization.h"
 
-#define LOCTEXT_NAMESPACE "VRMImporter"
+#define LOCTEXT_NAMESPACE "VRM4UImporter"
 
-DEFINE_LOG_CATEGORY(LogVRMImporter);
+DEFINE_LOG_CATEGORY(LogVRM4UImporter);
 
 //////////////////////////////////////////////////////////////////////////
 // FSpriterImporterModule
 
-class FVRMImporterModule : public FDefaultModuleImpl
+class FVRM4UImporterModule : public FDefaultModuleImpl
 {
 public:
 	virtual void StartupModule() override
@@ -25,7 +25,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 
-IMPLEMENT_MODULE(FVRMImporterModule, VRMImporter);
+IMPLEMENT_MODULE(FVRM4UImporterModule, VRM4UImporter);
 
 //////////////////////////////////////////////////////////////////////////
 

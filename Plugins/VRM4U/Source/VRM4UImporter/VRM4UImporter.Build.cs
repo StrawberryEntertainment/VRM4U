@@ -1,9 +1,9 @@
 
 using UnrealBuildTool;
 
-public class VRMImporter : ModuleRules
+public class VRM4UImporter : ModuleRules
 {
-	public VRMImporter(ReadOnlyTargetRules Target) : base(Target)
+	public VRM4UImporter(ReadOnlyTargetRules Target) : base(Target)
 	{
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -13,9 +13,9 @@ public class VRMImporter : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Json",
-				"Paper2D",
 				"UnrealEd",
-				"Paper2DEditor"
+                "VRM4U"
+
 			});
 
 		PrivateIncludePathModuleNames.AddRange(
