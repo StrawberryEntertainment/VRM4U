@@ -3,10 +3,13 @@
 #include "AssetToolsModule.h"
 #include "AssetRegistryModule.h"
 #include "PackageTools.h"
+#include "Misc/Paths.h"
+#include "Engine/SkeletalMesh.h"
 //#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "UObject/ConstructorHelpers.h"
 #include "LoaderBPFunctionLibrary.h"
 #include "VrmAssetListObject.h"
+#include "Engine/Blueprint.h"
 
 #define LOCTEXT_NAMESPACE "VRMImporter"
 
@@ -57,28 +60,57 @@ UObject* UVRMImporterFactory::FactoryCreateFile
 	return nullptr;
 }
 */
+template<class T>
+T* GetObjectFromStringAsset(FStringAssetReference const& AssetRef)
+{
+	UObject* AlreadyLoadedObj = AssetRef.ResolveObject();
+	if (AlreadyLoadedObj)
+	{
+		return Cast<T>(AlreadyLoadedObj);
+	}
+
+	UObject* NewlyLoadedObj = AssetRef.TryLoad();
+	if (NewlyLoadedObj)
+	{
+		return Cast<T>(NewlyLoadedObj);
+	}
+
+	return nullptr;
+}
+
 
 UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn)
 {
-	//static ConstructorHelpers::FObjectFinder<UVrmAssetListObject> MatClass(TEXT("Class'/VRM4U/VrmObjectListBP.VrmObjectListBP'"));
+	
+	//static ConstructorHelpers::FObjectFinder<UObject> MatClass(TEXT("/Game/test/NewMaterial.NewMaterial"));
+	//static ConstructorHelpers::FObjectFinder<UClass> MatClass(TEXT("Blueprint'/VRM4U/VrmObjectListBP.VrmObjectListBP_C'"));
 	//static ConstructorHelpers::FObjectFinder<UVrmAssetListObject> MatClass(TEXT("Blueprint'/VRM4U/VrmObjectListBP'"));
+	//static ConstructorHelpers::FObjectFinder<UObject> MatClass(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
+	//UVrmAssetListObject *m = Cast<UVrmAssetListObject>(MatClass.Object);
 
-	//UObject* objFinder = StaticLoadObject(UVrmAssetListObject::StaticClass(), nullptr, TEXT("Blueprint'/VRM4U/VrmObjectListBP'"));
-	UObject* objFinder = NewObject<UVrmAssetListObject>(InParent, NAME_None, RF_Transactional);
+	//UObject* objFinder = StaticLoadObject(UVrmAssetListObject::StaticClass(), nullptr, TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP_C"));
+	//UObject* objFinder = NewObject<UVrmAssetListObject>(InParent, NAME_None, RF_Transactional);
 
-	//if (MatClass.Object != NULL)
-	{
+	FSoftObjectPath r(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
+	UObject *u = r.TryLoad();
+	UClass *c = (UClass*)(Cast<UBlueprint>(u)->GeneratedClass);
+
+	//UVrmAssetListObject *m = Cast<UVrmAssetListObject>(u);
+	//FSoftClassPath r(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
+	//UObject *u = r.TryLoad();
+	//auto aaa = NewObject<UObject>(c);
+	UVrmAssetListObject *m = NewObject<UVrmAssetListObject>((UObject*)GetTransientPackage(), c);
+
+	if (m){
 		//auto a = NewObject<UVrmAssetListObject>(MatClass.Object, NAME_None, RF_Transactional);
 		//MatClass.Object; 
 		//ULoaderBPFunctionLibrary::LoadVRMFile(nullptr, fullFileName);
-		ULoaderBPFunctionLibrary::LoadVRMFile(Cast<UVrmAssetListObject>(objFinder), fullFileName);
-
-		//ULoaderBPFunctionLibrary::LoadVRMFile(Cast<UVrmAssetListObject>(objFinder), fullFileName);
-
-		//return a;
+		ULoaderBPFunctionLibrary::SetImportMode(true, Cast<UPackage>(InParent));
+		ULoaderBPFunctionLibrary::LoadVRMFile(m, fullFileName);
+		ULoaderBPFunctionLibrary::SetImportMode(false, nullptr);
 	}
 
-	return objFinder;
+	return InParent;
 }
 UObject* UVRM4UImporterFactory::FactoryCreateText(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const TCHAR*& Buffer, const TCHAR* BufferEnd, FFeedbackContext* Warn)
 {

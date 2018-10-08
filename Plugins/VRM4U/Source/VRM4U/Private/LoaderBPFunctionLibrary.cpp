@@ -27,6 +27,7 @@
 #include "IImageWrapperModule.h"
 
 #include "AssetRegistryModule.h"
+#include "UObject/Package.h"
 
 // tem
 UPackage *package = nullptr;
@@ -765,19 +766,16 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 									maxWeight = w.InfluenceWeights[i];
 									maxIndex = i;
 								}
-								if (w.InfluenceBones[i] == 3) {
-									UE_LOG(LogTemp, Warning, TEXT("overr"));
-								}
 							}
 							if (f > 255) {
 								UE_LOG(LogTemp, Warning, TEXT("overr"));
 								w.InfluenceWeights[0] -= (uint8)(f - 255);
 							}
 							if (f <= 250) {
-								UE_LOG(LogTemp, Warning, TEXT("bad!"));
+								//UE_LOG(LogTemp, Warning, TEXT("bad!"));
 							}
 							if (f <= 254) {
-								UE_LOG(LogTemp, Warning, TEXT("under"));
+								//UE_LOG(LogTemp, Warning, TEXT("under"));
 								w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 							}
 
@@ -833,7 +831,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 				// wait check
 
-				{
+				if (0){
 					for (auto &w : Weight) {
 						int f = 0;
 						int maxIndex = 0;
@@ -1055,6 +1053,13 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 //static bool LoadVRMPtr(UVrmAssetListObject *src, ) {
 //}
 
+static bool bImportMode = false;
+void ULoaderBPFunctionLibrary::SetImportMode(bool bIm, class UPackage *p) {
+	bImportMode = bIm;
+
+	package = p;
+}
+
 bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString filepath) {
 
 	Assimp::Importer mImporter;
@@ -1097,7 +1102,9 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		baseFileName = FPaths::GetBaseFilename(filepath);
 		FString name = basepath + baseFileName + TEXT("/") + FPaths::GetBaseFilename(filepath);
 
-		package = CreatePackage(nullptr, *name);
+		if (bImportMode == false) {
+			package = CreatePackage(nullptr, *name);
+		}
 
 	}
 
@@ -1116,7 +1123,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		saveObject(src->SkeletalMesh->PhysicsAsset);
 	}
 
-	{
+	if (bImportMode == false){
 		FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
 		FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
 		FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);

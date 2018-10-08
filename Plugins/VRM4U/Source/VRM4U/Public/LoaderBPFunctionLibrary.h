@@ -74,4 +74,5 @@ public:
 	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "output"))
 	static bool LoadVRMFile(class UVrmAssetListObject *VrmAsset, FString filepath);
 
+	static void SetImportMode(bool bImportMode, class UPackage *package);
 };

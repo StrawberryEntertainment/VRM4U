@@ -3,6 +3,6 @@
 	"Modules": 
 	{
 		"VRM4U": "UE4Editor-VRM4U.dll",
-		"VRMImporter": "UE4Editor-VRMImporter.dll"
+		"VRM4UImporter": "UE4Editor-VRM4UImporter.dll"
 	}
 }

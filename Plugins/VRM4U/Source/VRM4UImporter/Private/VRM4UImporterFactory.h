@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Factories/Factory.h"
 #include "VRM4UImporterFactory.generated.h"
 
 UCLASS()
