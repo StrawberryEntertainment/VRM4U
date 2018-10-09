@@ -29,7 +29,8 @@ bool UVRM4UImporterFactory::FactoryCanImport(const FString& Filename)
 {
 	const FString Extension = FPaths::GetExtension(Filename);
 
-	if( Extension == TEXT("vrm") || Extension == TEXT("gltf") || Extension == TEXT("glb"))
+	//if( Extension == TEXT("vrm") || Extension == TEXT("gltf") || Extension == TEXT("glb"))
+	if( Extension == TEXT("vrm"))
 	{
 		fullFileName = Filename;
 		return true;
