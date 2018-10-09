@@ -16,6 +16,11 @@ extern "C" {
     namespace VRM {
         typedef float(vec3)[3];
 
+        struct ASSIMP_API VRMHumanoid {
+            aiString humanBoneName;
+            aiString nodeName;
+        };
+
         struct ASSIMP_API VRMSpring {
             float stiffiness = 0.f;
             float gravityPower = 0.f;
@@ -49,6 +54,8 @@ extern "C" {
 
             int colliderGroupNum = 0;
             VRMColliderGroup *colliderGroups = nullptr;
+
+            VRMHumanoid humanoidBone[55];
 
             VRMMetadata() {
             }

@@ -5,6 +5,7 @@
 #include "VrmSkeletalMesh.h"
 #include "VrmModelActor.h"
 #include "VrmAssetListObject.h"
+#include "VrmMetaObject.h"
 
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
@@ -246,6 +247,24 @@ static UTexture2D* createTex(int32 InSizeX, int32 InSizeY, FString name) {
 		UE_LOG(LogTexture, Warning, TEXT("Invalid parameters specified for UTexture2D::Create()"));
 	}
 	return NewTexture;
+}
+
+
+static bool readBoneTable(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+
+	VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+
+	UVrmMetaObject *m;
+
+	m = NewObject<UVrmMetaObject>(package, TEXT("VrmMeta"), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+
+
+	for (auto &a : meta->humanoidBone) {
+		m->humanoidBoneTable.Add(a.humanBoneName.C_Str()) = a.nodeName.C_Str();
+	}
+
+	vrmAssetList->VrmMetaObject = m;
+	return true;
 }
 
 
@@ -1169,6 +1188,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	readTex(src, mScenePtr);
 	readModel(src, mScenePtr);
 	readMorph(src, mScenePtr);
+	readBoneTable(src, mScenePtr);
 
 	if (src->bAssetSave) {
 		for (auto &t : src->Textures) {
@@ -1179,6 +1199,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		}
 		saveObject(src->SkeletalMesh);
 		saveObject(src->SkeletalMesh->PhysicsAsset);
+		saveObject(src->VrmMetaObject);
 	}
 
 	if (bImportMode == false){

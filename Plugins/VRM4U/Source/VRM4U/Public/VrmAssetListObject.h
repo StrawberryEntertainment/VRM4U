@@ -10,6 +10,7 @@ class UMaterialInterface;
 class UTexture2D;
 class USkeletalMesh;
 class USkeleton;
+class UVrmMetaObject;
 
 /**
  * 
@@ -32,6 +33,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetInput")
 	USkeleton* BaseSkeleton;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetOutput")
+	UVrmMetaObject* VrmMetaObject;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetOutput")
 	USkeletalMesh* SkeletalMesh;
