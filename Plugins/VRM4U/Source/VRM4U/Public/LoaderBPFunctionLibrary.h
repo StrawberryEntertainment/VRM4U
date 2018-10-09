@@ -36,7 +36,10 @@ struct FMeshInfo
 		TArray<FLinearColor> VertexColors;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
-		TArray<FProcMeshTangent> Tangents;
+		TArray<FProcMeshTangent> MeshTangents;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
+		TArray<FVector> Tangents;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		FTransform RelativeTransform;

@@ -16,6 +16,7 @@
 #include <assimp/scene.h>
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
+#include <assimp/pbrmaterial.h>
 #include <assimp/vrm/vrmmeta.h>
 
 #include "RenderingThread.h"
@@ -105,12 +106,10 @@ void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& result)
 			//Tangent
 			if (mesh->HasTangentsAndBitangents())
 			{
-				FProcMeshTangent meshTangent = FProcMeshTangent(
-					mesh->mTangents[j].x,
-					mesh->mTangents[j].y,
-					mesh->mTangents[j].z
-				);
-				mi.Tangents.Push(meshTangent);
+				FVector v(mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z);
+				FProcMeshTangent meshTangent = FProcMeshTangent(v.X, v.Y, v.Z);
+				mi.Tangents.Push(v);
+				mi.MeshTangents.Push(meshTangent);
 			}
 
 			//Vertex color
@@ -326,10 +325,10 @@ static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr)
 
 		vrmAssetList->Materials.SetNum(mScenePtr->mNumMaterials);
 		for (uint32_t i = 0; i < mScenePtr->mNumMaterials; ++i) {
-			auto &m = *mScenePtr->mMaterials[i];
+			auto &aiMat = *mScenePtr->mMaterials[i];
 
 			UMaterialInterface *baseM = nullptr;;
-			if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTransparent")) >= 0) {
+			if (FString(aiMat.mShaderName.C_Str()).Find(TEXT("UnlitTransparent")) >= 0) {
 				baseM = vrmAssetList->BaseTransparentMaterial;
 			}
 			else {
@@ -345,9 +344,9 @@ static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr)
 			int index = -1;
 			{
 				for (uint32_t t = 0; t < AI_TEXTURE_TYPE_MAX; ++t) {
-					uint32_t n = m.GetTextureCount((aiTextureType)t);
+					uint32_t n = aiMat.GetTextureCount((aiTextureType)t);
 					for (uint32_t y = 0; y < n; ++y) {
-						m.GetTexture((aiTextureType)t, y, &texName);
+						aiMat.GetTexture((aiTextureType)t, y, &texName);
 						UE_LOG(LogTemp, Warning, TEXT("R--%s\n"), texName.C_Str());
 					}
 				}
@@ -361,7 +360,7 @@ static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr)
 			}
 			{
 				aiString path;
-				aiReturn r = m.GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0, &path);
+				aiReturn r = aiMat.GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0, &path);
 				if (r == AI_SUCCESS) {
 					std::string s = path.C_Str();
 					s = s.substr(s.find_last_of('*') + 1);
@@ -380,19 +379,55 @@ static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr)
 
 			if (index >= 0 && index < vrmAssetList->Textures.Num()) {
 				//UMaterialInstanceDynamic* dm = UMaterialInstanceDynamic::Create(baseM, vrmAssetList, m.GetName().C_Str());
-				UMaterialInstanceConstant* dm = NewObject<UMaterialInstanceConstant>(package, *(FString(TEXT("M_"))+m.GetName().C_Str()), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+				UMaterialInstanceConstant* dm = NewObject<UMaterialInstanceConstant>(package, *(FString(TEXT("M_"))+aiMat.GetName().C_Str()), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 				dm->Parent = baseM;
 				//dm->SetParentEditorOnly
 
 				if (dm) {
-					FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
-					v->ParameterInfo.Index = INDEX_NONE;
-					v->ParameterInfo.Name = TEXT("vrm_diffuse");
-					v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
-					v->ParameterValue = vrmAssetList->Textures[index];
-					dm->InitStaticPermutation();
 
-					//dm->SetTextureParameterValue(TEXT("vrm_diffuse"), vrmAssetList->Textures[index]);
+					//if (GetMatColor(mat, m->pbrMetallicRoughness.baseColorFactor, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR) != AI_SUCCESS) {
+					//}
+					{
+						{
+							aiColor4D col;
+							aiReturn result = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, col);
+							if (result == 0) {
+								FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+								v->ParameterInfo.Index = INDEX_NONE;
+								v->ParameterInfo.Name = TEXT("gltf_basecolor");
+								v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
+								v->ParameterValue = FLinearColor(col.r, col.g, col.b, col.a);
+							}
+						}
+
+						{
+							float f[2] = {1,1};
+							aiReturn result0 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, f[0]);
+							aiReturn result1 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, f[1]);
+							if (result0 == AI_SUCCESS || result1 == AI_SUCCESS) {
+								f[0] = (result0==AI_SUCCESS) ? f[0]: 1;
+								f[1] = (result1==AI_SUCCESS) ? f[1]: 1;
+								if (f[0] == 0 && f[1] == 0) {
+									f[0] = f[1] = 1.f;
+								}
+								FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+								v->ParameterInfo.Index = INDEX_NONE;
+								v->ParameterInfo.Name = TEXT("gltf_RM");
+								v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
+								v->ParameterValue = FLinearColor(f[0], f[1], 0, 0);
+							}
+						}
+					}
+
+					{
+						FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
+						v->ParameterInfo.Index = INDEX_NONE;
+						v->ParameterInfo.Name = TEXT("gltf_tex_diffuse");
+						v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+						v->ParameterValue = vrmAssetList->Textures[index];
+					}
+
+					dm->InitStaticPermutation();
 					matArray.Add(dm);
 				}
 			}
@@ -646,17 +681,32 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 				rd.RenderSections.SetNum(result.meshInfo.Num());
 				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
 					TArray<FSoftSkinVertex> meshWeight;
+					auto &mInfo = result.meshInfo[meshID];
 
-					for (int i = 0; i < result.meshInfo[meshID].Vertices.Num(); ++i) {
+					for (int i = 0; i < mInfo.Vertices.Num(); ++i) {
 						FSoftSkinVertex *meshS = new(meshWeight) FSoftSkinVertex();
 						auto a = result.meshInfo[meshID].Vertices[i] * 100.f;
 
 						v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
 
 						FVector2D uv;
-						uv = result.meshInfo[meshID].UV0[i];
+						uv = mInfo.UV0[i];
 						v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, 0, uv);
 						meshS->UVs[0] = uv;
+
+						{
+							v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
+							//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
+							auto &n = mInfo.Normals[i];
+							meshS->TangentX = mInfo.Tangents[i];
+							meshS->TangentY = n ^ mInfo.Tangents[i];
+							meshS->TangentZ = n;
+						}
+
+						if (i < mInfo.VertexColors.Num()){
+							auto &c = mInfo.VertexColors[i];
+							meshS->Color = FColor(c.R, c.G, c.B, c.A);
+						}
 
 						auto aiS = rd.SkinWeightVertexBuffer.GetSkinWeightPtr<false>(i);
 						//aiS->InfluenceWeights
@@ -1041,6 +1091,14 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 	//NewAsset->FindSocket
 
+	{
+		UAnimInstance *anim = nullptr;
+		//anim = NewObject<UAnimInstance>(package, *(baseFileName + TEXT("_anim")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+
+		//anim->ske
+
+		//saveObject(anim);
+	}
 	return nullptr;
 }// sk, k
 
