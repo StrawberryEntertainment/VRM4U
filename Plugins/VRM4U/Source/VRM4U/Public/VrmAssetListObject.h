@@ -22,28 +22,34 @@ class VRM4U_API UVrmAssetListObject : public UObject
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetInput")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InSave")
 	bool bAssetSave;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetInput")
-	UMaterialInterface* BaseOpaqueMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* BaseMToonOpaqueMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetInput")
-	UMaterialInterface* BaseTransparentMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* BaseMToonTransparentMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetInput")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* BaseUnlitOpaqueMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* BaseUnlitTransparentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	USkeleton* BaseSkeleton;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetOutput")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	UVrmMetaObject* VrmMetaObject;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetOutput")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	USkeletalMesh* SkeletalMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetOutput")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	TArray<UTexture2D*> Textures;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AssetOutput")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	TArray<UMaterialInterface*> Materials;
 
 };

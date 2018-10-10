@@ -347,11 +347,34 @@ static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr)
 			auto &aiMat = *mScenePtr->mMaterials[i];
 
 			UMaterialInterface *baseM = nullptr;;
-			if (FString(aiMat.mShaderName.C_Str()).Find(TEXT("UnlitTransparent")) >= 0) {
-				baseM = vrmAssetList->BaseTransparentMaterial;
-			}
-			else {
-				baseM = vrmAssetList->BaseOpaqueMaterial;
+			{
+				aiString alphaMode;
+				aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+
+				FString ShaderName = aiMat.mShaderName.C_Str();
+				if (ShaderName.Find(TEXT("UnlitTexture")) >= 0) {
+					baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
+				}
+				if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
+					baseM = vrmAssetList->BaseUnlitTransparentMaterial;
+				}
+				if (ShaderName.Find(TEXT("MToon")) >= 0) {
+					FString alpha = alphaMode.C_Str();
+					if (alpha == TEXT("BLEND")) {
+						baseM = vrmAssetList->BaseMToonTransparentMaterial;
+					}
+					else {
+						baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+					}
+				}
+				if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
+					baseM = vrmAssetList->BaseUnlitTransparentMaterial;
+				}
+
+
+				if (baseM == nullptr){
+					baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+				}
 			}
 			//if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTexture"))) {
 
