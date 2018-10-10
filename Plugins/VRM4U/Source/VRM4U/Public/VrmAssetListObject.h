@@ -37,8 +37,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BaseUnlitTransparentMaterial;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
+	//USkeleton* BaseSkeleton;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
-	USkeleton* BaseSkeleton;
+	USkeletalMesh* BaseSkeletalMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	UVrmMetaObject* VrmMetaObject;

@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "VrmSkeleton.h"
+#include "VrmAssetListObject.h"
+#include "VrmMetaObject.h"
 #include "Engine/SkeletalMesh.h"
 
 #include <assimp/scene.h>       // Output data structure
@@ -78,7 +80,31 @@ void rr(aiNode *node, TArray<aiNode*> &t) {
 	}
 }
 
-void UVrmSkeleton::Proc(aiScene* s, int &boneOffset) {
+void UVrmSkeleton::applyBoneFrom(const USkeleton *src, const UVrmMetaObject *meta) {
+	//UVrmAssetListObject *alo;
+
+	FReferenceSkeletonModifier RefSkelModifier(ReferenceSkeleton, this);
+
+	auto allbone = ReferenceSkeleton.GetRawRefBoneInfo();
+	for (auto &a : allbone) {
+		auto targetBoneName = meta->humanoidBoneTable.Find(a.Name.ToString());
+		if (targetBoneName == nullptr) {
+			continue;
+		}
+
+		auto index_src = src->GetReferenceSkeleton().FindRawBoneIndex(**targetBoneName);
+		auto &t = src->GetReferenceSkeleton().GetRawRefBonePose()[index_src];
+
+		auto index_my = GetReferenceSkeleton().FindRawBoneIndex(a.Name);
+
+		RefSkelModifier.UpdateRefPoseTransform(index_my, t);
+	}
+
+	ReferenceSkeleton.RebuildRefSkeleton(this, true);
+	HandleSkeletonHierarchyChange();
+}
+
+void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 
 	boneOffset = 0;
 	//FBoneNode n;

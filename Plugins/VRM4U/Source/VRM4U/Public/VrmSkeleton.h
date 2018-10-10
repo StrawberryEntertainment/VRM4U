@@ -26,7 +26,8 @@ public:
 
 	///
 public:
-	void Proc(struct aiScene* s, int &offset);
+	void applyBoneFrom(const class USkeleton *src, const class UVrmMetaObject *meta);
+	void readVrmBone(struct aiScene* s, int &offset);
 	
 	//FReferenceSkeleton& getRefSkeleton();
 };

@@ -249,6 +249,13 @@ static UTexture2D* createTex(int32 InSizeX, int32 InSizeY, FString name) {
 	return NewTexture;
 }
 
+static bool RetargetTest(){
+//	USkeleton *sk;
+
+	//FReferenceSkeletonModifier RefSkelModifier(sk->ReferenceSkeleton, sk);
+
+
+}
 
 static bool readBoneTable(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 
@@ -616,7 +623,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 		}
 		sk->Skeleton = k;
 		//k->MergeAllBonesToBoneTree(src);
-		k->Proc(const_cast<aiScene*>(mScenePtr), boneOffset);
+		k->readVrmBone(const_cast<aiScene*>(mScenePtr), boneOffset);
 
 		sk->RefSkeleton = k->GetReferenceSkeleton();
 		//sk->RefSkeleton.RebuildNameToIndexMap();
@@ -1134,6 +1141,28 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 	//NewAsset->FindSocket
 
 	{
+		//USkeletalMesh *sk = NewObject<USkeletalMesh>(package, *(baseFileName + TEXT("_skeletalmesh")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		UVrmSkeleton *base = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_ref_skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+
+		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(vrmAssetList->BaseSkeletalMesh, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
+
+		base->MergeAllBonesToBoneTree(ss);
+		base->applyBoneFrom(k, vrmAssetList->VrmMetaObject);
+
+		ss->Skeleton = base;
+		ss->RefSkeleton = base->GetReferenceSkeleton();
+
+		ss->CalculateInvRefMatrices();
+		ss->CalculateExtendedBounds();
+		ss->ConvertLegacyLODScreenSize();
+		ss->UpdateGenerateUpToData();
+
+		base->SetPreviewMesh(ss);
+		base->RecreateBoneTree(ss);
+
+		saveObject(base);
+		//
+
 		UAnimInstance *anim = nullptr;
 		//anim = NewObject<UAnimInstance>(package, *(baseFileName + TEXT("_anim")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
@@ -1208,10 +1237,11 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 
 	}
 
+	readBoneTable(src, mScenePtr);
+
 	readTex(src, mScenePtr);
 	readModel(src, mScenePtr);
 	readMorph(src, mScenePtr);
-	readBoneTable(src, mScenePtr);
 
 	if (src->bAssetSave) {
 		for (auto &t : src->Textures) {

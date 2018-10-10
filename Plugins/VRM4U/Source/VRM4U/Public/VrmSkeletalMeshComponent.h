@@ -18,4 +18,5 @@ class VRM4U_API UVrmSkeletalMeshComponent : public USkeletalMeshComponent
 public:
 	virtual void RefreshBoneTransforms( FActorComponentTickFunction* TickFunction = NULL ) override;
 
+
 };
