@@ -85,6 +85,13 @@ void UVrmSkeleton::applyBoneFrom(const USkeleton *src, const UVrmMetaObject *met
 
 	FReferenceSkeletonModifier RefSkelModifier(ReferenceSkeleton, this);
 
+	FTransform t;
+	t.SetIdentity();
+
+	for (int i = 0; i < GetBoneTree().Num(); ++i) {
+		RefSkelModifier.UpdateRefPoseTransform(i, t);
+	}
+
 	auto allbone = ReferenceSkeleton.GetRawRefBoneInfo();
 	for (auto &a : allbone) {
 		auto targetBoneName = meta->humanoidBoneTable.Find(a.Name.ToString());
