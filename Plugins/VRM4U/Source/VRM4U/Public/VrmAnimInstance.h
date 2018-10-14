@@ -11,6 +11,30 @@
 class UVrmMetaObject;
 class USkeleton;
 
+UENUM(BlueprintType)
+enum class EVrmMorphGroupType : uint8
+{
+	MT_Neutoral		UMETA(DisplayName="00_Neutoral"),
+	MT_A			UMETA(DisplayName="01_A"),
+	MT_I			UMETA(DisplayName="02_I"),
+	MT_U			UMETA(DisplayName="03_U"),
+	MT_E			UMETA(DisplayName="04_E"),
+	MT_O			UMETA(DisplayName="05_O"),
+	MT_Blink		UMETA(DisplayName="06_Blink"),
+	MT_Joy			UMETA(DisplayName="07_Joy"),
+	MT_Angry		UMETA(DisplayName="08_Angry"),
+	MT_Sorrow		UMETA(DisplayName="09_Sorrow"),
+	MT_Fun			UMETA(DisplayName="10_Fun"),
+	MT_LookUp		UMETA(DisplayName="11_LookUp"),
+	MT_LookDown		UMETA(DisplayName="12_LookDown"),
+	MT_LookLeft		UMETA(DisplayName="13_LookLeft"),
+	MT_LookRight	UMETA(DisplayName="14_LookRight"),
+	MT_Blink_L		UMETA(DisplayName="15_Blink_L"),
+	MT_Blink_R		UMETA(DisplayName="16_Blink_R"),
+	Num				UMETA(Hidden)
+};
+
+
 USTRUCT()
 struct VRM4U_API FVrmAnimInstanceProxy : public FAnimInstanceProxy {
 
@@ -64,7 +88,11 @@ public:
 	// Executed when begin play is called on the owning component
 	virtual void NativeBeginPlay()override;
 
-	
+	//virtual USkeleton* GetTargetSkeleton() const override;
+
+	UFUNCTION(BlueprintCallable, Category="Animation")
+	void SetMorphTargetVRM(EVrmMorphGroupType type, float Value);
+
 	
 	
 };

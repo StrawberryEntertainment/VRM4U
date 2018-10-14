@@ -16,6 +16,21 @@ extern "C" {
     namespace VRM {
         typedef float(vec3)[3];
 
+        struct ASSIMP_API VRMBlendShapeBind {
+            aiString nodeName;
+            aiString meshName;
+            int meshID=0;
+            int shapeIndex=0;
+            int weight=100;
+        };
+
+        struct ASSIMP_API VRMBlendShapeGroup {
+            aiString groupName;
+
+            int bindNum=0;
+            VRMBlendShapeBind *bind = nullptr;
+        };
+
         struct ASSIMP_API VRMHumanoid {
             aiString humanBoneName;
             aiString nodeName;
@@ -56,6 +71,9 @@ extern "C" {
             VRMColliderGroup *colliderGroups = nullptr;
 
             VRMHumanoid humanoidBone[55];
+
+            int blensShapeGroupNum = 0;
+            VRMBlendShapeGroup *blensShapeGourp = nullptr;
 
             VRMMetadata() {
             }

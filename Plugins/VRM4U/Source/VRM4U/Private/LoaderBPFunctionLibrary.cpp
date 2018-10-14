@@ -266,8 +266,27 @@ static bool readBoneTable(UVrmAssetListObject *vrmAssetList, const aiScene *mSce
 	m = NewObject<UVrmMetaObject>(package, TEXT("VrmMeta"), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
 
+	// bone
 	for (auto &a : meta->humanoidBone) {
 		m->humanoidBoneTable.Add(a.humanBoneName.C_Str()) = a.nodeName.C_Str();
+	}
+
+	//shape
+	m->BlendShapeGroup.SetNum(meta->blensShapeGroupNum);
+	for (int i = 0; i < meta->blensShapeGroupNum; ++i) {
+		auto &aiGroup = meta->blensShapeGourp[i];
+
+		m->BlendShapeGroup[i].name = aiGroup.groupName.C_Str();
+
+		m->BlendShapeGroup[i].BlendShape.SetNum(aiGroup.bindNum);
+		for (int b = 0; b < aiGroup.bindNum; ++b) {
+			auto &bind = m->BlendShapeGroup[i].BlendShape[b];
+			bind.meshName = aiGroup.bind[b].meshName.C_Str();
+			bind.nodeName= aiGroup.bind[b].nodeName.C_Str();
+			bind.weight = aiGroup.bind[b].weight;
+			bind.meshID = aiGroup.bind[b].meshID;
+			bind.shapeIndex = aiGroup.bind[b].shapeIndex;
+		}
 	}
 
 	vrmAssetList->VrmMetaObject = m;
