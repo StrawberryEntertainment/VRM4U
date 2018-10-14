@@ -506,6 +506,51 @@ static bool readTex(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr)
 	return true;
 }
 
+
+static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetName,const aiScene *mScenePtr) {
+
+	MorphDeltas.Reset(0);
+	uint32_t currentVertex = 0;
+
+	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
+		const aiMesh &aiM = *(mScenePtr->mMeshes[m]);
+		for (uint32_t a = 0; a < aiM.mNumAnimMeshes; ++a) {
+			const aiAnimMesh &aiA = *(aiM.mAnimMeshes[a]);
+			if (targetName != aiA.mName) {
+				continue;
+			}
+
+			for (uint32_t i = 0; i < aiA.mNumVertices; ++i) {
+				FMorphTargetDelta v;
+				v.SourceIdx = i +currentVertex;
+				v.PositionDelta.Set(
+					-aiA.mVertices[i][0] * 100.f,
+					aiA.mVertices[i][2] * 100.f,
+					aiA.mVertices[i][1] * 100.f
+					//aiA.mVertices[i][0],
+					//aiA.mVertices[i][1],
+					//aiA.mVertices[i][2]
+				);
+				//v.PositionDelta -= sVertex[i + currentVertex].Position;
+				//v.TangentZDelta -= sVertex[i + currentVertex].nor
+
+				//MorphVertex.TangentZDelta = BaseSample->Normals[UsedNormalIndex] - AverageSample->Normals[UsedNormalIndex];
+
+				v.TangentZDelta.Set(0, 0, 0);
+				//mtm->SectionIndices[i] = m;// i;// sk->GetImportedModel()->LODModels[0].Sections[m].MaterialIndex;
+
+				MorphDeltas.Add(v);
+			}
+
+
+			//FString sss = FString::Printf(TEXT("%02d_%02d_"), m, a) + FString(aiA.mName.C_Str());
+		}
+		currentVertex += aiM.mNumVertices;
+	}
+	return MorphDeltas.Num() != 0;
+}
+
+
 static bool readMorph(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 
 
@@ -526,12 +571,28 @@ static bool readMorph(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 	int currentVertex = 0;
 
+	TArray<FString> MorphNameList;
+
 	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
 		const aiMesh &aiM = *(mScenePtr->mMeshes[m]);
 		for (uint32_t a = 0; a < aiM.mNumAnimMeshes; ++a) {
 			const aiAnimMesh &aiA = *(aiM.mAnimMeshes[a]);
 			//aiA.
 
+			if (MorphNameList.Find(FString(aiA.mName.C_Str())) != INDEX_NONE) {
+				continue;
+			}
+			MorphNameList.Add(FString(aiA.mName.C_Str()));
+
+			TArray<FMorphTargetDelta> MorphDeltas;
+			if (readMorph2(MorphDeltas, aiA.mName, mScenePtr) == false) {
+				continue;
+			}
+
+			FString sss = FString::Printf(TEXT("%02d_%02d_"), m, a) + FString(aiA.mName.C_Str());
+			UMorphTarget *mt = NewObject<UMorphTarget>(sk, *sss);
+
+			/*
 			//FString sss = FString::FromInt(a) + FString(aiA.mName.C_Str());
 			FString sss = FString::Printf(TEXT("%02d_%02d_"), m, a) + FString(aiA.mName.C_Str());
 			//sss = FString::Printf(TEXT("%03d_%s"), a, aiA.mName.C_Str());
@@ -573,6 +634,7 @@ static bool readMorph(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 				//mtm->SectionIndices[i] = m;// i;// sk->GetImportedModel()->LODModels[0].Sections[m].MaterialIndex;
 			}
 			//mtm->NumBaseMeshVerts = aiA.mNumVertices;
+			*/
 
 			//mt->MorphLODModels.Add(*mtm);
 			mt->PopulateDeltas(MorphDeltas, 0, sk->GetImportedModel()->LODModels[0].Sections);
