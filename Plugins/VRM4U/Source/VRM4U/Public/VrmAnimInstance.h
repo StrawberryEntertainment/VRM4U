@@ -94,5 +94,7 @@ public:
 	void SetMorphTargetVRM(EVrmMorphGroupType type, float Value);
 
 	
-	
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void SetVrmData(USkeletalMeshComponent *baseSkeletalMesh, UVrmMetaObject *meta);
+
 };

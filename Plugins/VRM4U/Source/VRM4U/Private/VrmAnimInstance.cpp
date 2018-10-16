@@ -106,6 +106,20 @@ void UVrmAnimInstance::NativePostEvaluateAnimation() {
 			//a.SetIdentity();
 		}
 	}
+
+	if (BaseSkeletalMeshComponent) {
+		if (BaseSkeletalMeshComponent->AnimScriptInstance) {
+			IAnimClassInterface* AnimClassInterface = IAnimClassInterface::GetFromClass(this->GetClass());
+			//const USkeleton* AnimSkeleton = (AnimClassInterface) ? AnimClassInterface->GetTargetSkeleton() : nullptr;
+			if (AnimClassInterface) {
+				//AnimClassInterface->
+			}
+			//BaseSkeletalMeshComponent->AnimScriptInstance->target
+			//BaseSkeletalMeshComponent->AnimScriptInstance->CurrentSkeleton = 
+				//BaseSkeletalMeshComponent->SkeletalMesh->Skeleton;
+
+		}
+	}
 }
 void UVrmAnimInstance::NativeUninitializeAnimation() {
 }
@@ -152,4 +166,22 @@ void UVrmAnimInstance::SetMorphTargetVRM(EVrmMorphGroupType type, float Value) {
 	}
 
 
+}
+
+void UVrmAnimInstance::SetVrmData(USkeletalMeshComponent *baseSkeletalMesh, UVrmMetaObject *meta) {
+	IAnimClassInterface* AnimClassInterface = IAnimClassInterface::GetFromClass(this->GetClass());
+	//const USkeleton* AnimSkeleton = (AnimClassInterface) ? AnimClassInterface->GetTargetSkeleton() : nullptr;
+
+	USkeletalMeshComponent *skc = GetOwningComponent();
+
+	skc->SetSkeletalMesh(meta->SkeletalMesh);
+	BaseSkeletalMeshComponent = baseSkeletalMesh;
+	MetaObject = meta;
+
+	//if (AnimClassInterface) {
+	//	AnimClassInterface->
+	//}
+	//BaseSkeletalMeshComponent->AnimScriptInstance->target
+	//BaseSkeletalMeshComponent->AnimScriptInstance->CurrentSkeleton = 
+	//BaseSkeletalMeshComponent->SkeletalMesh->Skeleton;
 }

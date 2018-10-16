@@ -80,4 +80,12 @@ public:
 	static bool LoadVRMFile(class UVrmAssetListObject *VrmAsset, FString filepath);
 
 	static void SetImportMode(bool bImportMode, class UPackage *package);
+
+	//static void SetCopySkeletalMeshAnimation(bool bImportMode, class UPackage *package);
+
+
+	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "output"))
+	static bool VRMReTransformHumanoidBone(class USkeletalMeshComponent *targetHumanoidSkeleton, const class UVrmMetaObject *meta, const class USkeletalMeshComponent *displaySkeleton);
+
+	///static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeleton *displaySkeleton) {
 };

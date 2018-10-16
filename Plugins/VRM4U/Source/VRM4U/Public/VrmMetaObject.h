@@ -58,5 +58,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	TArray<FVrmBlendShapeGroup> BlendShapeGroup;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	class USkeletalMesh *SkeletalMesh;
+
 	
 };

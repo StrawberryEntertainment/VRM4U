@@ -674,6 +674,62 @@ static bool readMorph(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 	return true;
 }
 
+static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeleton *displaySkeleton) {
+
+	FReferenceSkeleton &ReferenceSkeleton = const_cast<FReferenceSkeleton&>(targetHumanoidSkeleton->GetReferenceSkeleton());
+	auto &allbone = const_cast<TArray<FMeshBoneInfo> &>(targetHumanoidSkeleton->GetReferenceSkeleton().GetRawRefBoneInfo());
+
+	//auto &humanoidTrans = humanoidSkeleton->GetReferenceSkeleton().GetRawRefBonePose();
+
+	FReferenceSkeletonModifier RefSkelModifier(ReferenceSkeleton, targetHumanoidSkeleton);
+
+	for (int ind_target = 0; ind_target < targetHumanoidSkeleton->GetBoneTree().Num(); ++ind_target) {
+		FTransform t;
+		t.SetIdentity();
+		RefSkelModifier.UpdateRefPoseTransform(ind_target, t);
+
+		auto &info = targetHumanoidSkeleton->GetReferenceSkeleton().GetRefBoneInfo();
+		auto &a = info[ind_target];
+
+		auto p = meta->humanoidBoneTable.Find(a.Name.ToString());
+		if (p == nullptr) {
+			continue;
+		}
+		auto ind_disp = displaySkeleton->GetReferenceSkeleton().FindBoneIndex(**p);
+		if (ind_disp == INDEX_NONE) {
+			continue;
+		}
+		RefSkelModifier.UpdateRefPoseTransform(ind_target, displaySkeleton->GetReferenceSkeleton().GetRefBonePose()[ind_disp]);
+	}
+
+	const_cast<FReferenceSkeleton&>(targetHumanoidSkeleton->GetReferenceSkeleton()).RebuildRefSkeleton(targetHumanoidSkeleton, true);
+
+}
+
+static void renameToHumanoidBone(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
+
+	//k->RemoveBonesFromSkeleton()
+	auto &allbone = const_cast<TArray<FMeshBoneInfo> &>(targetSkeleton->GetReferenceSkeleton().GetRawRefBoneInfo());
+
+	for (auto &a : allbone) {
+		auto p = meta->humanoidBoneTable.FindKey(a.Name.ToString());
+		if (p == nullptr) {
+			continue;
+		}
+		for (auto &b : allbone) {
+			if (a == b) continue;
+			if (b.Name == **p) {
+				b.Name = *(b.Name.ToString() + TEXT("_renamed_vrm4u"));
+			}
+		}
+		a.Name = **p;
+	}
+
+	const_cast<FReferenceSkeleton&>(targetSkeleton->GetReferenceSkeleton()).RebuildRefSkeleton(targetSkeleton, true);
+	//targetSkeleton->HandleSkeletonHierarchyChange();
+}
+
+
 
 static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 	if (vrmAssetList == nullptr) {
@@ -751,7 +807,6 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 
 		vrmAssetList->SkeletalMesh = sk;
-
 
 		{
 			FSkeletalMeshLODInfo &info = sk->AddLODInfo();
@@ -1246,13 +1301,18 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 	//NewAsset->FindSocket
 
 	{
-		//USkeletalMesh *sk = NewObject<USkeletalMesh>(package, *(baseFileName + TEXT("_skeletalmesh")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-		UVrmSkeleton *base = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_ref_skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		//UVrmSkeleton *base = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_ref_skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		USkeleton *base = DuplicateObject<USkeleton>(k, package, *(baseFileName + TEXT("_ref_skeleton")));
 
-		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(vrmAssetList->BaseSkeletalMesh, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
+		//USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(vrmAssetList->BaseSkeletalMesh, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
+		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
 
-		base->MergeAllBonesToBoneTree(ss);
-		base->applyBoneFrom(k, vrmAssetList->VrmMetaObject);
+		renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);
+
+
+
+		//base->MergeAllBonesToBoneTree(ss);
+		//base->applyBoneFrom(k, vrmAssetList->VrmMetaObject);
 
 		ss->Skeleton = base;
 		ss->RefSkeleton = base->GetReferenceSkeleton();
@@ -1279,6 +1339,34 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 }// sk, k
 
 
+
+bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeletalMeshComponent *displaySkeleton) {
+
+	ReTransformHumanoidBone(targetHumanoidSkeleton->SkeletalMesh->Skeleton, meta, displaySkeleton->SkeletalMesh->Skeleton);
+	auto &sk = targetHumanoidSkeleton->SkeletalMesh;
+	auto &k = sk->Skeleton;
+
+	sk->RefSkeleton = k->GetReferenceSkeleton();
+	//sk->RefSkeleton.RebuildNameToIndexMap();
+
+	//sk->RefSkeleton.RebuildRefSkeleton(sk->Skeleton, true);
+	//sk->Proc();
+
+	//src->RefSkeleton = sk->RefSkeleton;
+	
+	sk->Skeleton = k;
+	sk->RefSkeleton = k->GetReferenceSkeleton();
+
+	sk->CalculateInvRefMatrices();
+	sk->CalculateExtendedBounds();
+	sk->ConvertLegacyLODScreenSize();
+	sk->UpdateGenerateUpToData();
+
+	k->SetPreviewMesh(sk);
+	k->RecreateBoneTree(sk);
+
+	return true;
+}
 
 
 
@@ -1347,6 +1435,8 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	readTex(src, mScenePtr);
 	readModel(src, mScenePtr);
 	readMorph(src, mScenePtr);
+
+	src->VrmMetaObject->SkeletalMesh = src->SkeletalMesh;
 
 	if (src->bAssetSave) {
 		for (auto &t : src->Textures) {
