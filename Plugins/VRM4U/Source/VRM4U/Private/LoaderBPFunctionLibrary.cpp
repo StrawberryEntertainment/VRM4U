@@ -688,10 +688,11 @@ static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVr
 		t.SetIdentity();
 		RefSkelModifier.UpdateRefPoseTransform(ind_target, t);
 
-		auto &info = targetHumanoidSkeleton->GetReferenceSkeleton().GetRefBoneInfo();
-		auto &a = info[ind_target];
+		auto boneName = ReferenceSkeleton.GetBoneName(ind_target);
+		//auto &info = targetHumanoidSkeleton->GetReferenceSkeleton().GetRefBoneInfo();
+		//auto &a = info[ind_target];
 
-		auto p = meta->humanoidBoneTable.Find(a.Name.ToString());
+		auto p = meta->humanoidBoneTable.Find(boneName.ToString());
 		if (p == nullptr) {
 			continue;
 		}
@@ -699,10 +700,26 @@ static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVr
 		if (ind_disp == INDEX_NONE) {
 			continue;
 		}
-		RefSkelModifier.UpdateRefPoseTransform(ind_target, displaySkeleton->GetReferenceSkeleton().GetRefBonePose()[ind_disp]);
+		t = displaySkeleton->GetReferenceSkeleton().GetRefBonePose()[ind_disp];
+
+		auto parent = displaySkeleton->GetReferenceSkeleton().GetParentIndex(ind_disp);
+		while (parent != INDEX_NONE) {
+
+			auto s = displaySkeleton->GetReferenceSkeleton().GetBoneName(parent);
+
+			if (meta->humanoidBoneTable.FindKey(s.ToString()) != nullptr) {
+				// parent == humanoidBone
+				break;
+			}
+			//t.SetLocation(t.GetLocation() + displaySkeleton->GetReferenceSkeleton().GetRefBonePose()[parent].GetLocation());;
+			parent = displaySkeleton->GetReferenceSkeleton().GetParentIndex(parent);
+		}
+
+
+		RefSkelModifier.UpdateRefPoseTransform(ind_target, t);
 	}
 
-	const_cast<FReferenceSkeleton&>(targetHumanoidSkeleton->GetReferenceSkeleton()).RebuildRefSkeleton(targetHumanoidSkeleton, true);
+	ReferenceSkeleton.RebuildRefSkeleton(targetHumanoidSkeleton, true);
 
 }
 
