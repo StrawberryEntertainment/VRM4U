@@ -154,9 +154,9 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 	ct->DefaultInstance.ConstraintBone2 = con2;
 
 
-	ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 5);
-	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 5);
-	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 5);
+	ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 10);
+	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 10);
+	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 10);
 
 	ct->DefaultInstance.ProfileInstance.ConeLimit.Stiffness = 100.f;
 	ct->DefaultInstance.ProfileInstance.TwistLimit.Stiffness = 100.f;
@@ -964,7 +964,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 					}
 
 					auto &aiM = mScenePtr->mMeshes[meshID];
-					TMap<int, int> bonemap;
+					TArray<int> bonemap;
 					if (1) {
 						//mScenePtr->mRootNode->mMeshes
 						for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
@@ -986,7 +986,16 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 									if (s.InfluenceWeights[jj] > 0.f) {
 										continue;
 									}
-									s.InfluenceBones[jj] = b;
+
+									uint8 tabledIndex = 0;
+									auto f = bonemap.Find(b);
+									if (f != INDEX_NONE) {
+										tabledIndex = f;
+									}else {
+										tabledIndex = bonemap.Add(b);
+									}
+
+									s.InfluenceBones[jj] = tabledIndex;
 									s.InfluenceWeights[jj] = (uint8)(aiW.mWeight * 255.f);
 
 									meshWeight[aiW.mVertexId].InfluenceBones[jj] = s.InfluenceBones[jj];
@@ -1067,10 +1076,14 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 						s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
 						s.BaseVertexIndex = currentVertex;
 						s.SoftVertices = meshWeight;
-						s.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
+						s.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
 						for (int i = 0; i < s.BoneMap.Num(); ++i) {
-							s.BoneMap[i] = i;
+							s.BoneMap[i] = bonemap[i];
 						}
+						//s.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
+						//for (int i = 0; i < s.BoneMap.Num(); ++i) {
+						//	s.BoneMap[i] = i;
+						//}
 						s.NumVertices = meshWeight.Num();
 						s.MaxBoneInfluences = 4;
 
@@ -1211,9 +1224,9 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 			VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 			
 			for (int i = 0; i < meta->sprintNum; ++i) {
-				auto &s = meta->springs[i];
-				for (int j = 0; j < s.boneNum; ++j) {
-					auto &sbone = s.bones_name[j];
+				auto &spring = meta->springs[i];
+				for (int j = 0; j < spring.boneNum; ++j) {
+					auto &sbone = spring.bones_name[j];
 					USkeletalBodySetup *bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
 					
 					//int nodeID = mScenePtr->mRootNode->FindNode(sbone.c_str());
@@ -1223,7 +1236,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 					FKAggregateGeom agg;
 					FKSphereElem SphereElem;
 					SphereElem.Center = FVector(0);
-					SphereElem.Radius = s.hitRadius * 100.f;
+					SphereElem.Radius = spring.hitRadius * 100.f;
 					agg.SphereElems.Add(SphereElem);
 
 
@@ -1233,6 +1246,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 					bs->CollisionTraceFlag = CTF_UseSimpleAsComplex;
 					// newly created bodies default to simulating
 					bs->PhysicsType = PhysType_Kinematic;	// fix
+					//bs->get
 
 					bs->InvalidatePhysicsData();
 					bs->CreatePhysicsMeshes();
@@ -1255,6 +1269,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 							bs2->BoneName = k->GetReferenceSkeleton().GetBoneName(c);
 							bs2->PhysicsType = PhysType_Simulated;
 							//bs2->profile
+							bs2->DefaultInstance.InertiaTensorScale.Set(2, 2, 2);
 
 							pa->SkeletalBodySetups.Add(bs2);
 

@@ -267,6 +267,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 				//continue;
 			}
 			if (totalBoneCount > 0 && info.ParentIndex == INDEX_NONE) {
+				// bad bone. root?
 				continue;
 			}
 			RefSkelModifier.Add(info, pose);
