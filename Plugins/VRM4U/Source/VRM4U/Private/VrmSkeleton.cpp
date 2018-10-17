@@ -4,6 +4,7 @@
 #include "VrmAssetListObject.h"
 #include "VrmMetaObject.h"
 #include "Engine/SkeletalMesh.h"
+//#include "UnStringConv.h
 
 #include <assimp/scene.h>       // Output data structure
 #include <assimp/mesh.h>       // Output data structure
@@ -160,26 +161,69 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 		{
 
 			TArray<FString> rec;
-			for (auto &a : bone) {
-				FString str = a->mName.C_Str();
-				if (rec.Find(str) >= 0) {
+			for (int targetBondeID = 0; targetBondeID < bone.Num(); ++targetBondeID) {
+				auto &a = bone[targetBondeID];
+
+				FString str = (a->mName.C_Str());
+				if (rec.Find(str.ToLower()) >= 0) {
+					// same name check
 					aiString origName = a->mName;
-					str += TEXT("_renamed_vrm4u");
+					str += TEXT("_renamed_vrm4u_") + FString::Printf(TEXT("%02d"), targetBondeID);
 					a->mName.Set(TCHAR_TO_ANSI(*str));
 
 					//add
 					for (uint32_t meshID = 0; meshID < s->mNumMeshes; ++meshID) {
 						auto &aiM = *(s->mMeshes[meshID]);
 						
-						for (uint32_t boneID = 0; boneID < aiM.mNumBones; ++boneID) {
-							auto &aiB = *(aiM.mBones[boneID]);
+						for (uint32_t allBoneID = 0; allBoneID < aiM.mNumBones; ++allBoneID) {
+							auto &aiB = *(aiM.mBones[allBoneID]);
 							if (strcmp(aiB.mName.C_Str(), origName.C_Str()) == 0) {
-								aiB.mName = a->mName;
+
+								char tmp[512];
+								//if (bone.Num() == aiM.mNumBones) {
+								//	snprintf(tmp, 512, "%s_renamed_vrm4u_%02d", origName.C_Str(), allBoneID);
+								//} else {
+									snprintf(tmp, 512, "%s", a->mName.C_Str());
+								//}
+								//FString tmp = origName.C_Str();
+								//tmp += TEXT("_renamed_vrm4u") + FString::Printf(TEXT("%02d"), allBoneID);
+
+								aiB.mName = tmp;
 							}
 						}
 					}
 				}
-				rec.Add(str);
+				if (0) {
+					// ascii code
+					aiString origName = a->mName;
+					str = TEXT("_renamed_vrm4u_") + FString::Printf(TEXT("%02d"), targetBondeID);
+					a->mName.Set(TCHAR_TO_ANSI(*str));
+
+					//add
+					for (uint32_t meshID = 0; meshID < s->mNumMeshes; ++meshID) {
+						auto &aiM = *(s->mMeshes[meshID]);
+
+						for (uint32_t allBoneID = 0; allBoneID < aiM.mNumBones; ++allBoneID) {
+							auto &aiB = *(aiM.mBones[allBoneID]);
+							if (strcmp(aiB.mName.C_Str(), origName.C_Str()) == 0) {
+
+								char tmp[512];
+								if (bone.Num() == aiM.mNumBones) {
+									snprintf(tmp, 512, "_renamed_vrm4u_%02d", allBoneID);
+								}else {
+									snprintf(tmp, 512, "_renamed_vrm4u_%02d", allBoneID + bone.Num()*targetBondeID);
+								}
+								//FString tmp = origName.C_Str();
+								//tmp += TEXT("_renamed_vrm4u") + FString::Printf(TEXT("%02d"), allBoneID);
+
+								aiB.mName = tmp;
+							}
+						}
+					}
+
+				}
+
+				rec.Add(str.ToLower());
 			}
 		}
 

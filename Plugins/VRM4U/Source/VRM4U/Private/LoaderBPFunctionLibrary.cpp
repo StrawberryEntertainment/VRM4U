@@ -147,7 +147,6 @@ void FindMesh(const aiScene* scene, aiNode* node, FReturnedData& retdata)
 
 static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, FName con2){
 	UPhysicsConstraintTemplate *ct = NewObject<UPhysicsConstraintTemplate>(pa, NAME_None, RF_Transactional);
-	pa->ConstraintSetup.Add(ct);
 	//"skirt_01_01"
 	ct->Modify(false);
 	ct->DefaultInstance.JointName = TCHAR_TO_ANSI(*(con1.ToString() + TEXT("_") + con2.ToString()));
@@ -164,6 +163,10 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 
 	const int32 BoneIndex1 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone1);
 	const int32 BoneIndex2 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone2);
+
+	if (BoneIndex1 == INDEX_NONE || BoneIndex2 == INDEX_NONE) {
+		return;
+	}
 
 	check(BoneIndex1 != INDEX_NONE);
 	check(BoneIndex2 != INDEX_NONE);
@@ -213,6 +216,7 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 	//ct->DefaultInstance.InitConstraint();
 
 
+	pa->ConstraintSetup.Add(ct);
 	pa->DisableCollision(BoneIndex1, BoneIndex2);
 
 }
@@ -960,6 +964,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 					}
 
 					auto &aiM = mScenePtr->mMeshes[meshID];
+					TMap<int, int> bonemap;
 					if (1) {
 						//mScenePtr->mRootNode->mMeshes
 						for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
@@ -980,12 +985,6 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 									auto &s = Weight[aiW.mVertexId + currentVertex];
 									if (s.InfluenceWeights[jj] > 0.f) {
 										continue;
-									}
-									if (jj >= 4) {
-										UE_LOG(LogTemp, Warning, TEXT("test >=4.\n"));
-									}
-									if (b == 3 || b == 4 || b == 5 || b==11) {
-										UE_LOG(LogTemp, Warning, TEXT("test4.\n"));
 									}
 									s.InfluenceBones[jj] = b;
 									s.InfluenceWeights[jj] = (uint8)(aiW.mWeight * 255.f);
