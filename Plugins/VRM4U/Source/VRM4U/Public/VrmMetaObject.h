@@ -14,6 +14,9 @@ struct VRM4U_API FVrmBlendShape{
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	FString morphTargetName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	FString nodeName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)

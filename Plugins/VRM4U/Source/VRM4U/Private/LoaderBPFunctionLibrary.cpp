@@ -289,6 +289,7 @@ static bool readBoneTable(UVrmAssetListObject *vrmAssetList, const aiScene *mSce
 		m->BlendShapeGroup[i].BlendShape.SetNum(aiGroup.bindNum);
 		for (int b = 0; b < aiGroup.bindNum; ++b) {
 			auto &bind = m->BlendShapeGroup[i].BlendShape[b];
+			bind.morphTargetName = aiGroup.bind[b].blendShapeName.C_Str();
 			bind.meshName = aiGroup.bind[b].meshName.C_Str();
 			bind.nodeName= aiGroup.bind[b].nodeName.C_Str();
 			bind.weight = aiGroup.bind[b].weight;
@@ -617,7 +618,8 @@ static bool readMorph(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 				continue;
 			}
 
-			FString sss = FString::Printf(TEXT("%02d_%02d_"), m, a) + FString(aiA.mName.C_Str());
+			//FString sss = FString::Printf(TEXT("%02d_%02d_"), m, a) + FString(aiA.mName.C_Str());
+			FString sss = aiA.mName.C_Str();// FString::Printf(TEXT("%02d_%02d_"), m, a) + FString();
 			UMorphTarget *mt = NewObject<UMorphTarget>(sk, *sss);
 			
 			/*
@@ -1331,12 +1333,12 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 	//NewAsset->FindSocket
 
-	{
+	if (0){
 		//UVrmSkeleton *base = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_ref_skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-		USkeleton *base = DuplicateObject<USkeleton>(k, package, *(baseFileName + TEXT("_ref_skeleton")));
+		USkeleton *base = DuplicateObject<USkeleton>(k, package, *(baseFileName + TEXT("_skeleton_reference")));
 
 		//USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(vrmAssetList->BaseSkeletalMesh, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
-		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
+		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, package, *(baseFileName + TEXT("_ref_skeletalmesh_reference")));
 
 		renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);
 

@@ -147,6 +147,9 @@ void UVrmAnimInstance::SetMorphTargetVRM(EVrmMorphGroupType type, float Value) {
 		for (auto &b : a.BlendShape) {
 			//b.meshName
 
+			SetMorphTarget(*(b.morphTargetName), Value);
+
+			/*
 			for (auto &m : skc->SkeletalMesh->MorphTargets) {
 				auto s = m->GetName();
 				//if (s.Find(b.meshName) < 0) {
@@ -162,6 +165,7 @@ void UVrmAnimInstance::SetMorphTargetVRM(EVrmMorphGroupType type, float Value) {
 				}
 				SetMorphTarget(*s, Value);
 			}
+			*/
 		}
 	}
 

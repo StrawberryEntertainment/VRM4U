@@ -17,6 +17,7 @@ extern "C" {
         typedef float(vec3)[3];
 
         struct ASSIMP_API VRMBlendShapeBind {
+            aiString blendShapeName;
             aiString nodeName;
             aiString meshName;
             int meshID=0;
