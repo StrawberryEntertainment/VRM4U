@@ -63,4 +63,7 @@ public:
 	FString BaseFileName;
 
 	FReturnedData *Result;
+
+	UPROPERTY()
+	USkeletalMesh* HumanoidSkeletalMesh;
 };

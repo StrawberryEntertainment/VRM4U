@@ -20,6 +20,9 @@ namespace VRM {
 	bool ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
 	bool ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+
+	bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+	bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 }
 
 
