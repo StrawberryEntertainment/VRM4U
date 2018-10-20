@@ -27,7 +27,7 @@ static void aaaa(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
 USkeletalMesh* UVrmSkeleton::GetPreviewMesh(bool bFindIfNotSet)
 {
 	//return Super::GetPreviewMesh(bFindIfNotSet);
-#if 1 //WITH_EDITORONLY_DATA
+#if WITH_EDITORONLY_DATA
 	USkeletalMesh* PreviewMesh = PreviewSkeletalMesh.LoadSynchronous();
 
 	if(PreviewMesh && PreviewMesh->Skeleton != this) // fix mismatched skeleton
@@ -59,7 +59,7 @@ USkeletalMesh* UVrmSkeleton::GetPreviewMesh(bool bFindIfNotSet)
 USkeletalMesh* UVrmSkeleton::GetPreviewMesh() const
 {
 	//return Super::GetPreviewMesh();
-#if 1 //WITH_EDITORONLY_DATA
+#if WITH_EDITORONLY_DATA
 	return PreviewSkeletalMesh.Get();
 #else
 	return nullptr;
@@ -69,7 +69,7 @@ USkeletalMesh* UVrmSkeleton::GetPreviewMesh() const
 void UVrmSkeleton::SetPreviewMesh(USkeletalMesh* PreviewMesh, bool bMarkAsDirty)
 {
 	//Super::SetPreviewMesh(PreviewMesh, bMarkAsDirty);
-#if 1 //WITH_EDITORONLY_DATA
+#if WITH_EDITORONLY_DATA
 	if (bMarkAsDirty)
 	{
 		Modify();
@@ -134,7 +134,9 @@ void UVrmSkeleton::applyBoneFrom(const USkeleton *src, const UVrmMetaObject *met
 	}
 
 	ReferenceSkeleton.RebuildRefSkeleton(this, true);
+#if WITH_EDITOR
 	HandleSkeletonHierarchyChange();
+#endif
 }
 
 void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
@@ -198,14 +200,14 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 						char tmp[512];
 						snprintf(tmp, 512, "%s_DUP", n[0]->mName.C_Str());
 						if (t[0] < t[1]) {
-							//n[0]->mName = tmp;
+							n[0]->mName = tmp;
 						}else {
-							//n[1]->mName = tmp;
+							n[1]->mName = tmp;
 						}
 
 						//countParent(
 
-						//continue;
+						continue;
 					}
 
 					TMap<FString, FString> renameTable;
@@ -287,7 +289,9 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 		for (auto &a: bone) {
 			FMeshBoneInfo info;
 			info.Name = a->mName.C_Str();
+#if WITH_EDITORONLY_DATA
 			info.ExportName = a->mName.C_Str();
+#endif
 
 			FTransform pose;
 			int32 index = 0;
@@ -332,7 +336,10 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 
 
 
+#if WITH_EDITOR
 	HandleSkeletonHierarchyChange();
+#endif
+
 //	bShouldHandleHierarchyChange = true;
 	//ReferenceSkeleton.
 }

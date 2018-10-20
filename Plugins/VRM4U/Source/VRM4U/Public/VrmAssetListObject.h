@@ -11,6 +11,7 @@ class UTexture2D;
 class USkeletalMesh;
 class USkeleton;
 class UVrmMetaObject;
+struct FReturnedData;
 
 /**
  * 
@@ -18,7 +19,7 @@ class UVrmMetaObject;
 UCLASS(Blueprintable, BlueprintType)
 class VRM4U_API UVrmAssetListObject : public UObject
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 
 public:
 
@@ -55,4 +56,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	TArray<UMaterialInterface*> Materials;
 
+	UPROPERTY()
+	UPackage *Package;
+
+	UPROPERTY()
+	FString BaseFileName;
+
+	FReturnedData *Result;
 };
