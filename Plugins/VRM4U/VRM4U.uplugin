@@ -16,7 +16,7 @@
   "Modules": [
     {
       "Name": "VRM4U",
-      "Type": "Developer",
+      "Type": "Runtime",
       "LoadingPhase": "Default"
     },
     {
