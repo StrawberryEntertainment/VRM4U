@@ -797,8 +797,8 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 		//return result;
 	}
 
-	USkeletalMesh *sk = NewObject<USkeletalMesh>(package, *(baseFileName + TEXT("_skeletalmesh")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-	UVrmSkeleton *k = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	USkeletalMesh *sk = NewObject<USkeletalMesh>(package, *(FString(TEXT("SK_")) + baseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	UVrmSkeleton *k = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_Skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
 	static int boneOffset = 0;
 	{
@@ -1218,7 +1218,7 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 	UPhysicsAsset *pa = nullptr;
 	{
 		//aa
-		pa = NewObject<UPhysicsAsset>(package, *(baseFileName + TEXT("_physicsasset")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		pa = NewObject<UPhysicsAsset>(package, *(baseFileName + TEXT("_Physics")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 		pa->Modify();
 		pa->SetPreviewMesh(sk);
 		sk->PhysicsAsset = pa;
@@ -1333,19 +1333,19 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 	//NewAsset->FindSocket
 
-	if (0){
-		//UVrmSkeleton *base = NewObject<UVrmSkeleton>(package, *(baseFileName + TEXT("_ref_skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-		USkeleton *base = DuplicateObject<USkeleton>(k, package, *(baseFileName + TEXT("_skeleton_reference")));
+	return nullptr;
+}// sk, k
 
-		//USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(vrmAssetList->BaseSkeletalMesh, package, *(baseFileName + TEXT("_ref_skeletalmesh")));
-		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, package, *(baseFileName + TEXT("_ref_skeletalmesh_reference")));
+
+static bool createHumanoidSkeletalMesh(UVrmAssetListObject *vrmAssetList) {
+	if (1){
+		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
+		USkeleton *k = sk->Skeleton;
+
+		USkeleton *base = DuplicateObject<USkeleton>(k, package, *(baseFileName + TEXT("_humanoid_Skeleton")));
+		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, package, *(FString(TEXT("SK_")) + baseFileName + TEXT("_humanoid")));
 
 		renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);
-
-
-
-		//base->MergeAllBonesToBoneTree(ss);
-		//base->applyBoneFrom(k, vrmAssetList->VrmMetaObject);
 
 		ss->Skeleton = base;
 		ss->RefSkeleton = base->GetReferenceSkeleton();
@@ -1368,12 +1368,20 @@ static bool readModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePt
 
 		//saveObject(anim);
 	}
-	return nullptr;
-}// sk, k
 
+	return true;
+}
 
 
 bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeletalMeshComponent *displaySkeleton) {
+
+	if (targetHumanoidSkeleton == nullptr) return false;
+	if (targetHumanoidSkeleton->SkeletalMesh == nullptr) return false;
+
+	if (displaySkeleton == nullptr) return false;
+	if (displaySkeleton->SkeletalMesh == nullptr) return false;
+
+	if (meta == nullptr) return false;
 
 	ReTransformHumanoidBone(targetHumanoidSkeleton->SkeletalMesh->Skeleton, meta, displaySkeleton->SkeletalMesh->Skeleton);
 	auto &sk = targetHumanoidSkeleton->SkeletalMesh;
@@ -1468,6 +1476,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	readTex(src, mScenePtr);
 	readModel(src, mScenePtr);
 	readMorph(src, mScenePtr);
+	createHumanoidSkeletalMesh(src);
 
 	src->VrmMetaObject->SkeletalMesh = src->SkeletalMesh;
 
