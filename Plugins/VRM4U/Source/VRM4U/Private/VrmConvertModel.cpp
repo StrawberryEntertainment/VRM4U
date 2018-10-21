@@ -27,6 +27,64 @@
 
 //#include "Engine/.h"
 
+#if WITH_EDITOR
+typedef FSoftSkinVertex FSoftSkinVertexLocal;
+
+#else
+namespace {
+	struct FSoftSkinVertexLocal
+	{
+		FVector			Position;
+
+		// Tangent, U-direction
+		FVector			TangentX;
+		// Binormal, V-direction
+		FVector			TangentY;
+		// Normal
+		FVector4		TangentZ;
+
+		// UVs
+		FVector2D		UVs[MAX_TEXCOORDS];
+		// VertexColor
+		FColor			Color;
+		uint8			InfluenceBones[MAX_TOTAL_INFLUENCES];
+		uint8			InfluenceWeights[MAX_TOTAL_INFLUENCES];
+
+		/** If this vert is rigidly weighted to a bone, return true and the bone index. Otherwise return false. */
+		//ENGINE_API bool GetRigidWeightBone(uint8& OutBoneIndex) const;
+
+		/** Returns the maximum weight of any bone that influences this vertex. */
+		//ENGINE_API uint8 GetMaximumWeight() const;
+
+		/**
+		* Serializer
+		*
+		* @param Ar - archive to serialize with
+		* @param V - vertex to serialize
+		* @return archive that was used
+		*/
+		//friend FArchive& operator<<(FArchive& Ar, FSoftSkinVertex& V);
+	};
+}
+#endif
+
+static int GetChildBoneLocal(const USkeleton *skeleton, const int32 ParentBoneIndex, TArray<int32> & Children) {
+	Children.Reset();
+	auto &r = skeleton->GetReferenceSkeleton();
+
+	const int32 NumBones = r.GetRawBoneNum();
+	for (int32 ChildIndex = ParentBoneIndex + 1; ChildIndex < NumBones; ChildIndex++)
+	{
+		if (ParentBoneIndex == r.GetParentIndex(ChildIndex))
+		{
+			Children.Add(ChildIndex);
+		}
+	}
+	return Children.Num();
+}
+
+
+
 static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& result)
 {
 
@@ -214,42 +272,38 @@ namespace VRM {
 
 		FReturnedData &result = *(vrmAssetList->Result);
 
+		result.bSuccess = false;
+		result.meshInfo.Empty();
+		result.NumMeshes = 0;
+
+		if (mScenePtr == nullptr)
 		{
-			result.bSuccess = false;
-			result.meshInfo.Empty();
-			result.NumMeshes = 0;
+			UE_LOG(LogTemp, Warning, TEXT("test null.\n"));
+		}
 
-			if (mScenePtr == nullptr)
+		if (mScenePtr->HasMeshes())
+		{
+			result.meshInfo.SetNum(mScenePtr->mNumMeshes, false);
+
+			FindMesh(mScenePtr, mScenePtr->mRootNode, result);
+
+			int verCount = 0;
+			for (uint32 i = 0; i < mScenePtr->mNumMeshes; ++i)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("test null.\n"));
-			}
-
-			if (mScenePtr->HasMeshes())
-			{
-				result.meshInfo.SetNum(mScenePtr->mNumMeshes, false);
-
-				FindMesh(mScenePtr, mScenePtr->mRootNode, result);
-
-				int verCount = 0;
-				for (uint32 i = 0; i < mScenePtr->mNumMeshes; ++i)
+				//Triangle number
+				for (uint32 l = 0; l < mScenePtr->mMeshes[i]->mNumFaces; ++l)
 				{
-					//Triangle number
-					for (uint32 l = 0; l < mScenePtr->mMeshes[i]->mNumFaces; ++l)
+					for (uint32 m = 0; m < mScenePtr->mMeshes[i]->mFaces[l].mNumIndices; ++m)
 					{
-						for (uint32 m = 0; m < mScenePtr->mMeshes[i]->mFaces[l].mNumIndices; ++m)
-						{
-							if (m >= 3){
-								UE_LOG(LogTemp, Warning, TEXT("FindMeshInfo. %d\n"), m);
-							}
-							result.meshInfo[i].Triangles.Push(mScenePtr->mMeshes[i]->mFaces[l].mIndices[m]);
+						if (m >= 3){
+							UE_LOG(LogTemp, Warning, TEXT("FindMeshInfo. %d\n"), m);
 						}
+						result.meshInfo[i].Triangles.Push(mScenePtr->mMeshes[i]->mFaces[l].mIndices[m]);
 					}
-					verCount += mScenePtr->mMeshes[i]->mNumVertices;
 				}
-				result.bSuccess = true;
+				verCount += mScenePtr->mMeshes[i]->mNumVertices;
 			}
-
-			//return result;
+			result.bSuccess = true;
 		}
 
 		USkeletalMesh *sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
@@ -258,8 +312,6 @@ namespace VRM {
 		static int boneOffset = 0;
 		{
 			// name dup check
-			{
-			}
 			sk->Skeleton = k;
 			//k->MergeAllBonesToBoneTree(src);
 			k->readVrmBone(const_cast<aiScene*>(mScenePtr), boneOffset);
@@ -299,10 +351,9 @@ namespace VRM {
 				pRd->StaticVertexBuffers.ColorVertexBuffer.Init(10);
 				pRd->StaticVertexBuffers.StaticMeshVertexBuffer.Init(10, 10);
 
+#if WITH_EDITOR
 				TArray<FSoftSkinVertex> Weight;
 				Weight.SetNum(10);
-
-#if WITH_EDITOR
 				pRd->SkinWeightVertexBuffer.Init(Weight);
 #endif
 			}
@@ -320,306 +371,265 @@ namespace VRM {
 
 		//USkeleton* NewAsset = nullptr;// = src->Skeleton;// DuplicateObject<USkeleton>(src, src->GetOuter(), TEXT("/Game/FirstPerson/Character/Mesh/SK_Mannequin_Arms_Skeletonaaaaaaa"));
 		{
+			FSkeletalMeshLODRenderData &rd = sk->GetResourceForRendering()->LODRenderData[0];
+
+			for (int i = 0; i < sk->Skeleton->GetBoneTree().Num(); ++i) {
+				rd.RequiredBones.Add(i);
+				rd.ActiveBoneIndices.Add(i);
+			}
 			{
-				{
-					//TArray<UMorphTarget*> t;
-					//p->InitResources(true, t);
+				FStaticMeshVertexBuffers	 &v = rd.StaticVertexBuffers;
+
+				int allIndex = 0;
+				int allVertex = 0;
+				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
+					allIndex += result.meshInfo[meshID].Triangles.Num();
+					allVertex += result.meshInfo[meshID].Vertices.Num();
 				}
-				//p->LODRenderData.
-				//p->LODRenderData.Add(&(p->LODRenderData[0]));
-				//p->LODRenderData.Add(&d);
+				v.StaticMeshVertexBuffer.Init(allVertex, 1);
+				v.PositionVertexBuffer.Init(allVertex);
+				//rd.SkinWeightVertexBuffer.Init(allVertex);
 
-				//				FSkeletalMeshLODRenderData* LODData = new(LODRenderData) FSkeletalMeshLODRenderData();
+				TArray<uint32> Triangles;
+				TArray<FSoftSkinVertexLocal> Weight;
+				Weight.SetNum(allVertex);
+				int currentIndex = 0;
+				int currentVertex = 0;
 
+#if WITH_EDITORONLY_DATA
+				new(sk->GetImportedModel()->LODModels) FSkeletalMeshLODModel();
+				sk->GetImportedModel()->LODModels[0].Sections.SetNum(result.meshInfo.Num());
+#endif
 
-				//FSkeletalMeshLODInfo *i = src->GetLODInfo(0);
-				//i->lo
-				//pRd->BuildFromLODModel(sk->lod
-				//p->LODRenderData.Add(&rd);
-				FSkeletalMeshLODRenderData &rd = sk->GetResourceForRendering()->LODRenderData[0];
+				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
+					TArray<FSoftSkinVertexLocal> meshWeight;
+					auto &mInfo = result.meshInfo[meshID];
 
-				for (int i = 0; i < sk->Skeleton->GetBoneTree().Num(); ++i) {
-					rd.RequiredBones.Add(i);
-					rd.ActiveBoneIndices.Add(i);
-				}
-				{
-					//rd.RenderSections[0].NumTriangles = 0;
-					FStaticMeshVertexBuffers	 &v = rd.StaticVertexBuffers;
+					for (int i = 0; i < mInfo.Vertices.Num(); ++i) {
+						FSoftSkinVertexLocal *meshS = new(meshWeight) FSoftSkinVertexLocal();
+						auto a = result.meshInfo[meshID].Vertices[i] * 100.f;
 
-					//				TArray<FModelVertex> m;
+						v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
 
-					int allIndex = 0;
-					int allVertex = 0;
-					for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
-						allIndex += result.meshInfo[meshID].Triangles.Num();
-						allVertex += result.meshInfo[meshID].Vertices.Num();
-					}
-					v.StaticMeshVertexBuffer.Init(allVertex, 1);
-					v.PositionVertexBuffer.Init(allVertex);
-					//rd.SkinWeightVertexBuffer.Init(allVertex);
+						FVector2D uv;
+						uv = mInfo.UV0[i];
+						v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, 0, uv);
+						meshS->UVs[0] = uv;
 
-					TArray<uint32> Triangles;
-					TArray<FSoftSkinVertex> Weight;
-					Weight.SetNum(allVertex);
-					int currentIndex = 0;
-					int currentVertex = 0;
-
-					new(sk->GetImportedModel()->LODModels) FSkeletalMeshLODModel();
-					sk->GetImportedModel()->LODModels[0].Sections.SetNum(result.meshInfo.Num());
-
-					rd.RenderSections.SetNum(result.meshInfo.Num());
-					for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
-						TArray<FSoftSkinVertex> meshWeight;
-						auto &mInfo = result.meshInfo[meshID];
-
-						for (int i = 0; i < mInfo.Vertices.Num(); ++i) {
-							FSoftSkinVertex *meshS = new(meshWeight) FSoftSkinVertex();
-							auto a = result.meshInfo[meshID].Vertices[i] * 100.f;
-
-							v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
-
-							FVector2D uv;
-							uv = mInfo.UV0[i];
-							v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, 0, uv);
-							meshS->UVs[0] = uv;
-
-							{
-								v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
-								//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
-								auto &n = mInfo.Normals[i];
-								meshS->TangentX = mInfo.Tangents[i];
-								meshS->TangentY = n ^ mInfo.Tangents[i];
-								meshS->TangentZ = n;
-							}
-
-							if (i < mInfo.VertexColors.Num()){
-								auto &c = mInfo.VertexColors[i];
-								meshS->Color = FColor(c.R, c.G, c.B, c.A);
-							}
-
-							auto aiS = rd.SkinWeightVertexBuffer.GetSkinWeightPtr<false>(i);
-							//aiS->InfluenceWeights
-							// InfluenceBones
-
-							FSoftSkinVertex &s = Weight[currentVertex + i];
-							s.Position = v.PositionVertexBuffer.VertexPosition(currentVertex + i);
-							meshS->Position = v.PositionVertexBuffer.VertexPosition(currentVertex + i);
-
-							for (int32 InfluenceIndex = 0; InfluenceIndex < MAX_TOTAL_INFLUENCES; InfluenceIndex++)
-							{
-								//s.InfluenceBones[InfluenceIndex] = 0;
-								//s.InfluenceWeights[InfluenceIndex] = 0;
-							}
-							//s.InfluenceBones[0] = 0;// aiS->InfluenceBones[0];// +boneOffset;
-							//meshS->InfluenceBones[0] = 0;
-							//s.InfluenceWeights[0] = 255;
-							//meshS->InfluenceWeights[0] = 255;
-
-							//s.InfluenceWeights[0] = aiS->InfluenceWeights[0];
-							//s.InfluenceWeights[1] = aiS->InfluenceWeights[1];
-
-
-							//aiNode *bone = mScenePtr->mRootNode->FindNode( mScenePtr->mMeshes[meshID]->mBones[0]->mName );
+						{
+							v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
+							//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
+							auto &n = mInfo.Normals[i];
+							meshS->TangentX = mInfo.Tangents[i];
+							meshS->TangentY = n ^ mInfo.Tangents[i];
+							meshS->TangentZ = n;
 						}
 
-						auto &aiM = mScenePtr->mMeshes[meshID];
-						TArray<int> bonemap;
-						if (1) {
-							//mScenePtr->mRootNode->mMeshes
-							for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
-								auto &aiB = aiM->mBones[boneIndex];
+						if (i < mInfo.VertexColors.Num()){
+							auto &c = mInfo.VertexColors[i];
+							meshS->Color = FColor(c.R, c.G, c.B, c.A);
+						}
 
-								int b = sk->RefSkeleton.FindBoneIndex(aiB->mName.C_Str());
+						auto aiS = rd.SkinWeightVertexBuffer.GetSkinWeightPtr<false>(i);
+						//aiS->InfluenceWeights
+						// InfluenceBones
 
-								if (b < 0) {
+						FSoftSkinVertexLocal &s = Weight[currentVertex + i];
+						s.Position = v.PositionVertexBuffer.VertexPosition(currentVertex + i);
+						meshS->Position = v.PositionVertexBuffer.VertexPosition(currentVertex + i);
+
+						for (int32 InfluenceIndex = 0; InfluenceIndex < MAX_TOTAL_INFLUENCES; InfluenceIndex++)
+						{
+							//s.InfluenceBones[InfluenceIndex] = 0;
+							//s.InfluenceWeights[InfluenceIndex] = 0;
+						}
+						//s.InfluenceBones[0] = 0;// aiS->InfluenceBones[0];// +boneOffset;
+						//meshS->InfluenceBones[0] = 0;
+						//s.InfluenceWeights[0] = 255;
+						//meshS->InfluenceWeights[0] = 255;
+
+						//s.InfluenceWeights[0] = aiS->InfluenceWeights[0];
+						//s.InfluenceWeights[1] = aiS->InfluenceWeights[1];
+
+
+						//aiNode *bone = mScenePtr->mRootNode->FindNode( mScenePtr->mMeshes[meshID]->mBones[0]->mName );
+					} // vertex loop
+
+					auto &aiM = mScenePtr->mMeshes[meshID];
+					TArray<int> bonemap;
+					//mScenePtr->mRootNode->mMeshes
+					for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
+						auto &aiB = aiM->mBones[boneIndex];
+
+						int b = sk->RefSkeleton.FindBoneIndex(aiB->mName.C_Str());
+
+						if (b < 0) {
+							continue;
+						}
+						for (uint32 weightIndex = 0; weightIndex < aiB->mNumWeights; ++weightIndex) {
+							auto &aiW = aiB->mWeights[weightIndex];
+
+							if (aiW.mWeight == 0.f) {
+								continue;
+							}
+							for (int jj = 0; jj < 8; ++jj) {
+								auto &s = Weight[aiW.mVertexId + currentVertex];
+								if (s.InfluenceWeights[jj] > 0.f) {
 									continue;
 								}
-								for (uint32 weightIndex = 0; weightIndex < aiB->mNumWeights; ++weightIndex) {
-									auto &aiW = aiB->mWeights[weightIndex];
 
-									if (aiW.mWeight == 0.f) {
-										continue;
-									}
-									for (int jj = 0; jj < 8; ++jj) {
-										auto &s = Weight[aiW.mVertexId + currentVertex];
-										if (s.InfluenceWeights[jj] > 0.f) {
-											continue;
-										}
-
-										uint8 tabledIndex = 0;
-										auto f = bonemap.Find(b);
-										if (f != INDEX_NONE) {
-											tabledIndex = f;
-										}else {
-											tabledIndex = bonemap.Add(b);
-										}
-
-										s.InfluenceBones[jj] = tabledIndex;
-										s.InfluenceWeights[jj] = (uint8)(aiW.mWeight * 255.f);
-
-										meshWeight[aiW.mVertexId].InfluenceBones[jj] = s.InfluenceBones[jj];
-										meshWeight[aiW.mVertexId].InfluenceWeights[jj] = s.InfluenceWeights[jj];
-										break;
-									}
+								uint8 tabledIndex = 0;
+								auto f = bonemap.Find(b);
+								if (f != INDEX_NONE) {
+									tabledIndex = f;
+								}else {
+									tabledIndex = bonemap.Add(b);
 								}
+
+								s.InfluenceBones[jj] = tabledIndex;
+								s.InfluenceWeights[jj] = (uint8)(aiW.mWeight * 255.f);
+
+								meshWeight[aiW.mVertexId].InfluenceBones[jj] = s.InfluenceBones[jj];
+								meshWeight[aiW.mVertexId].InfluenceWeights[jj] = s.InfluenceWeights[jj];
+								break;
 							}
 						}
+					}
 
-						{
-							FSkelMeshRenderSection &NewRenderSection = rd.RenderSections[meshID];
-							//NewRenderSection = rd.RenderSections[0];
-							NewRenderSection.MaterialIndex = aiM->mMaterialIndex;// ModelSection.MaterialIndex;
-							NewRenderSection.BaseIndex = currentIndex;
-							NewRenderSection.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
-							//NewRenderSection.bRecomputeTangent = ModelSection.bRecomputeTangent;
-							NewRenderSection.bCastShadow = true;// ModelSection.bCastShadow;
-							NewRenderSection.BaseVertexIndex = 0;// currentVertex;// currentVertex;// ModelSection.BaseVertexIndex;
-																 //NewRenderSection.ClothMappingData = ModelSection.ClothMappingData;
-																 //NewRenderSection.BoneMap.SetNum(1);//ModelSection.BoneMap;
-																 //NewRenderSection.BoneMap[0] = 10;
-							NewRenderSection.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
-							for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
-								NewRenderSection.BoneMap[i] = i;
-							}
+					{
+						rd.RenderSections.SetNum(result.meshInfo.Num());
 
-
-							NewRenderSection.NumVertices = result.meshInfo[meshID].Vertices.Num();// result.meshInfo[meshID].Triangles.Num();// allVertex;// result.meshInfo[meshID].Vertices.Num();// ModelSection.NumVertices;
-
-							NewRenderSection.MaxBoneInfluences = 4;// ModelSection.MaxBoneInfluences;
-																   //NewRenderSection.CorrespondClothAssetIndex = ModelSection.CorrespondClothAssetIndex;
-																   //NewRenderSection.ClothingData = ModelSection.ClothingData;
-							TMap<int32, TArray<int32>> OverlappingVertices;
-							NewRenderSection.DuplicatedVerticesBuffer.Init(NewRenderSection.NumVertices, OverlappingVertices);
-							NewRenderSection.bDisabled = false;// ModelSection.bDisabled;
-															   //RenderSections.Add(NewRenderSection);
-
-															   //rd.RenderSections[0] = NewRenderSection;
-
+						FSkelMeshRenderSection &NewRenderSection = rd.RenderSections[meshID];
+						//NewRenderSection = rd.RenderSections[0];
+						NewRenderSection.MaterialIndex = aiM->mMaterialIndex;// ModelSection.MaterialIndex;
+						NewRenderSection.BaseIndex = currentIndex;
+						NewRenderSection.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
+						//NewRenderSection.bRecomputeTangent = ModelSection.bRecomputeTangent;
+						NewRenderSection.bCastShadow = true;// ModelSection.bCastShadow;
+						NewRenderSection.BaseVertexIndex = 0;// currentVertex;// currentVertex;// ModelSection.BaseVertexIndex;
+																//NewRenderSection.ClothMappingData = ModelSection.ClothMappingData;
+																//NewRenderSection.BoneMap.SetNum(1);//ModelSection.BoneMap;
+																//NewRenderSection.BoneMap[0] = 10;
+						NewRenderSection.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
+						for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
+							NewRenderSection.BoneMap[i] = i;
 						}
 
-						{
-							for (auto &w : meshWeight) {
-								int f = 0;
-								int maxIndex = 0;
-								int maxWeight = 0;
-								for (int i = 0; i < 8; ++i) {
-									f += w.InfluenceWeights[i];
 
-									if (maxWeight < w.InfluenceWeights[i]) {
-										maxWeight = w.InfluenceWeights[i];
-										maxIndex = i;
-									}
-								}
-								if (f > 255) {
-									UE_LOG(LogTemp, Warning, TEXT("overr"));
-									w.InfluenceWeights[0] -= (uint8)(f - 255);
-								}
-								if (f <= 250) {
-									//UE_LOG(LogTemp, Warning, TEXT("bad!"));
-								}
-								if (f <= 254) {
-									//UE_LOG(LogTemp, Warning, TEXT("under"));
-									w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
-								}
+						NewRenderSection.NumVertices = result.meshInfo[meshID].Vertices.Num();// result.meshInfo[meshID].Triangles.Num();// allVertex;// result.meshInfo[meshID].Vertices.Num();// ModelSection.NumVertices;
 
+						NewRenderSection.MaxBoneInfluences = 4;// ModelSection.MaxBoneInfluences;
+																//NewRenderSection.CorrespondClothAssetIndex = ModelSection.CorrespondClothAssetIndex;
+																//NewRenderSection.ClothingData = ModelSection.ClothingData;
+						TMap<int32, TArray<int32>> OverlappingVertices;
+						NewRenderSection.DuplicatedVerticesBuffer.Init(NewRenderSection.NumVertices, OverlappingVertices);
+						NewRenderSection.bDisabled = false;// ModelSection.bDisabled;
+															//RenderSections.Add(NewRenderSection);
+															//rd.RenderSections[0] = NewRenderSection;
+					}
+
+					for (auto &w : meshWeight) {
+						int f = 0;
+						int maxIndex = 0;
+						int maxWeight = 0;
+						for (int i = 0; i < 8; ++i) {
+							f += w.InfluenceWeights[i];
+
+							if (maxWeight < w.InfluenceWeights[i]) {
+								maxWeight = w.InfluenceWeights[i];
+								maxIndex = i;
 							}
 						}
+						if (f > 255) {
+							UE_LOG(LogTemp, Warning, TEXT("overr"));
+							w.InfluenceWeights[0] -= (uint8)(f - 255);
+						}
+						if (f <= 254) {
+							w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
+						}
 
-						{
+					}
+
 #if WITH_EDITORONLY_DATA
-							auto &s = sk->GetImportedModel()->LODModels[0].Sections[meshID];
+					{
+						auto &s = sk->GetImportedModel()->LODModels[0].Sections[meshID];
 
-							TMap<int32, TArray<int32>> OverlappingVertices;
+						TMap<int32, TArray<int32>> OverlappingVertices;
 
-							s.MaterialIndex = aiM->mMaterialIndex;
-							s.BaseIndex = currentIndex;
-							s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
-							s.BaseVertexIndex = currentVertex;
-							s.SoftVertices = meshWeight;
-							s.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
-							for (int i = 0; i < s.BoneMap.Num(); ++i) {
-								s.BoneMap[i] = bonemap[i];
-							}
-							//s.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
-							//for (int i = 0; i < s.BoneMap.Num(); ++i) {
-							//	s.BoneMap[i] = i;
-							//}
-							s.NumVertices = meshWeight.Num();
-							s.MaxBoneInfluences = 4;
+						s.MaterialIndex = aiM->mMaterialIndex;
+						s.BaseIndex = currentIndex;
+						s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
+						s.BaseVertexIndex = currentVertex;
+						s.SoftVertices = meshWeight;
+						s.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
+						for (int i = 0; i < s.BoneMap.Num(); ++i) {
+							s.BoneMap[i] = bonemap[i];
+						}
+						s.NumVertices = meshWeight.Num();
+						s.MaxBoneInfluences = 4;
+					}
 #endif
-						}
-						//last
 
-						//rd.MultiSizeIndexContainer.CopyIndexBuffer(result.meshInfo[0].Triangles);
-						int t1 = Triangles.Num();
-						Triangles.Append(result.meshInfo[meshID].Triangles);
-						int t2 = Triangles.Num();
+					//rd.MultiSizeIndexContainer.CopyIndexBuffer(result.meshInfo[0].Triangles);
+					int t1 = Triangles.Num();
+					Triangles.Append(result.meshInfo[meshID].Triangles);
+					int t2 = Triangles.Num();
 
-						for (int i = t1; i < t2; ++i) {
-							Triangles[i] += currentVertex;
-						}
-						currentIndex += result.meshInfo[meshID].Triangles.Num();
-						currentVertex += result.meshInfo[meshID].Vertices.Num();
-						//rd.MultiSizeIndexContainer.update
+					for (int i = t1; i < t2; ++i) {
+						Triangles[i] += currentVertex;
 					}
+					currentIndex += result.meshInfo[meshID].Triangles.Num();
+					currentVertex += result.meshInfo[meshID].Vertices.Num();
+					//rd.MultiSizeIndexContainer.update
+				} // mesh loop
 
 
-					//rd.MultiSizeIndexContainer.CreateIndexBuffer(sizeof(uint32));
-					//rd.MultiSizeIndexContainer.GetIndexBuffer()->ReleaseResource();
-					//rd.MultiSizeIndexContainer.RebuildIndexBuffer(sizeof(uint32), Triangles);
-					//rd.MultiSizeIndexContainer.CopyIndexBuffer(Triangles);
-					//rd.AdjacencyMultiSizeIndexContainer.CopyIndexBuffer(Triangles);
+				if (0){
+					for (auto &w : Weight) {
+						int f = 0;
+						int maxIndex = 0;
+						int maxWeight = 0;
+						for (int i = 0; i < 8; ++i) {
+							f += w.InfluenceWeights[i];
 
-					//rd.SkinWeightVertexBuffer.Init(Weight);
-
-
-					// wait check
-
-					if (0){
-						for (auto &w : Weight) {
-							int f = 0;
-							int maxIndex = 0;
-							int maxWeight = 0;
-							for (int i = 0; i < 8; ++i) {
-								f += w.InfluenceWeights[i];
-
-								if (maxWeight < w.InfluenceWeights[i]) {
-									maxWeight = w.InfluenceWeights[i];
-									maxIndex = i;
-								}
-								if (w.InfluenceBones[i] == 3) {
-									UE_LOG(LogTemp, Warning, TEXT("overr"));
-								}
+							if (maxWeight < w.InfluenceWeights[i]) {
+								maxWeight = w.InfluenceWeights[i];
+								maxIndex = i;
 							}
-							if (f > 255) {
+							if (w.InfluenceBones[i] == 3) {
 								UE_LOG(LogTemp, Warning, TEXT("overr"));
-								w.InfluenceWeights[0] -= (uint8)(f - 255);
 							}
-							if (f <= 250) {
-								UE_LOG(LogTemp, Warning, TEXT("bad!"));
-							}
-							if (f <= 254) {
-								UE_LOG(LogTemp, Warning, TEXT("under"));
-								w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
-							}
-
+						}
+						if (f > 255) {
+							UE_LOG(LogTemp, Warning, TEXT("overr"));
+							w.InfluenceWeights[0] -= (uint8)(f - 255);
+						}
+						if (f <= 250) {
+							UE_LOG(LogTemp, Warning, TEXT("bad!"));
+						}
+						if (f <= 254) {
+							UE_LOG(LogTemp, Warning, TEXT("under"));
+							w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 						}
 
-
 					}
+
+
+				}
 
 #if WITH_EDITOR
-					{
-						FSkeletalMeshLODModel *p = &(sk->GetImportedModel()->LODModels[0]);
-						p->NumVertices = allVertex;
-						p->NumTexCoords = 1;// allVertex;
-						p->IndexBuffer = Triangles;
-						p->ActiveBoneIndices = rd.ActiveBoneIndices;
-						p->RequiredBones = rd.RequiredBones;
-					}
+				{
+					FSkeletalMeshLODModel *p = &(sk->GetImportedModel()->LODModels[0]);
+					p->NumVertices = allVertex;
+					p->NumTexCoords = 1;// allVertex;
+					p->IndexBuffer = Triangles;
+					p->ActiveBoneIndices = rd.ActiveBoneIndices;
+					p->RequiredBones = rd.RequiredBones;
+				}
 #endif
-					//rd.StaticVertexBuffers.StaticMeshVertexBuffer.TexcoordDataPtr;
+				//rd.StaticVertexBuffers.StaticMeshVertexBuffer.TexcoordDataPtr;
 
+				if (1) {
 					ENQUEUE_RENDER_COMMAND(UpdateCommand)(
 						[sk, Triangles, Weight](FRHICommandListImmediate& RHICmdList)
 					{
@@ -707,7 +717,7 @@ namespace VRM {
 							//Material = (UMaterial*)StaticDuplicateObject(OriginalMaterial, GetTransientPackage(), NAME_None, ~RF_Standalone, UPreviewMaterial::StaticClass()); 
 							TArray<int32> child;
 							int32 ii = k->GetReferenceSkeleton().FindBoneIndex(sbone.C_Str());
-							k->GetChildBones(ii, child);
+							GetChildBoneLocal(k, ii, child);
 							for (auto &c : child) {
 								USkeletalBodySetup *bs2 = Cast<USkeletalBodySetup>(StaticDuplicateObject(bs,pa, NAME_None));
 

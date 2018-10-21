@@ -213,9 +213,10 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	VRM::ConvertTextureAndMaterial(src, mScenePtr);
 	VRM::ConvertVrmMeta(src, mScenePtr);	// use texture.
 	VRM::ConvertModel(src, mScenePtr);
+#if WITH_EDITOR
 	VRM::ConvertMorphTarget(src, mScenePtr);
 	VRM::ConvertHumanoid(src, mScenePtr);
-
+#endif
 	src->VrmMetaObject->SkeletalMesh = src->SkeletalMesh;
 
 	if (src->bAssetSave) {
