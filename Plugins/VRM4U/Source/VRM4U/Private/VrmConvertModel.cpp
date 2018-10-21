@@ -658,7 +658,7 @@ namespace VRM {
 		}
 
 		UPhysicsAsset *pa = nullptr;
-		{
+		if (mScenePtr->mVRMMeta){
 			//aa
 			pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Physics")) , EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 			pa->Modify();

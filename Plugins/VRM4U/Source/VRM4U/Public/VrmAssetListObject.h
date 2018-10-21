@@ -11,7 +11,9 @@ class UTexture2D;
 class USkeletalMesh;
 class USkeleton;
 class UVrmMetaObject;
+class UVrmLicenseObject;
 struct FReturnedData;
+
 
 /**
  * 
@@ -46,6 +48,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	UVrmMetaObject* VrmMetaObject;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
+	UVrmLicenseObject* VrmLicenseObject;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	USkeletalMesh* SkeletalMesh;

@@ -23,7 +23,9 @@
 #include "Animation/Skeleton.h"
 
 static void renameToHumanoidBone(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
-
+	if (meta == nullptr) {
+		return;
+	}
 	//k->RemoveBonesFromSkeleton()
 	auto &allbone = const_cast<TArray<FMeshBoneInfo> &>(targetSkeleton->GetReferenceSkeleton().GetRawRefBoneInfo());
 

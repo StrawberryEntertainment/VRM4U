@@ -6,6 +6,7 @@
 #include "VrmModelActor.h"
 #include "VrmAssetListObject.h"
 #include "VrmMetaObject.h"
+#include "VrmLicenseObject.h"
 
 #include "VrmConvert.h"
 
@@ -41,6 +42,7 @@ FReturnedData result;
 
 static bool saveObject(UObject *u) {
 #if WITH_EDITOR
+	if (u == nullptr) return false;
 	package->MarkPackageDirty();
 	FAssetRegistryModule::AssetCreated(u);
 	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
@@ -51,15 +53,6 @@ static bool saveObject(UObject *u) {
 }
 
 ////
-
-static bool RetargetTest(){
-//	USkeleton *sk;
-
-	//FReferenceSkeletonModifier RefSkelModifier(sk->ReferenceSkeleton, sk);
-
-
-}
-
 
 static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeleton *displaySkeleton) {
 
@@ -101,82 +94,21 @@ static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVr
 
 			auto s = displaySkeleton->GetReferenceSkeleton().GetBoneName(parent);
 
-			if (meta->humanoidBoneTable.FindKey(s.ToString()) != nullptr) {
-				// parent == humanoidBone
-				break;
+			if (meta) {
+				if (meta->humanoidBoneTable.FindKey(s.ToString()) != nullptr) {
+					// parent == humanoidBone
+					break;
+				}
 			}
 			//t.SetLocation(t.GetLocation() + displaySkeleton->GetReferenceSkeleton().GetRefBonePose()[parent].GetLocation());;
 			parent = displaySkeleton->GetReferenceSkeleton().GetParentIndex(parent);
 		}
-
-
 		RefSkelModifier.UpdateRefPoseTransform(ind_target, t);
 	}
 
 	ReferenceSkeleton.RebuildRefSkeleton(targetHumanoidSkeleton, true);
 
 }
-
-static void renameToHumanoidBone(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
-
-	//k->RemoveBonesFromSkeleton()
-	auto &allbone = const_cast<TArray<FMeshBoneInfo> &>(targetSkeleton->GetReferenceSkeleton().GetRawRefBoneInfo());
-
-	for (auto &a : allbone) {
-		auto p = meta->humanoidBoneTable.FindKey(a.Name.ToString());
-		if (p == nullptr) {
-			continue;
-		}
-		for (auto &b : allbone) {
-			if (a == b) continue;
-			if (b.Name == **p) {
-				b.Name = *(b.Name.ToString() + TEXT("_renamed_vrm4u"));
-			}
-		}
-		a.Name = **p;
-	}
-
-	const_cast<FReferenceSkeleton&>(targetSkeleton->GetReferenceSkeleton()).RebuildRefSkeleton(targetSkeleton, true);
-	//targetSkeleton->HandleSkeletonHierarchyChange();
-}
-
-
-static bool createHumanoidSkeletalMesh(UVrmAssetListObject *vrmAssetList) {
-	if (1){
-		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
-		USkeleton *k = sk->Skeleton;
-
-		USkeleton *base = DuplicateObject<USkeleton>(k, package, *(baseFileName + TEXT("_humanoid_Skeleton")));
-		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, package, *(FString(TEXT("SK_")) + baseFileName + TEXT("_humanoid")));
-
-		renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);
-
-		ss->Skeleton = base;
-		ss->RefSkeleton = base->GetReferenceSkeleton();
-
-		ss->CalculateInvRefMatrices();
-		ss->CalculateExtendedBounds();
-#if WITH_EDITORONLY_DATA
-		ss->ConvertLegacyLODScreenSize();
-		ss->UpdateGenerateUpToData();
-#endif
-		base->SetPreviewMesh(ss);
-		base->RecreateBoneTree(ss);
-
-		saveObject(base);
-		//
-
-		UAnimInstance *anim = nullptr;
-		//anim = NewObject<UAnimInstance>(package, *(baseFileName + TEXT("_anim")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-
-		//anim->ske
-
-		//saveObject(anim);
-	}
-
-	return true;
-}
-
 
 bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeletalMeshComponent *displaySkeleton) {
 
@@ -219,11 +151,6 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 }
 
 
-
-
-////////////////
-//static bool LoadVRMPtr(UVrmAssetListObject *src, ) {
-//}
 
 static bool bImportMode = false;
 void ULoaderBPFunctionLibrary::SetImportMode(bool bIm, class UPackage *p) {
@@ -283,8 +210,8 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	src->BaseFileName = baseFileName;
 	src->Package = package;
 
-	VRM::ConvertVrmMeta(src, mScenePtr);
 	VRM::ConvertTextureAndMaterial(src, mScenePtr);
+	VRM::ConvertVrmMeta(src, mScenePtr);	// use texture.
 	VRM::ConvertModel(src, mScenePtr);
 	VRM::ConvertMorphTarget(src, mScenePtr);
 	VRM::ConvertHumanoid(src, mScenePtr);
@@ -301,6 +228,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		saveObject(src->SkeletalMesh);
 		saveObject(src->SkeletalMesh->PhysicsAsset);
 		saveObject(src->VrmMetaObject);
+		saveObject(src->VrmLicenseObject);
 		saveObject(src->HumanoidSkeletalMesh);
 	}
 

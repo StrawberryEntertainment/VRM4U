@@ -200,14 +200,14 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 						char tmp[512];
 						snprintf(tmp, 512, "%s_DUP", n[0]->mName.C_Str());
 						if (t[0] < t[1]) {
-							n[0]->mName = tmp;
+							//n[0]->mName = tmp;
 						}else {
-							n[1]->mName = tmp;
+							//n[1]->mName = tmp;
 						}
 
 						//countParent(
 
-						continue;
+						//continue;
 					}
 
 					TMap<FString, FString> renameTable;
@@ -288,7 +288,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 		int totalBoneCount = 0;
 		for (auto &a: bone) {
 			FMeshBoneInfo info;
-			info.Name = a->mName.C_Str();
+			info.Name = UTF8_TO_TCHAR(a->mName.C_Str());
 #if WITH_EDITORONLY_DATA
 			info.ExportName = a->mName.C_Str();
 #endif

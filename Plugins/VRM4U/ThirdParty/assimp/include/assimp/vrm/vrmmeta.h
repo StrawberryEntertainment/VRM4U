@@ -63,8 +63,39 @@ extern "C" {
             VRMCollider *colliders = nullptr;
         };
 
+        enum VRMLicenseList{
+            LIC_version,
+            LIC_author,
+            LIC_contactInformation,
+            LIC_reference,
+            LIC_title,
+            LIC_texture,
+            LIC_allowedUserName,
+            LIC_violentUssageName,
+            LIC_sexualUssageName,
+            LIC_commercialUssageName,
+            LIC_otherPermissionUrl,
+            LIC_licenseName,
+            LIC_otherLicenseUrl,
+
+            LIC_futter,
+            LIC_max,
+        };
+
+        struct ASSIMP_API VRMLicensePair {
+            aiString Key;
+            aiString Value;
+        };
+
+        struct ASSIMP_API VRMLicense
+        {
+            int licensePairNum = 0;
+            VRMLicensePair *licensePair = nullptr;
+        };
         struct ASSIMP_API VRMMetadata
         {
+            VRMLicense license;
+
             int sprintNum = 0;
             VRMSpring *springs = nullptr;
 
