@@ -8,7 +8,7 @@
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/pbrmaterial.h>
-//#include <assimp/vrm/vrmmeta.h>
+#include <assimp/vrm/vrmmeta.h>
 
 #include "Modules/ModuleManager.h"
 #include "IImageWrapper.h"
@@ -54,6 +54,81 @@ namespace {
 			UE_LOG(LogTexture, Warning, TEXT("Invalid parameters specified for UTexture2D::Create()"));
 		}
 		return NewTexture;
+	}
+
+
+	bool createAndAddMaterial(UMaterialInstanceConstant *dm, int matIndex, UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+		auto i = matIndex;
+		const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+
+		if (i >= meta->materialNum) {
+			return false;
+		}
+		auto &vrmMat = meta->material[i];
+		{
+			struct TT {
+				FString key;
+				float* value;
+			};
+			TT table[] = {
+				TEXT("_Color"),			vrmMat.vectorProperties._Color,
+				TEXT("_ShadeColor"),	vrmMat.vectorProperties._ShadeColor,
+				TEXT("_MainTex"),		vrmMat.vectorProperties._MainTex,
+				TEXT("_ShadeTexture"),	vrmMat.vectorProperties._ShadeTexture,
+				TEXT("_BumpMap"),				vrmMat.vectorProperties._BumpMap,
+				TEXT("_ReceiveShadowTexture"),	vrmMat.vectorProperties._ReceiveShadowTexture,
+				TEXT("_SphereAdd"),				vrmMat.vectorProperties._SphereAdd,
+				TEXT("_EmissionColor"),			vrmMat.vectorProperties._EmissionColor,
+				TEXT("_EmissionMap"),			vrmMat.vectorProperties._EmissionMap,
+				TEXT("_OutlineWidthTexture"),	vrmMat.vectorProperties._OutlineWidthTexture,
+				TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor,
+			};
+
+			for (auto &t : table) {
+				FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+				v->ParameterInfo.Index = INDEX_NONE;
+				v->ParameterInfo.Name = *(TEXT("mtoon") + t.key);
+				v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+				v->ParameterValue = FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]);
+			}
+		}
+		{
+			struct TT {
+				FString key;
+				float& value;
+			};
+			TT table[] = {
+				TEXT("_Cutoff"),		vrmMat.floatProperties._Cutoff,
+				TEXT("_BumpScale"),	vrmMat.floatProperties._BumpScale,
+				TEXT("_ReceiveShadowRate"),	vrmMat.floatProperties._ReceiveShadowRate,
+				TEXT("_ShadeShift"),			vrmMat.floatProperties._ShadeShift,
+				TEXT("_ShadeToony"),			vrmMat.floatProperties._ShadeToony,
+				TEXT("_LightColorAttenuation"),	vrmMat.floatProperties._LightColorAttenuation,
+				TEXT("_OutlineWidth"),			vrmMat.floatProperties._OutlineWidth,
+				TEXT("_OutlineScaledMaxDistance"),	vrmMat.floatProperties._OutlineScaledMaxDistance,
+				TEXT("_OutlineLightingMix"),			vrmMat.floatProperties._OutlineLightingMix,
+				TEXT("_DebugMode"),				vrmMat.floatProperties._DebugMode,
+				TEXT("_BlendMode"),				vrmMat.floatProperties._BlendMode,
+				TEXT("_OutlineWidthMode"),		vrmMat.floatProperties._OutlineWidthMode,
+				TEXT("_OutlineColorMode"),	vrmMat.floatProperties._OutlineColorMode,
+				TEXT("_CullMode"),			vrmMat.floatProperties._CullMode,
+				TEXT("_OutlineCullMode"),		vrmMat.floatProperties._OutlineCullMode,
+				TEXT("_SrcBlend"),			vrmMat.floatProperties._SrcBlend,
+				TEXT("_DstBlend"),			vrmMat.floatProperties._DstBlend,
+				TEXT("_ZWrite"),				vrmMat.floatProperties._ZWrite,
+				TEXT("_IsFirstSetup"),		vrmMat.floatProperties._IsFirstSetup,
+			};
+
+			for (auto &t : table) {
+				FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
+				v->ParameterInfo.Index = INDEX_NONE;
+				v->ParameterInfo.Name = *(TEXT("mtoon") + t.key);
+				v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+				v->ParameterValue = t.value;
+			}
+		}
+
+		return true;
 	}
 }
 
@@ -145,6 +220,7 @@ namespace VRM {
 				auto &aiMat = *mScenePtr->mMaterials[i];
 
 				UMaterialInterface *baseM = nullptr;;
+				bool bMToon = false;
 				{
 					aiString alphaMode;
 					aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
@@ -157,6 +233,7 @@ namespace VRM {
 						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
 					}
 					if (ShaderName.Find(TEXT("MToon")) >= 0) {
+						bMToon = true;
 						FString alpha = alphaMode.C_Str();
 						if (alpha == TEXT("BLEND")) {
 							baseM = vrmAssetList->BaseMToonTransparentMaterial;
@@ -218,53 +295,48 @@ namespace VRM {
 				//MyComponent2->SetMaterial(0, DynMaterial);
 
 				if (index >= 0 && index < vrmAssetList->Textures.Num()) {
-					//UMaterialInstanceDynamic* dm = UMaterialInstanceDynamic::Create(baseM, vrmAssetList, m.GetName().C_Str());
 					UMaterialInstanceConstant* dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *(FString(TEXT("M_"))+aiMat.GetName().C_Str()), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 					dm->Parent = baseM;
-					//dm->SetParentEditorOnly
 
 					if (dm) {
-
-						//if (GetMatColor(mat, m->pbrMetallicRoughness.baseColorFactor, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR) != AI_SUCCESS) {
-						//}
-						{
-							{
-								aiColor4D col;
-								aiReturn result = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, col);
-								if (result == 0) {
-									FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
-									v->ParameterInfo.Index = INDEX_NONE;
-									v->ParameterInfo.Name = TEXT("gltf_basecolor");
-									v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
-									v->ParameterValue = FLinearColor(col.r, col.g, col.b, col.a);
-								}
-							}
-
-							{
-								float f[2] = {1,1};
-								aiReturn result0 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, f[0]);
-								aiReturn result1 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, f[1]);
-								if (result0 == AI_SUCCESS || result1 == AI_SUCCESS) {
-									f[0] = (result0==AI_SUCCESS) ? f[0]: 1;
-									f[1] = (result1==AI_SUCCESS) ? f[1]: 1;
-									if (f[0] == 0 && f[1] == 0) {
-										f[0] = f[1] = 1.f;
-									}
-									FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
-									v->ParameterInfo.Index = INDEX_NONE;
-									v->ParameterInfo.Name = TEXT("gltf_RM");
-									v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
-									v->ParameterValue = FLinearColor(f[0], f[1], 0, 0);
-								}
+						if (bMToon){
+							aiColor4D col;
+							aiReturn result = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, col);
+							if (result == 0) {
+								FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+								v->ParameterInfo.Index = INDEX_NONE;
+								v->ParameterInfo.Name = TEXT("gltf_basecolor");
+								v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
+								v->ParameterValue = FLinearColor(col.r, col.g, col.b, col.a);
 							}
 						}
 
+						if (bMToon){
+							float f[2] = {1,1};
+							aiReturn result0 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, f[0]);
+							aiReturn result1 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, f[1]);
+							if (result0 == AI_SUCCESS || result1 == AI_SUCCESS) {
+								f[0] = (result0==AI_SUCCESS) ? f[0]: 1;
+								f[1] = (result1==AI_SUCCESS) ? f[1]: 1;
+								if (f[0] == 0 && f[1] == 0) {
+									f[0] = f[1] = 1.f;
+								}
+								FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+								v->ParameterInfo.Index = INDEX_NONE;
+								v->ParameterInfo.Name = TEXT("gltf_RM");
+								v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
+								v->ParameterValue = FLinearColor(f[0], f[1], 0, 0);
+							}
+						}
 						{
 							FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
 							v->ParameterInfo.Index = INDEX_NONE;
 							v->ParameterInfo.Name = TEXT("gltf_tex_diffuse");
 							v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
 							v->ParameterValue = vrmAssetList->Textures[index];
+						}
+						if (bMToon) {
+							createAndAddMaterial(dm, i, vrmAssetList, mScenePtr);
 						}
 
 						dm->InitStaticPermutation();

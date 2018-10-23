@@ -15,6 +15,7 @@ extern "C" {
 
     namespace VRM {
         typedef float(vec3)[3];
+        typedef float(vec4)[4];
 
         struct ASSIMP_API VRMBlendShapeBind {
             aiString blendShapeName;
@@ -37,6 +38,7 @@ extern "C" {
             aiString nodeName;
         };
 
+        // physics
         struct ASSIMP_API VRMSpring {
             float stiffiness = 0.f;
             float gravityPower = 0.f;
@@ -62,7 +64,57 @@ extern "C" {
             int colliderNum = 0;
             VRMCollider *colliders = nullptr;
         };
+        // physics
 
+        // material
+        struct ASSIMP_API VRMMaterialFloatProperties {
+            float _Cutoff;
+            float _BumpScale;
+            float _ReceiveShadowRate;
+            float _ShadeShift;
+            float _ShadeToony;
+            float _LightColorAttenuation;
+            float _OutlineWidth;
+            float _OutlineScaledMaxDistance;
+            float _OutlineLightingMix;
+            float _DebugMode;
+            float _BlendMode;
+            float _OutlineWidthMode;
+            float _OutlineColorMode;
+            float _CullMode;
+            float _OutlineCullMode;
+            float _SrcBlend;
+            float _DstBlend;
+            float _ZWrite;
+            float _IsFirstSetup;
+        };
+        struct ASSIMP_API VRMMaterialVectorProperties {
+            vec4 _Color;
+            vec4 _ShadeColor;
+            vec4 _MainTex;
+            vec4 _ShadeTexture;
+            vec4 _BumpMap;
+            vec4 _ReceiveShadowTexture;
+            vec4 _SphereAdd;
+            vec4 _EmissionColor;
+            vec4 _EmissionMap;
+            vec4 _OutlineWidthTexture;
+            vec4 _OutlineColor;
+        };
+        struct ASSIMP_API VRMMaterialTextureProperties {
+            int _MainTex;
+            int _ShadeTexture;
+        };
+        struct ASSIMP_API VRMMaterial {
+            aiString name;
+            aiString shaderName;
+            VRMMaterialFloatProperties floatProperties;
+            VRMMaterialVectorProperties vectorProperties;
+            VRMMaterialTextureProperties textureProperties;
+        };
+        // material
+
+        // license
         enum VRMLicenseList{
             LIC_version,
             LIC_author,
@@ -92,6 +144,8 @@ extern "C" {
             int licensePairNum = 0;
             VRMLicensePair *licensePair = nullptr;
         };
+        // license end
+
         struct ASSIMP_API VRMMetadata
         {
             VRMLicense license;
@@ -106,6 +160,9 @@ extern "C" {
 
             int blensShapeGroupNum = 0;
             VRMBlendShapeGroup *blensShapeGourp = nullptr;
+
+            int materialNum = 0;
+            VRMMaterial *material = nullptr;
 
             VRMMetadata() {
             }

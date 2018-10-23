@@ -420,9 +420,12 @@ namespace VRM {
 							v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
 							//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
 							auto &n = mInfo.Normals[i];
-							meshS->TangentX = mInfo.Tangents[i];
-							meshS->TangentY = n ^ mInfo.Tangents[i];
-							meshS->TangentZ = n;
+							FVector n_tmp(-n.X, n.Z, n.Y);
+							FVector t_tmp(-mInfo.Tangents[i].X, mInfo.Tangents[i].Y, mInfo.Tangents[i].Z);
+
+							meshS->TangentX = t_tmp;
+							meshS->TangentY = n_tmp ^ t_tmp;
+							meshS->TangentZ = n_tmp;
 						}
 
 						if (i < mInfo.VertexColors.Num()){

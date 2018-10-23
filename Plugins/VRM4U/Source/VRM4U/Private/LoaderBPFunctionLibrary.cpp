@@ -245,13 +245,14 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 }
 
 
-bool ULoaderBPFunctionLibrary::VRMTransMatrix(TArray<float> &matrix1, TArray<float> &matrix2, const FTransform trans) {
+bool ULoaderBPFunctionLibrary::VRMTransMatrix(TArray<float> &matrix1, FMatrix &matrix2, const FTransform trans) {
 
 	FMatrix m1 = trans.ToMatrixWithScale().Inverse();
 	matrix1.SetNum(16);
 	for (int i = 0; i < 16; ++i) {
 		matrix1[i] = m1.M[i/4][i%4];
 	}
+//	USceneCaptureComponent2D *g;
 
 	return true;
 }

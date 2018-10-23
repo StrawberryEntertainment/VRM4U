@@ -90,6 +90,6 @@ public:
 	///static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeleton *displaySkeleton) {
 
 	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "matrix1"))
-	static bool VRMTransMatrix(TArray<float> &matrix1, TArray<float> &matrix2, const FTransform trans);
+	static bool VRMTransMatrix(TArray<float> &matrix1, FMatrix &matrix2, const FTransform trans);
 
 };
