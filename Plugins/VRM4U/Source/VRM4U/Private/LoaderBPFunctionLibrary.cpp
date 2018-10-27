@@ -251,9 +251,14 @@ bool ULoaderBPFunctionLibrary::VRMTransMatrix(TArray<float> &matrix1, FMatrix &m
 	matrix1.SetNum(16);
 	for (int i = 0; i < 16; ++i) {
 		matrix1[i] = m1.M[i/4][i%4];
+		matrix2.M[i / 4][i % 4] = m1.M[i / 4][i % 4];
 	}
-//	USceneCaptureComponent2D *g;
+	//matrix2.XPlane.Set(m1.M[0][0], m1.M[0][1], m1.M[0][2]);
+	//matrix2.XPlane.W = m1.M[0][3];
 
+	//USceneCaptureComponent2D *g;
+	//FMatrix m = g->GetComponentTransform().ToMatrixWithScale().Inverse();
+	//FVector4
 	return true;
 }
 
