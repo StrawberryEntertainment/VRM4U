@@ -89,7 +89,11 @@ public:
 
 	///static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeleton *displaySkeleton) {
 
-	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "matrix1"))
-	static bool VRMTransMatrix(TArray<float> &matrix1, FMatrix &matrix2, const FTransform trans);
+	UFUNCTION(BlueprintCallable,Category="VRM4U")
+	static void VRMTransMatrix(const FTransform &transform, TArray<FLinearColor> &matrix, TArray<FLinearColor> &matrix_inv);
+
+
+	UFUNCTION(BlueprintPure, Category = "VRM4U")
+	static void VRMGetMaterialPropertyOverrides(const UMaterialInterface *Material, TEnumAsByte<EBlendMode> &BlendMode, TEnumAsByte<EMaterialShadingModel> &ShadingModel, bool &IsTwoSided, bool &IsMasked);
 
 };

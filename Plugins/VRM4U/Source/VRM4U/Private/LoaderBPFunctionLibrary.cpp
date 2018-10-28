@@ -245,21 +245,29 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 }
 
 
-bool ULoaderBPFunctionLibrary::VRMTransMatrix(TArray<float> &matrix1, FMatrix &matrix2, const FTransform trans) {
 
-	FMatrix m1 = trans.ToMatrixWithScale().Inverse();
-	matrix1.SetNum(16);
-	for (int i = 0; i < 16; ++i) {
-		matrix1[i] = m1.M[i/4][i%4];
-		matrix2.M[i / 4][i % 4] = m1.M[i / 4][i % 4];
+void ULoaderBPFunctionLibrary::VRMTransMatrix(const FTransform &transform, TArray<FLinearColor> &matrix, TArray<FLinearColor> &matrix_inv){
+
+	FMatrix m = transform.ToMatrixWithScale();
+	FMatrix mi = transform.ToMatrixWithScale().Inverse();
+
+	matrix.SetNum(4);
+	matrix_inv.SetNum(4);
+
+	for (int i = 0; i < 4; ++i) {
+		matrix[i] = FLinearColor(m.M[i][0], m.M[i][1], m.M[i][2], m.M[i][3]);
+		matrix_inv[i] = FLinearColor(mi.M[i][0], mi.M[i][1], mi.M[i][2], mi.M[i][3]);
 	}
-	//matrix2.XPlane.Set(m1.M[0][0], m1.M[0][1], m1.M[0][2]);
-	//matrix2.XPlane.W = m1.M[0][3];
 
-	//USceneCaptureComponent2D *g;
-	//FMatrix m = g->GetComponentTransform().ToMatrixWithScale().Inverse();
-	//FVector4
-	return true;
+	return;
 }
 
-
+void ULoaderBPFunctionLibrary::VRMGetMaterialPropertyOverrides(const UMaterialInterface *Material, TEnumAsByte<EBlendMode> &BlendMode, TEnumAsByte<EMaterialShadingModel> &ShadingModel, bool &IsTwoSided, bool &IsMasked){
+	if (Material == nullptr) {
+		return;
+	}
+	BlendMode		= Material->GetBlendMode();
+	ShadingModel	= Material->GetShadingModel();
+	IsTwoSided		= Material->IsTwoSided();
+	IsMasked		= Material->IsMasked();
+}
