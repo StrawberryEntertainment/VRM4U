@@ -66,7 +66,9 @@ namespace VRM {
 		ss->CalculateExtendedBounds();
 #if WITH_EDITORONLY_DATA
 		ss->ConvertLegacyLODScreenSize();
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 		ss->UpdateGenerateUpToData();
+#endif
 #endif
 		base->SetPreviewMesh(ss);
 		base->RecreateBoneTree(ss);

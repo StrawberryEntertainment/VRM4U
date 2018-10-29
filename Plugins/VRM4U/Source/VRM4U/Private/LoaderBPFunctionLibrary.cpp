@@ -26,6 +26,7 @@
 #include "RenderingThread.h"
 #include "SkeletalMeshModel.h"
 #include "SkeletalMeshLODModel.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 
 #include "IImageWrapper.h"
@@ -141,7 +142,9 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 
 #if WITH_EDITORONLY_DATA
 	sk->ConvertLegacyLODScreenSize();
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 	sk->UpdateGenerateUpToData();
+#endif
 #endif
 
 	k->SetPreviewMesh(sk);

@@ -24,6 +24,7 @@ static void aaaa(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
 	}
 }
 
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 USkeletalMesh* UVrmSkeleton::GetPreviewMesh(bool bFindIfNotSet)
 {
 	//return Super::GetPreviewMesh(bFindIfNotSet);
@@ -78,7 +79,8 @@ void UVrmSkeleton::SetPreviewMesh(USkeletalMesh* PreviewMesh, bool bMarkAsDirty)
 	PreviewSkeletalMesh = PreviewMesh;
 #endif
 }
-
+#else// UE420
+#endif	// UE420
 
 bool UVrmSkeleton::IsPostLoadThreadSafe() const
 {

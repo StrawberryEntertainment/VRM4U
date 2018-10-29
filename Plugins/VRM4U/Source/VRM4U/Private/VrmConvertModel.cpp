@@ -25,6 +25,7 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 
+
 //#include "Engine/.h"
 
 #if WITH_EDITOR
@@ -328,8 +329,10 @@ namespace VRM {
 			sk->CalculateInvRefMatrices();
 			sk->CalculateExtendedBounds();
 #if WITH_EDITOR
-			sk->ConvertLegacyLODScreenSize();
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 			sk->UpdateGenerateUpToData();
+#endif
+			sk->ConvertLegacyLODScreenSize();
 			sk->GetImportedModel()->LODModels.Reset();
 #endif
 
@@ -339,9 +342,17 @@ namespace VRM {
 
 			vrmAssetList->SkeletalMesh = sk;
 
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 			{
 				FSkeletalMeshLODInfo &info = sk->AddLODInfo();
 			}
+#else
+			sk->LODInfo.AddZeroed(1); 
+			//const USkeletalMeshLODSettings* DefaultSetting = sk->GetDefaultLODSetting();
+			// if failed to get setting, that means, we don't have proper setting 
+			// in that case, use last index setting
+			//!DefaultSetting->SetLODSettingsToMesh(sk, 0);
+#endif
 			sk->AllocateResourceForRendering();
 			FSkeletalMeshRenderData *p = sk->GetResourceForRendering();
 			FSkeletalMeshLODRenderData *pRd = new(p->LODRenderData) FSkeletalMeshLODRenderData();
@@ -393,6 +404,10 @@ namespace VRM {
 				TArray<uint32> Triangles;
 				TArray<FSoftSkinVertexLocal> Weight;
 				Weight.SetNum(allVertex);
+				for (auto &w : Weight) {
+					memset(w.InfluenceWeights, 0, sizeof(w.InfluenceWeights));
+				}
+				//Weight.AddZeroed(allVertex);
 				int currentIndex = 0;
 				int currentVertex = 0;
 

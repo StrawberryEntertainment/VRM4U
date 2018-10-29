@@ -9,6 +9,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "LoaderBPFunctionLibrary.h"
 #include "VrmAssetListObject.h"
+#include "VrmRuntimeSettings.h"
 #include "Engine/Blueprint.h"
 
 #define LOCTEXT_NAMESPACE "VRMImporter"
@@ -93,17 +94,40 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 	//UObject* objFinder = StaticLoadObject(UVrmAssetListObject::StaticClass(), nullptr, TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP_C"));
 	//UObject* objFinder = NewObject<UVrmAssetListObject>(InParent, NAME_None, RF_Transactional);
 
-	FSoftObjectPath r(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
-	UObject *u = r.TryLoad();
-	UClass *c = (UClass*)(Cast<UBlueprint>(u)->GeneratedClass);
+	UVrmAssetListObject *m = nullptr;
+	UClass *c = nullptr;
+	{
+		const UVrmRuntimeSettings* Settings = GetDefault<UVrmRuntimeSettings>();
+
+		FSoftObjectPath r = Settings->AssetListObject; //(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
+		UObject *u = r.TryLoad();
+		if (u) {
+			if (Cast<UBlueprint>(u)) {
+				c = (UClass*)(Cast<UBlueprint>(u)->GeneratedClass);
+			}
+		}
+
+		if (c == nullptr) {
+			FSoftObjectPath r(TEXT("/VRM4U/VrmAssetListObjectBP.VrmAssetListObjectBP"));
+			UObject *u = r.TryLoad();
+			if (u) {
+				c = (UClass*)(Cast<UBlueprint>(u)->GeneratedClass);
+			}
+		}
+
+		if (c == nullptr) {
+			c = UVrmAssetListObject::StaticClass();
+		}
+
+		m = NewObject<UVrmAssetListObject>((UObject*)GetTransientPackage(), c);
+	}
 
 	//UVrmAssetListObject *m = Cast<UVrmAssetListObject>(u);
 	//FSoftClassPath r(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
 	//UObject *u = r.TryLoad();
 	//auto aaa = NewObject<UObject>(c);
-	UVrmAssetListObject *m = NewObject<UVrmAssetListObject>((UObject*)GetTransientPackage(), c);
 
-	if (m){
+	if (m) {
 		//auto a = NewObject<UVrmAssetListObject>(MatClass.Object, NAME_None, RF_Transactional);
 		//MatClass.Object; 
 		//ULoaderBPFunctionLibrary::LoadVRMFile(nullptr, fullFileName);

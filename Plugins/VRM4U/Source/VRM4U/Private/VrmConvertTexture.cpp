@@ -241,20 +241,17 @@ namespace VRM {
 						else {
 							baseM = vrmAssetList->BaseMToonOpaqueMaterial;
 						}
-					}
-					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
-						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
-					}
 
-
-					if (baseM == nullptr){
-						baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+						if (baseM == nullptr) {
+							baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+						}
 					}
 				}
 				//if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTexture"))) {
 
 				if (baseM == nullptr) {
-					continue;
+					//continue;
+					baseM = UMaterial::GetDefaultMaterial(MD_Surface);
 				}
 
 				aiString texName;

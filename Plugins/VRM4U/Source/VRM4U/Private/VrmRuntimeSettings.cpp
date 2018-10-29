@@ -7,4 +7,5 @@ UVrmRuntimeSettings::UVrmRuntimeSettings(const FObjectInitializer& ObjectInitial
 	: Super(ObjectInitializer)
 {
 
+	AssetListObject.SetPath(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
 }
