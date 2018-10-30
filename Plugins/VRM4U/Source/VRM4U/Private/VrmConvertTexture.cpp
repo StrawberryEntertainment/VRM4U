@@ -10,6 +10,8 @@
 #include <assimp/pbrmaterial.h>
 #include <assimp/vrm/vrmmeta.h>
 
+#include "Materials/MaterialExpressionTextureSampleParameter2D.h"
+
 #include "Modules/ModuleManager.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
@@ -130,6 +132,55 @@ namespace {
 
 		return true;
 	}
+
+	UMaterial* CreateDefaultMaterial(UVrmAssetListObject *vrmAssetList) {
+		//auto MaterialFactory = NewObject<UMaterialFactoryNew>();
+
+		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone|RF_Public, NULL, GWarn );
+
+//		UMaterial* UnrealMaterial = (UMaterial*)MaterialFactory->FactoryCreateNew(
+//			UMaterial::StaticClass(), vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone|RF_Public, NULL, GWarn );
+
+		if (UnrealMaterial != NULL)
+		{
+			//UnrealMaterialFinal = UnrealMaterial;
+			// Notify the asset registry
+			//FAssetRegistryModule::AssetCreated(UnrealMaterial);
+
+			if(true)
+			{
+				bool bNeedsRecompile = true;
+				UnrealMaterial->GetMaterial()->SetMaterialUsage(bNeedsRecompile, MATUSAGE_SkeletalMesh);
+			}
+
+			// Set the dirty flag so this package will get saved later
+			//Package->SetDirtyFlag(true);
+
+			// textures and properties
+
+			{
+				UMaterialExpressionTextureSampleParameter2D* UnrealTextureExpression = NewObject<UMaterialExpressionTextureSampleParameter2D>(UnrealMaterial);
+				UnrealMaterial->Expressions.Add(UnrealTextureExpression);
+				UnrealTextureExpression->SamplerType = SAMPLERTYPE_Color;
+				UnrealTextureExpression->ParameterName = TEXT("gltf_tex_diffuse");
+
+#if WITH_EDITORONLY_DATA
+				UnrealMaterial->BaseColor.Expression = UnrealTextureExpression;
+#endif
+			}
+
+			UnrealMaterial->BlendMode = BLEND_Masked;
+			UnrealMaterial->SetShadingModel(MSM_DefaultLit);
+			/*
+				UnrealMaterial->BlendMode = BLEND_Translucent;
+				CreateAndLinkExpressionForMaterialProperty(FbxMaterial, UnrealMaterial, FbxSurfaceMaterial::sTransparencyFactor, UnrealMaterial->OpacityMask, false, UVSets, FVector2D(150, 256));
+
+			}
+			FixupMaterial(FbxMaterial, UnrealMaterial); // add random diffuse if none exists
+			*/
+		}
+		return UnrealMaterial;
+	}
 }
 
 namespace VRM {
@@ -241,17 +292,24 @@ namespace VRM {
 						else {
 							baseM = vrmAssetList->BaseMToonOpaqueMaterial;
 						}
+					}
+					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
+						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
+					}
 
-						if (baseM == nullptr) {
-							baseM = vrmAssetList->BaseMToonOpaqueMaterial;
-						}
+
+					if (baseM == nullptr){
+						baseM = vrmAssetList->BaseMToonOpaqueMaterial;
 					}
 				}
 				//if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTexture"))) {
 
 				if (baseM == nullptr) {
-					//continue;
-					baseM = UMaterial::GetDefaultMaterial(MD_Surface);
+					baseM = CreateDefaultMaterial(vrmAssetList);
+					vrmAssetList->BaseUnlitOpaqueMaterial = baseM;
+				}
+				if (baseM == nullptr) {
+					continue;
 				}
 
 				aiString texName;
