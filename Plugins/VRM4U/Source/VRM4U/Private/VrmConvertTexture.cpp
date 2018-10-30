@@ -136,8 +136,11 @@ namespace {
 	UMaterial* CreateDefaultMaterial(UVrmAssetListObject *vrmAssetList) {
 		//auto MaterialFactory = NewObject<UMaterialFactoryNew>();
 
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone|RF_Public, NULL, GWarn );
-
+#else
+		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public);
+#endif
 //		UMaterial* UnrealMaterial = (UMaterial*)MaterialFactory->FactoryCreateNew(
 //			UMaterial::StaticClass(), vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone|RF_Public, NULL, GWarn );
 
