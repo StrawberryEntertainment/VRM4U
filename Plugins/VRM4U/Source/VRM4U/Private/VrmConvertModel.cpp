@@ -308,14 +308,23 @@ namespace VRM {
 		}
 
 		USkeletalMesh *sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-		UVrmSkeleton *k = NewObject<UVrmSkeleton>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		USkeleton *k = NewObject<USkeleton>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
 		static int boneOffset = 0;
 		{
 			// name dup check
 			sk->Skeleton = k;
 			//k->MergeAllBonesToBoneTree(src);
-			k->readVrmBone(const_cast<aiScene*>(mScenePtr), boneOffset);
+			{
+				USkeletalMesh *sk_tmp = NewObject<USkeletalMesh>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+				UVrmSkeleton *k_tmp = NewObject<UVrmSkeleton>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+
+				k_tmp->readVrmBone(const_cast<aiScene*>(mScenePtr), boneOffset);
+				sk_tmp->Skeleton = k_tmp;
+				sk_tmp->RefSkeleton = k_tmp->GetReferenceSkeleton();
+
+				k->MergeAllBonesToBoneTree(sk_tmp);
+			}
 
 			sk->RefSkeleton = k->GetReferenceSkeleton();
 			//sk->RefSkeleton.RebuildNameToIndexMap();
@@ -366,6 +375,16 @@ namespace VRM {
 				TArray<FSoftSkinVertex> Weight;
 				Weight.SetNum(10);
 				pRd->SkinWeightVertexBuffer.Init(Weight);
+#else
+				{
+					TArray< TSkinWeightInfo<false> > InWeights;
+					InWeights.SetNum(10);
+					for (auto &a : InWeights) {
+						memset(a.InfluenceBones, 0, sizeof(a.InfluenceBones));
+						memset(a.InfluenceWeights, 0, sizeof(a.InfluenceWeights));
+					}
+					pRd->SkinWeightVertexBuffer = InWeights;
+				}
 #endif
 			}
 
@@ -668,6 +687,19 @@ namespace VRM {
 
 #if WITH_EDITOR
 						d.SkinWeightVertexBuffer.Init(Weight);
+#else
+						{
+							TArray< TSkinWeightInfo<false> > InWeights;
+							InWeights.Reserve(Weight.Num());
+
+							for (const auto &a : Weight) {
+								auto n = new(InWeights) TSkinWeightInfo<false>;
+
+								memcpy(n->InfluenceBones, a.InfluenceBones, sizeof(n->InfluenceBones));
+								memcpy(n->InfluenceWeights, a.InfluenceWeights, sizeof(n->InfluenceWeights));
+							}
+							d.SkinWeightVertexBuffer = InWeights;
+						}
 #endif
 						d.SkinWeightVertexBuffer.InitResource();
 
