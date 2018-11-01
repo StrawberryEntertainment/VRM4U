@@ -244,7 +244,18 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		ULevel::LevelDirtiedEvent.Broadcast();
 	}
 
-	return nullptr;
+	// force delete vrmdata
+	if (mScenePtr->mVRMMeta) {
+		auto *a = const_cast<aiScene*>(mScenePtr);
+		if (a) {
+			VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(a->mVRMMeta);
+			//VRM::ReleaseVRMMeta(meta);
+			//delete meta;
+			//a->mVRMMeta = nullptr;
+		}
+
+	}
+	return true;
 }
 
 

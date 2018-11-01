@@ -31,6 +31,10 @@ extern "C" {
 
             int bindNum=0;
             VRMBlendShapeBind *bind = nullptr;
+
+            ~VRMBlendShapeGroup() {
+                delete[] bind;
+            }
         };
 
         struct ASSIMP_API VRMHumanoid {
@@ -52,6 +56,11 @@ extern "C" {
 
             int colliderGourpNum = 0;
             int* colliderGroups = nullptr;
+
+            ~VRMSpring() {
+                delete[] bones_name;
+                delete[] colliderGroups;
+            }
         };
         struct ASSIMP_API VRMCollider {
             vec3 offset = { 0,0,0 };
@@ -63,6 +72,10 @@ extern "C" {
 
             int colliderNum = 0;
             VRMCollider *colliders = nullptr;
+
+            ~VRMColliderGroup() {
+                delete[] colliders;
+            }
         };
         // physics
 
@@ -143,6 +156,10 @@ extern "C" {
         {
             int licensePairNum = 0;
             VRMLicensePair *licensePair = nullptr;
+
+            ~VRMLicense() {
+                delete[] licensePair;
+            }
         };
         // license end
 
@@ -167,7 +184,16 @@ extern "C" {
             VRMMetadata() {
             }
 
+            ~VRMMetadata() {
+                delete[] springs;
+                delete[] colliderGroups;
+                delete[] blensShapeGourp;
+                delete[] material;
+            }
+
         };
+
+        void ReleaseVRMMeta(VRMMetadata *&meta);
     }
 
 #ifdef __cplusplus
