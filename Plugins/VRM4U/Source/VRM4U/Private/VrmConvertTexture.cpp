@@ -154,6 +154,7 @@ namespace {
 			{
 				bool bNeedsRecompile = true;
 				UnrealMaterial->GetMaterial()->SetMaterialUsage(bNeedsRecompile, MATUSAGE_SkeletalMesh);
+				UnrealMaterial->GetMaterial()->SetMaterialUsage(bNeedsRecompile, MATUSAGE_MorphTargets);
 			}
 
 			// Set the dirty flag so this package will get saved later
