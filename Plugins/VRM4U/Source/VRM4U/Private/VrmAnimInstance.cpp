@@ -30,6 +30,10 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 	auto &pose = Output.Pose;
 
 	for (auto &boneName : meta->humanoidBoneTable) {
+
+		if (boneName.Key == TEXT("leftEye") || boneName.Key == TEXT("rightEye")) {
+			continue;
+		}
 		//auto i = srcMesh->GetBoneIndex();
 		if (srcMesh->GetBoneIndex(*(boneName.Key)) < 0) {
 			continue;
