@@ -16,6 +16,10 @@ class USkeletalMesh;
 class UVrmAssetListObject;
 
 namespace VRM {
+
+	bool IsImportMode();
+	void SetImportMode(bool bImportMode);
+
 	bool ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
 	bool ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);

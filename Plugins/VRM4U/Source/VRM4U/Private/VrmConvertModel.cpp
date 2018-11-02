@@ -362,6 +362,7 @@ namespace VRM {
 			// in that case, use last index setting
 			//!DefaultSetting->SetLODSettingsToMesh(sk, 0);
 #endif
+
 			sk->AllocateResourceForRendering();
 			FSkeletalMeshRenderData *p = sk->GetResourceForRendering();
 			FSkeletalMeshLODRenderData *pRd = new(p->LODRenderData) FSkeletalMeshLODRenderData();
@@ -533,7 +534,7 @@ namespace VRM {
 						}
 					}
 
-					{
+					if (VRM::IsImportMode() == false){
 						rd.RenderSections.SetNum(result.meshInfo.Num());
 
 						FSkelMeshRenderSection &NewRenderSection = rd.RenderSections[meshID];
@@ -543,13 +544,17 @@ namespace VRM {
 						NewRenderSection.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
 						//NewRenderSection.bRecomputeTangent = ModelSection.bRecomputeTangent;
 						NewRenderSection.bCastShadow = true;// ModelSection.bCastShadow;
-						NewRenderSection.BaseVertexIndex = 0;// currentVertex;// currentVertex;// ModelSection.BaseVertexIndex;
+						NewRenderSection.BaseVertexIndex = currentVertex;// currentVertex;// currentVertex;// ModelSection.BaseVertexIndex;
 																//NewRenderSection.ClothMappingData = ModelSection.ClothMappingData;
 																//NewRenderSection.BoneMap.SetNum(1);//ModelSection.BoneMap;
 																//NewRenderSection.BoneMap[0] = 10;
-						NewRenderSection.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
+						//NewRenderSection.BoneMap.SetNum(sk->Skeleton->GetBoneTree().Num());//ModelSection.BoneMap;
+						//for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
+						//	NewRenderSection.BoneMap[i] = i;
+						//}
+						NewRenderSection.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
 						for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
-							NewRenderSection.BoneMap[i] = i;
+							NewRenderSection.BoneMap[i] = bonemap[i];
 						}
 
 
@@ -666,7 +671,7 @@ namespace VRM {
 #endif
 				//rd.StaticVertexBuffers.StaticMeshVertexBuffer.TexcoordDataPtr;
 
-				if (1) {
+				if (VRM::IsImportMode() == false) {
 					ENQUEUE_RENDER_COMMAND(UpdateCommand)(
 						[sk, Triangles, Weight](FRHICommandListImmediate& RHICmdList)
 					{

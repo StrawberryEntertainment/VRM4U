@@ -155,9 +155,8 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 
 
 
-static bool bImportMode = false;
 void ULoaderBPFunctionLibrary::SetImportMode(bool bIm, class UPackage *p) {
-	bImportMode = bIm;
+	VRM::SetImportMode(bIm);
 
 	package = p;
 }
@@ -204,7 +203,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		baseFileName = FPaths::GetBaseFilename(filepath);
 		FString name = basepath + baseFileName + TEXT("/") + FPaths::GetBaseFilename(filepath);
 
-		if (bImportMode == false) {
+		if (VRM::IsImportMode() == false) {
 			package = CreatePackage(nullptr, *name);
 		}
 
@@ -236,7 +235,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		saveObject(src->HumanoidSkeletalMesh);
 	}
 
-	if (bImportMode == false){
+	if (VRM::IsImportMode() == false){
 		FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
 		FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
 		FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);

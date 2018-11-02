@@ -216,6 +216,10 @@ namespace VRM {
 					Width = ImageWrapper->GetWidth();
 					Height = ImageWrapper->GetHeight();
 
+					if (Width == 0 || Height == 0) {
+						continue;
+					}
+
 					ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, RawData);
 				}
 				FString baseName = t.mFilename.C_Str();
