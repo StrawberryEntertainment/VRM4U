@@ -156,7 +156,7 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 
 
 void ULoaderBPFunctionLibrary::SetImportMode(bool bIm, class UPackage *p) {
-	VRM::SetImportMode(bIm);
+	VRMConverter::SetImportMode(bIm);
 
 	package = p;
 }
@@ -174,10 +174,18 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	if (filepath.IsEmpty())
 	{
 	}
+	//filepath.esc
+	//setlocale(LC_ALL, "");
+	//_tsetlocale(LC_ALL, _T(""));
+	//_wsetlocale(LC_ALL, _T(""));
 	std::string file;
+	//TChar a;
 	//switch (type)
 	//{
 	//case EPathType::Absolute:
+	//file = TCHAR_TO_UTF8(filepath.GetCharArray().GetData());
+	//file = TCHAR_TO_ANSI( UTF8_TO_TCHAR(*filepath) );
+	//file = TCHAR_TO_UTF8(*filepath.ReplaceCharWithEscapedChar());
 	file = TCHAR_TO_UTF8(*filepath);
 	//	break;
 	//case EPathType::Relative:
@@ -201,23 +209,24 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		//path += FPaths::GameDevelopersDir() + TEXT("VRM/");
 
 		baseFileName = FPaths::GetBaseFilename(filepath);
-		FString name = basepath + baseFileName + TEXT("/") + FPaths::GetBaseFilename(filepath);
+		FString name = basepath + baseFileName + TEXT("/") + VRMConverter::NormalizeFileName(FPaths::GetBaseFilename(filepath));
 
-		if (VRM::IsImportMode() == false) {
+		if (VRMConverter::IsImportMode() == false) {
 			package = CreatePackage(nullptr, *name);
 		}
 
 	}
 
-	src->BaseFileName = baseFileName;
+	src->OrigFileName = baseFileName;
+	src->BaseFileName = VRMConverter::NormalizeFileName(baseFileName);
 	src->Package = package;
 
-	VRM::ConvertTextureAndMaterial(src, mScenePtr);
-	VRM::ConvertVrmMeta(src, mScenePtr);	// use texture.
-	VRM::ConvertModel(src, mScenePtr);
+	VRMConverter::ConvertTextureAndMaterial(src, mScenePtr);
+	VRMConverter::ConvertVrmMeta(src, mScenePtr);	// use texture.
+	VRMConverter::ConvertModel(src, mScenePtr);
 #if WITH_EDITOR
-	VRM::ConvertMorphTarget(src, mScenePtr);
-	VRM::ConvertHumanoid(src, mScenePtr);
+	VRMConverter::ConvertMorphTarget(src, mScenePtr);
+	VRMConverter::ConvertHumanoid(src, mScenePtr);
 #endif
 	src->VrmMetaObject->SkeletalMesh = src->SkeletalMesh;
 
@@ -235,7 +244,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		saveObject(src->HumanoidSkeletalMesh);
 	}
 
-	if (VRM::IsImportMode() == false){
+	if (VRMConverter::IsImportMode() == false){
 		FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
 		FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
 		FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);

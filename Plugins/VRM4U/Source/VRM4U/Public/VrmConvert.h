@@ -15,20 +15,22 @@ class UMaterialInterface;
 class USkeletalMesh;
 class UVrmAssetListObject;
 
-namespace VRM {
+class VRMConverter {
+public:
+	static bool IsImportMode();
+	static void SetImportMode(bool bImportMode);
+	static FString NormalizeFileName(const char *str);
+	static FString NormalizeFileName(const FString &str);
 
-	bool IsImportMode();
-	void SetImportMode(bool bImportMode);
+	static bool ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
-	bool ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+	static bool ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
-	bool ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+	static bool ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
-	bool ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
-
-	bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
-	bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
-}
+	static bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+};
 
 
 class VRM4U_API VrmConvert

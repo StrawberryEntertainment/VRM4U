@@ -292,7 +292,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 			FMeshBoneInfo info;
 			info.Name = UTF8_TO_TCHAR(a->mName.C_Str());
 #if WITH_EDITORONLY_DATA
-			info.ExportName = a->mName.C_Str();
+			info.ExportName = UTF8_TO_TCHAR(a->mName.C_Str());
 #endif
 
 			FTransform pose;

@@ -65,6 +65,9 @@ public:
 	UPackage *Package;
 
 	UPROPERTY()
+	FString OrigFileName;
+
+	UPROPERTY()
 	FString BaseFileName;
 
 	FReturnedData *Result;

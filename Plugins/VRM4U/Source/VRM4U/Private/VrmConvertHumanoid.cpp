@@ -49,34 +49,32 @@ static void renameToHumanoidBone(USkeleton *targetSkeleton, const UVrmMetaObject
 
 
 
-namespace VRM {
-	bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
-		const USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
-		const USkeleton *k = sk->Skeleton;
+bool VRMConverter::ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+	const USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
+	const USkeleton *k = sk->Skeleton;
 
-		USkeleton *base = DuplicateObject<USkeleton>(k, vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_humanoid_Skeleton")));
-		USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName + TEXT("_humanoid")));
+	USkeleton *base = DuplicateObject<USkeleton>(k, vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_humanoid_Skeleton")));
+	USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName + TEXT("_humanoid")));
 
-		renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);
+	renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);
 
-		ss->Skeleton = base;
-		ss->RefSkeleton = base->GetReferenceSkeleton();
+	ss->Skeleton = base;
+	ss->RefSkeleton = base->GetReferenceSkeleton();
 
-		ss->CalculateInvRefMatrices();
-		ss->CalculateExtendedBounds();
+	ss->CalculateInvRefMatrices();
+	ss->CalculateExtendedBounds();
 #if WITH_EDITORONLY_DATA
-		ss->ConvertLegacyLODScreenSize();
+	ss->ConvertLegacyLODScreenSize();
 #if	UE_VERSION_NEWER_THAN(4,20,0)
-		ss->UpdateGenerateUpToData();
+	ss->UpdateGenerateUpToData();
 #endif
 #endif
-		base->SetPreviewMesh(ss);
-		base->RecreateBoneTree(ss);
+	base->SetPreviewMesh(ss);
+	base->RecreateBoneTree(ss);
 
-		vrmAssetList->HumanoidSkeletalMesh = ss;
+	vrmAssetList->HumanoidSkeletalMesh = ss;
 
-		return true;
-	}
+	return true;
 }
 
 VrmConvertHumanoid::VrmConvertHumanoid()
