@@ -69,6 +69,30 @@ namespace {
 }
 #endif
 
+static const aiNode* GetBoneNodeFromMeshID(const int &meshID, const aiNode *node) {
+
+	if (node == nullptr) {
+		return nullptr;
+	}
+	for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
+		if (node->mMeshes[i] == meshID) {
+			return node;
+		}
+	}
+
+	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
+		auto a = GetBoneNodeFromMeshID(meshID, node->mChildren[i]);
+		if (a) {
+			return a;
+		}
+	}
+	return nullptr;
+}
+
+static const  aiNode* GetBoneFromMeshID(int meshID, const aiScene *mScenePtr) {
+	return GetBoneNodeFromMeshID(meshID, mScenePtr->mRootNode);
+}
+
 static int GetChildBoneLocal(const USkeleton *skeleton, const int32 ParentBoneIndex, TArray<int32> & Children) {
 	Children.Reset();
 	auto &r = skeleton->GetReferenceSkeleton();
@@ -515,13 +539,16 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 								continue;
 							}
 
-							uint8 tabledIndex = 0;
+							int tabledIndex = 0;
 							auto f = bonemap.Find(b);
 							if (f != INDEX_NONE) {
 								tabledIndex = f;
 							}
 							else {
 								tabledIndex = bonemap.Add(b);
+							}
+							if (tabledIndex > 255) {
+								UE_LOG(LogTemp, Warning, TEXT("bonemap over!"));
 							}
 
 							s.InfluenceBones[jj] = tabledIndex;
@@ -552,9 +579,19 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					//for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
 					//	NewRenderSection.BoneMap[i] = i;
 					//}
-					NewRenderSection.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
-					for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
-						NewRenderSection.BoneMap[i] = bonemap[i];
+					if (bonemap.Num() > 0) {
+						NewRenderSection.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
+						for (int i = 0; i < NewRenderSection.BoneMap.Num(); ++i) {
+							NewRenderSection.BoneMap[i] = bonemap[i];
+						}
+					}else {
+						NewRenderSection.BoneMap.SetNum(1);
+						auto *p = GetBoneFromMeshID(meshID, mScenePtr);
+						int32 i = k->GetReferenceSkeleton().FindBoneIndex(p->mName.C_Str());
+						if (i <= 0) {
+							i = meshID;
+						}
+						NewRenderSection.BoneMap[0] = i;
 					}
 
 
@@ -603,9 +640,19 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
 					s.BaseVertexIndex = currentVertex;
 					s.SoftVertices = meshWeight;
-					s.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
-					for (int i = 0; i < s.BoneMap.Num(); ++i) {
-						s.BoneMap[i] = bonemap[i];
+					if (bonemap.Num() > 0) {
+						s.BoneMap.SetNum(bonemap.Num());//ModelSection.BoneMap;
+						for (int i = 0; i < s.BoneMap.Num(); ++i) {
+							s.BoneMap[i] = bonemap[i];
+						}
+					}else {
+						s.BoneMap.SetNum(1);
+						auto *p = GetBoneFromMeshID(meshID, mScenePtr);
+						int32 i = k->GetReferenceSkeleton().FindBoneIndex(p->mName.C_Str());
+						if (i <= 0) {
+							i = meshID;
+						}
+						s.BoneMap[0] = i;
 					}
 					s.NumVertices = meshWeight.Num();
 					s.MaxBoneInfluences = 4;
