@@ -89,7 +89,7 @@ static const aiNode* GetBoneNodeFromMeshID(const int &meshID, const aiNode *node
 	return nullptr;
 }
 
-static const  aiNode* GetBoneFromMeshID(int meshID, const aiScene *mScenePtr) {
+static const  aiNode* GetNodeFromMeshID(int meshID, const aiScene *mScenePtr) {
 	return GetBoneNodeFromMeshID(meshID, mScenePtr->mRootNode);
 }
 
@@ -124,19 +124,31 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 
 		result.meshToIndex.FindOrAdd(mesh) = mi.Vertices.Num();
 
-		//if (mesh->mNumBones == 0) {
-		//	continue;
-		//}
+		bool bSkin = true;
+		if (mesh->mNumBones == 0) {
+			bSkin = false;
+		}
 
 
 		//transform.
 		aiMatrix4x4 tempTrans = node->mTransformation;
+		if (bSkin == false) {
+			auto *p = node->mParent;
+			while (p) {
+				aiMatrix4x4 aiMat = p->mTransformation;
+				tempTrans *= aiMat;
+
+				p = p->mParent;
+			}
+		}
+
 		FMatrix tempMatrix;
 		tempMatrix.M[0][0] = tempTrans.a1; tempMatrix.M[0][1] = tempTrans.b1; tempMatrix.M[0][2] = tempTrans.c1; tempMatrix.M[0][3] = tempTrans.d1;
 		tempMatrix.M[1][0] = tempTrans.a2; tempMatrix.M[1][1] = tempTrans.b2; tempMatrix.M[1][2] = tempTrans.c2; tempMatrix.M[1][3] = tempTrans.d2;
 		tempMatrix.M[2][0] = tempTrans.a3; tempMatrix.M[2][1] = tempTrans.b3; tempMatrix.M[2][2] = tempTrans.c3; tempMatrix.M[2][3] = tempTrans.d3;
 		tempMatrix.M[3][0] = tempTrans.a4; tempMatrix.M[3][1] = tempTrans.b4; tempMatrix.M[3][2] = tempTrans.c4; tempMatrix.M[3][3] = tempTrans.d4;
 		mi.RelativeTransform = FTransform(tempMatrix);
+
 
 		//vet
 		for (uint32 j = 0; j < mesh->mNumVertices; ++j)
@@ -586,7 +598,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						}
 					}else {
 						NewRenderSection.BoneMap.SetNum(1);
-						auto *p = GetBoneFromMeshID(meshID, mScenePtr);
+						auto *p = GetNodeFromMeshID(meshID, mScenePtr);
 						int32 i = k->GetReferenceSkeleton().FindBoneIndex(p->mName.C_Str());
 						if (i <= 0) {
 							i = meshID;
@@ -647,7 +659,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						}
 					}else {
 						s.BoneMap.SetNum(1);
-						auto *p = GetBoneFromMeshID(meshID, mScenePtr);
+						auto *p = GetNodeFromMeshID(meshID, mScenePtr);
 						int32 i = k->GetReferenceSkeleton().FindBoneIndex(p->mName.C_Str());
 						if (i <= 0) {
 							i = meshID;
