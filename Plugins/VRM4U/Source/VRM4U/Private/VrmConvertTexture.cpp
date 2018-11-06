@@ -139,6 +139,23 @@ namespace {
 				dm->BasePropertyOverrides.bOverride_OpacityMaskClipValue = true;
 				dm->BasePropertyOverrides.OpacityMaskClipValue = vrmMat.floatProperties._Cutoff;
 			}
+
+			{
+				auto replaceParent = dm->Parent;
+				switch ((int)(vrmMat.floatProperties._BlendMode)) {
+				case 0:
+				case 1:
+					replaceParent = vrmAssetList->BaseMToonOpaqueMaterial;
+					break;
+				case 2:
+				case 3:
+					replaceParent = vrmAssetList->BaseMToonTransparentMaterial;
+					break;
+				}
+				if (replaceParent) {
+					dm->Parent = replaceParent;
+				}
+			}
 		}
 
 		return true;
