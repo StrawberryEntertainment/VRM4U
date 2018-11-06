@@ -22,6 +22,8 @@ public:
 	static FString NormalizeFileName(const char *str);
 	static FString NormalizeFileName(const FString &str);
 
+	static bool NormalizeBoneName(const aiScene *mScenePtr);
+
 	static bool ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
 	static bool ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);

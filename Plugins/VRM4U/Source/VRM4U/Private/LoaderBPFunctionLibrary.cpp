@@ -221,6 +221,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	src->BaseFileName = VRMConverter::NormalizeFileName(baseFileName);
 	src->Package = package;
 
+	VRMConverter::NormalizeBoneName(mScenePtr);
 	VRMConverter::ConvertTextureAndMaterial(src, mScenePtr);
 	VRMConverter::ConvertVrmMeta(src, mScenePtr);	// use texture.
 	VRMConverter::ConvertModel(src, mScenePtr);
