@@ -180,7 +180,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 			for (int targetBondeID = 0; targetBondeID < bone.Num(); ++targetBondeID) {
 				auto &a = bone[targetBondeID];
 
-				FString str = (a->mName.C_Str());
+				FString str = UTF8_TO_TCHAR(a->mName.C_Str());
 				auto f = rec_low.Find(str.ToLower());
 				if (f >= 0) {
 					// same name check
@@ -188,7 +188,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 					//str += TEXT("_renamed_vrm4u_") + FString::Printf(TEXT("%02d"), targetBondeID);
 					//a->mName.Set(TCHAR_TO_ANSI(*str));
 
-					if (rec_orig[f] == a->mName.C_Str()) {
+					if (rec_orig[f] == UTF8_TO_TCHAR(a->mName.C_Str())) {
 						// same name node!
 						aiNode *n[] = {
 							s->mRootNode->FindNode(a->mName),
@@ -200,7 +200,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 						};
 
 						char tmp[512];
-						snprintf(tmp, 512, "%s_DUP", n[0]->mName.C_Str());
+						snprintf(tmp, 512, "%s_DUP", (n[0]->mName.C_Str()));
 						if (t[0] < t[1]) {
 							//n[0]->mName = tmp;
 						}else {
@@ -219,9 +219,9 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 						s += TEXT("_renamed_vrm4u_") + FString::Printf(TEXT("%02d"), f);
 						renameTable.FindOrAdd(rec_orig[f]) = s;
 
-						s = a->mName.C_Str();
+						s = UTF8_TO_TCHAR(a->mName.C_Str());
 						s += TEXT("_renamed_vrm4u_") + FString::Printf(TEXT("%02d"), targetBondeID);
-						renameTable.FindOrAdd(a->mName.C_Str()) = s;
+						renameTable.FindOrAdd(UTF8_TO_TCHAR(a->mName.C_Str())) = s;
 						str = s;
 					}
 
@@ -232,7 +232,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 						
 						for (uint32_t allBoneID = 0; allBoneID < aiM.mNumBones; ++allBoneID) {
 							auto &aiB = *(aiM.mBones[allBoneID]);
-							auto res = renameTable.Find(aiB.mName.C_Str());
+							auto res = renameTable.Find(UTF8_TO_TCHAR(aiB.mName.C_Str()));
 							if (res) {
 							//if (strcmp(aiB.mName.C_Str(), origName.C_Str()) == 0) {
 

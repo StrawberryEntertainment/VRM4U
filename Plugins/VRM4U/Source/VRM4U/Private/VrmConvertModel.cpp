@@ -115,8 +115,7 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 
 	for (uint32 i = 0; i < node->mNumMeshes; i++)
 	{
-		std::string TestString = node->mName.C_Str();
-		FString Fs = FString(TestString.c_str());
+		FString Fs = UTF8_TO_TCHAR(node->mName.C_Str());
 		UE_LOG(LogTemp, Warning, TEXT("FindMeshInfo. %s\n"), *Fs);
 		int meshidx = node->mMeshes[i];
 		aiMesh *mesh = scene->mMeshes[meshidx];
@@ -430,7 +429,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		for (int i = 0; i < sk->Materials.Num(); ++i) {
 			sk->Materials[i].MaterialInterface = vrmAssetList->Materials[i];
 			sk->Materials[i].UVChannelData = FMeshUVChannelInfo(1);
-			sk->Materials[i].MaterialSlotName = mScenePtr->mMaterials[i]->GetName().C_Str();
+			sk->Materials[i].MaterialSlotName = UTF8_TO_TCHAR(mScenePtr->mMaterials[i]->GetName().C_Str());
 		}
 	}
 	//USkeleton* NewAsset = NewObject<USkeleton>();
@@ -534,7 +533,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
 					auto &aiB = aiM->mBones[boneIndex];
 
-					int b = sk->RefSkeleton.FindBoneIndex(aiB->mName.C_Str());
+					int b = sk->RefSkeleton.FindBoneIndex(UTF8_TO_TCHAR(aiB->mName.C_Str()));
 
 					if (b < 0) {
 						continue;
@@ -579,6 +578,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					FSkelMeshRenderSection &NewRenderSection = rd.RenderSections[meshID];
 					//NewRenderSection = rd.RenderSections[0];
 					NewRenderSection.MaterialIndex = aiM->mMaterialIndex;// ModelSection.MaterialIndex;
+					if (NewRenderSection.MaterialIndex >= vrmAssetList->Materials.Num()) NewRenderSection.MaterialIndex = 0;
 					NewRenderSection.BaseIndex = currentIndex;
 					NewRenderSection.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
 					//NewRenderSection.bRecomputeTangent = ModelSection.bRecomputeTangent;
@@ -599,7 +599,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}else {
 						NewRenderSection.BoneMap.SetNum(1);
 						auto *p = GetNodeFromMeshID(meshID, mScenePtr);
-						int32 i = k->GetReferenceSkeleton().FindBoneIndex(p->mName.C_Str());
+						int32 i = k->GetReferenceSkeleton().FindBoneIndex(UTF8_TO_TCHAR(p->mName.C_Str()));
 						if (i <= 0) {
 							i = meshID;
 						}
@@ -648,6 +648,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					TMap<int32, TArray<int32>> OverlappingVertices;
 
 					s.MaterialIndex = aiM->mMaterialIndex;
+					if (s.MaterialIndex >= vrmAssetList->Materials.Num()) s.MaterialIndex = 0;
 					s.BaseIndex = currentIndex;
 					s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
 					s.BaseVertexIndex = currentVertex;
@@ -660,7 +661,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}else {
 						s.BoneMap.SetNum(1);
 						auto *p = GetNodeFromMeshID(meshID, mScenePtr);
-						int32 i = k->GetReferenceSkeleton().FindBoneIndex(p->mName.C_Str());
+						int32 i = k->GetReferenceSkeleton().FindBoneIndex(UTF8_TO_TCHAR(p->mName.C_Str()));
 						if (i <= 0) {
 							i = meshID;
 						}
@@ -810,7 +811,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 
 						bs->Modify();
-						bs->BoneName = sbone.C_Str();
+						bs->BoneName = UTF8_TO_TCHAR(sbone.C_Str());
 						bs->AddCollisionFrom(agg);
 						bs->CollisionTraceFlag = CTF_UseSimpleAsComplex;
 						// newly created bodies default to simulating
@@ -831,7 +832,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						{
 							//Material = (UMaterial*)StaticDuplicateObject(OriginalMaterial, GetTransientPackage(), NAME_None, ~RF_Standalone, UPreviewMaterial::StaticClass()); 
 							TArray<int32> child;
-							int32 ii = k->GetReferenceSkeleton().FindBoneIndex(sbone.C_Str());
+							int32 ii = k->GetReferenceSkeleton().FindBoneIndex(UTF8_TO_TCHAR(sbone.C_Str()));
 							GetChildBoneLocal(k, ii, child);
 							for (auto &c : child) {
 								USkeletalBodySetup *bs2 = Cast<USkeletalBodySetup>(StaticDuplicateObject(bs, pa, NAME_None));
@@ -845,7 +846,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 
 
-								createConstraint(sk, pa, sbone.C_Str(), bs2->BoneName);
+								createConstraint(sk, pa, UTF8_TO_TCHAR(sbone.C_Str()), bs2->BoneName);
 							}
 						}
 					}
@@ -872,7 +873,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					USkeletalBodySetup *bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
 
 					bs->Modify();
-					bs->BoneName = c.node_name.C_Str();
+					bs->BoneName = UTF8_TO_TCHAR(c.node_name.C_Str());
 					bs->AddCollisionFrom(agg);
 					bs->CollisionTraceFlag = CTF_UseSimpleAsComplex;
 					// newly created bodies default to simulating

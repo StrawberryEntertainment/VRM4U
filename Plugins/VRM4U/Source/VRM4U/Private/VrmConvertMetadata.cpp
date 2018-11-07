@@ -37,7 +37,7 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 
 	// bone
 	for (auto &a : meta->humanoidBone) {
-		m->humanoidBoneTable.Add(a.humanBoneName.C_Str()) = a.nodeName.C_Str();
+		m->humanoidBoneTable.Add(UTF8_TO_TCHAR(a.humanBoneName.C_Str())) = UTF8_TO_TCHAR(a.nodeName.C_Str());
 	}
 
 	//shape
@@ -45,14 +45,14 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 	for (int i = 0; i < meta->blensShapeGroupNum; ++i) {
 		auto &aiGroup = meta->blensShapeGourp[i];
 
-		m->BlendShapeGroup[i].name = aiGroup.groupName.C_Str();
+		m->BlendShapeGroup[i].name = UTF8_TO_TCHAR(aiGroup.groupName.C_Str());
 
 		m->BlendShapeGroup[i].BlendShape.SetNum(aiGroup.bindNum);
 		for (int b = 0; b < aiGroup.bindNum; ++b) {
 			auto &bind = m->BlendShapeGroup[i].BlendShape[b];
-			bind.morphTargetName = aiGroup.bind[b].blendShapeName.C_Str();
-			bind.meshName = aiGroup.bind[b].meshName.C_Str();
-			bind.nodeName = aiGroup.bind[b].nodeName.C_Str();
+			bind.morphTargetName = UTF8_TO_TCHAR(aiGroup.bind[b].blendShapeName.C_Str());
+			bind.meshName = UTF8_TO_TCHAR(aiGroup.bind[b].meshName.C_Str());
+			bind.nodeName = UTF8_TO_TCHAR(aiGroup.bind[b].nodeName.C_Str());
 			bind.weight = aiGroup.bind[b].weight;
 			bind.meshID = aiGroup.bind[b].meshID;
 			bind.shapeIndex = aiGroup.bind[b].shapeIndex;

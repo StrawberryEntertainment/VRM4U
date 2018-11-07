@@ -99,6 +99,7 @@ static bool ReplaceNodeName(aiNode *node, const TMap<FString, FString> &map) {
 
 bool VRMConverter::NormalizeBoneName(const aiScene *mScenePtr) {
 
+	return true;
 	//auto p = const_cast<aiScene*>(mScenePtr);
 	//if (p == nullptr) return false;
 
@@ -106,6 +107,8 @@ bool VRMConverter::NormalizeBoneName(const aiScene *mScenePtr) {
 
 	totalCount = 0;
 	//mScenePtr->mMeshes[0]->bon
+
+	AddReplaceList(mScenePtr->mRootNode, replaceTable);
 
 	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
 		if (hasInvalidBoneName(mScenePtr->mMeshes[m]->mName)) {
@@ -116,17 +119,53 @@ bool VRMConverter::NormalizeBoneName(const aiScene *mScenePtr) {
 			}
 		}
 	}
-	AddReplaceList(mScenePtr->mRootNode, replaceTable);
 
 	// replace!
 
+	ReplaceNodeName(mScenePtr->mRootNode, replaceTable);
+
 	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
-		auto a = replaceTable.Find(UTF8_TO_TCHAR(mScenePtr->mMeshes[m]->mName.C_Str()));
-		if (a) {
+		if (auto a = replaceTable.Find(UTF8_TO_TCHAR(mScenePtr->mMeshes[m]->mName.C_Str()))){
 			mScenePtr->mMeshes[m]->mName.Set(TCHAR_TO_ANSI(**a));
 		}
+
+		auto &aiM = mScenePtr->mMeshes[m];
+		for (uint32_t b = 0; b < aiM->mNumBones; ++b) {
+			if (auto a = replaceTable.Find(UTF8_TO_TCHAR(aiM->mBones[b]->mName.C_Str()))) {
+				aiM->mBones[b]->mName.Set(TCHAR_TO_ANSI(**a));
+			}
+		}
 	}
-	ReplaceNodeName(mScenePtr->mRootNode, replaceTable);
+
+	{
+		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+
+		for (int s = 0; s < meta->sprintNum; ++s) {
+			auto &a = meta->springs[s];
+			if (a.bones_name == nullptr) {
+				continue;
+			}
+			for (int b = 0; b < a.boneNum; ++b) {
+				if (auto str = replaceTable.Find(UTF8_TO_TCHAR(a.bones_name[b].C_Str()))) {
+					a.bones_name[b].Set(TCHAR_TO_ANSI(**str));
+				}
+			}
+		}
+
+		for (int c = 0; c < meta->colliderGroupNum; ++c) {
+			auto &a = meta->colliderGroups[c];
+			if (auto str = replaceTable.Find(UTF8_TO_TCHAR(a.node_name.C_Str()))) {
+				a.node_name.Set(TCHAR_TO_ANSI(**str));
+			}
+		}
+
+		for (auto &a : meta->humanoidBone) {
+			if (auto str = replaceTable.Find(UTF8_TO_TCHAR(a.nodeName.C_Str()))) {
+				a.nodeName.Set(TCHAR_TO_ANSI(**str));
+			}
+		}
+	}
+
 
 	return true;
 }
