@@ -4,12 +4,13 @@
 #include "VrmMetaObject.h"
 #include "Animation/AnimNodeBase.h"
 #include "Animation/Morphtarget.h"
+#include "BoneControllers/AnimNode_Fabrik.h"
+#include "BoneControllers/AnimNode_TwoBoneIK.h"
 
 
 void FVrmAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance) {
 }
 bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
-	
 	Output.ResetToRefPose();
 
 	UVrmAnimInstance *animInstance = Cast<UVrmAnimInstance>(GetAnimInstanceObject());
@@ -17,18 +18,164 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		return false;
 	}
 
-	UVrmMetaObject *meta = animInstance->MetaObject;
-	if (meta == nullptr) {
-		return false;
+	enum BoneTarget{
+		E_Hand_L,
+		E_UpperArm_L,
+		E_Hand_R,
+		E_UpperArm_R,
+
+		E_MAX,
+	};
+	FString targetBoneTable[] = {
+		TEXT("leftHand"),
+		TEXT("leftUpperArm"),
+		TEXT("rightHand"),
+		TEXT("rightUpperArm"),
+		TEXT("head"),
+		TEXT("spine"),
+	};
+
+	FTransform targetTracking[] = {
+		animInstance->TransHandLeft,
+		animInstance->TransHandRight,
+		animInstance->TransHead,
+	};
+
+	{
+		const USceneComponent *targetComponent[] = {
+			animInstance->ComponentHandLeft,
+			animInstance->ComponentHandRight,
+			animInstance->ComponentHead,
+		};
+
+		for (int i = 0; i < 3; ++i) {
+			if (targetComponent[i] == nullptr) continue;
+			targetTracking[i] = targetComponent[i]->GetComponentTransform();
+		}
+	}
+
+
+	const UVrmMetaObject *meta = animInstance->MetaObject;
+	if (meta) {
+		for (auto &humanoidName : targetBoneTable) {
+			for (auto &modelName : meta->humanoidBoneTable) {
+				if (humanoidName.Compare(modelName.Key, ESearchCase::IgnoreCase) != 0) {
+					continue;
+				}
+				humanoidName = modelName.Value;
+				break;
+			}
+		}
+		//return false;
 	}
 
 	USkeletalMeshComponent *srcMesh = animInstance->BaseSkeletalMeshComponent;
 	if (srcMesh == nullptr) {
-		return false;
+	//	return false;
 	}
+
+	const auto &RefSkeletonTransform = GetSkelMeshComponent()->SkeletalMesh->RefSkeleton.GetRefBonePose();
 
 	auto &pose = Output.Pose;
 
+	FComponentSpacePoseContext ComponentSpacePoseContext(Output.AnimInstanceProxy);
+	ComponentSpacePoseContext.Pose.InitPose(Output.Pose);
+
+
+	for (int i = 0; i < 3; ++i) {
+
+		if (targetTracking[i].GetLocation().Size() == 0) {
+			continue;
+		}
+
+		FAnimNode_Fabrik f;
+		{
+
+			f.EffectorTransformSpace = EBoneControlSpace::BCS_WorldSpace;
+			f.EffectorTransform = targetTracking[i];
+
+			//f.EffectorTarget;
+
+			f.EffectorRotationSource = EBoneRotationSource::BRS_CopyFromTarget;
+
+			f.TipBone.BoneName = *(targetBoneTable[i * 2]);
+			f.TipBone.Initialize(this->GetSkeleton());
+
+			f.RootBone.BoneName = *(targetBoneTable[i * 2 + 1]);
+			f.RootBone.Initialize(this->GetSkeleton());
+
+			f.Precision = 1.f;
+			f.MaxIterations = 10;
+			f.bEnableDebugDraw = false;
+		}
+		FAnimNode_TwoBoneIK t;
+		{
+			t.IKBone.BoneName = *(targetBoneTable[i * 2]);
+
+			t.bAllowStretching = true;
+			t.StartStretchRatio = 1.f;
+			t.MaxStretchScale = 1.1f;
+			//f.bTakeRotationFromEffectorSpace = false;
+			//f.bMaintainEffectorRelRot : 1;
+
+			t.EffectorLocationSpace = EBoneControlSpace::BCS_WorldSpace;
+
+			t.EffectorLocation = targetTracking[i].GetLocation();
+
+			//f.EffectorTarget;
+
+			t.JointTargetLocationSpace = EBoneControlSpace::BCS_WorldSpace;
+
+			const USceneComponent *tmp[] = {
+				animInstance->ComponentHandJointTargetLeft,
+				animInstance->ComponentHandJointTargetRight,
+				nullptr,
+			};
+			if (tmp[i]) {
+				t.JointTargetLocation = tmp[i]->GetComponentLocation();
+			}
+			//f.JointTarget;
+			t.bAllowTwist = true;
+		}
+
+
+		{
+
+			//ApplyBoneControllers(GetCurveBoneControllers(), ComponentSpacePoseContext);
+			//ApplyBoneControllers(BoneControllers, ComponentSpacePoseContext);
+			if (USkeleton* LocalSkeleton = ComponentSpacePoseContext.AnimInstanceProxy->GetSkeleton())
+			{
+				//for (auto& SingleBoneController : InBoneControllers)
+				{
+					auto &SingleBoneController = t;
+
+					TArray<FBoneTransform> BoneTransforms;
+					FAnimationCacheBonesContext Proxy(this);
+					SingleBoneController.CacheBones_AnyThread(Proxy);
+					if (SingleBoneController.IsValidToEvaluate(LocalSkeleton, ComponentSpacePoseContext.Pose.GetPose().GetBoneContainer()))
+					{
+						SingleBoneController.EvaluateSkeletalControl_AnyThread(ComponentSpacePoseContext, BoneTransforms);
+						if (BoneTransforms.Num() > 0)
+						{
+							ComponentSpacePoseContext.Pose.LocalBlendCSBoneTransforms(BoneTransforms, 1.0f);
+						}
+					}
+				}
+			}
+		}
+	}
+	ComponentSpacePoseContext.Pose.ConvertToLocalPoses(Output.Pose);
+
+	for (int i=0; i<2; ++i){
+		auto b = GetSkelMeshComponent()->GetBoneIndex(*targetBoneTable[i*2]);
+		FCompactPose::BoneIndexType bi(b);
+		auto t = Output.Pose[bi];
+		t.SetRotation(targetTracking[i].GetRotation());
+		Output.Pose[bi] = t;
+	}
+
+
+/*
 	for (auto &boneName : meta->humanoidBoneTable) {
 
 		if (boneName.Key == TEXT("leftEye") || boneName.Key == TEXT("rightEye")) {
@@ -45,10 +192,18 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		if (i < 0) {
 			continue;
 		}
+		auto refLocation = RefSkeletonTransform[i].GetLocation();
+		
+		FVector newLoc = t.GetLocation();
+		if (newLoc.Normalize()) {
+			newLoc *= refLocation.Size();
+			t.SetLocation(newLoc);
+		}
+
 		FCompactPose::BoneIndexType bi(i);
 		pose[bi] = t;
 	}
-
+*/
 	return true;
 }
 void FVrmAnimInstanceProxy::UpdateAnimationNode(float DeltaSeconds) {

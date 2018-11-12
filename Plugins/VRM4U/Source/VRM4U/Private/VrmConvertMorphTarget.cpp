@@ -91,17 +91,22 @@ bool VRMConverter::ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const a
 			//aiA.
 			TArray<FMorphTargetDelta> MorphDeltas;
 
+			FString morphName = UTF8_TO_TCHAR(aiA.mName.C_Str());
+			if (morphName == TEXT("")) {
+				//morphName = FString::Printf("%d_%d", m, a);
+			}
 
-			if (MorphNameList.Find(FString(UTF8_TO_TCHAR(aiA.mName.C_Str()))) != INDEX_NONE) {
+
+			if (MorphNameList.Find(morphName) != INDEX_NONE) {
 				continue;
 			}
-			MorphNameList.Add(FString(UTF8_TO_TCHAR(aiA.mName.C_Str())));
+			MorphNameList.Add(morphName);
 			if (readMorph2(MorphDeltas, aiA.mName, mScenePtr) == false) {
 				continue;
 			}
 
 			//FString sss = FString::Printf(TEXT("%02d_%02d_"), m, a) + FString(aiA.mName.C_Str());
-			FString sss = UTF8_TO_TCHAR(aiA.mName.C_Str());// FString::Printf(TEXT("%02d_%02d_"), m, a) + FString();
+			FString sss = morphName;// FString::Printf(TEXT("%02d_%02d_"), m, a) + FString();
 			UMorphTarget *mt = NewObject<UMorphTarget>(sk, *sss);
 
 			mt->PopulateDeltas(MorphDeltas, 0, sk->GetImportedModel()->LODModels[0].Sections);
@@ -109,7 +114,7 @@ bool VRMConverter::ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const a
 			if (mt->HasValidData()) {
 				sk->RegisterMorphTarget(mt);
 			}
-
+			
 		}
 	}
 
