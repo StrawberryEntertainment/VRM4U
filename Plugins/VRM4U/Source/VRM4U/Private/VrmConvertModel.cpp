@@ -382,6 +382,18 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		k->SetPreviewMesh(sk);
 		k->RecreateBoneTree(sk);
 
+		// changet retarget option
+		if (IsImportMode() == false){
+			//k->Modify();
+
+			for (int i = 0; i < k->GetReferenceSkeleton().GetRawBoneNum(); ++i) {
+				//const int32 BoneIndex = k->GetReferenceSkeleton().FindBoneIndex(InBoneName);
+				//k->SetBoneTranslationRetargetingMode(i, EBoneTranslationRetargetingMode::Skeleton);
+				//FAssetNotifications::SkeletonNeedsToBeSaved(k);
+			}
+		}
+
+		// sk end
 
 		vrmAssetList->SkeletalMesh = sk;
 

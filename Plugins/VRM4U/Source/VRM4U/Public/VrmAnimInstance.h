@@ -73,6 +73,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	USkeletalMeshComponent *BaseSkeletalMeshComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+	FTransform TransHandLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+	FTransform TransHandRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+	FTransform TransHead;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+	USceneComponent *ComponentHandLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+	USceneComponent *ComponentHandRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+	USceneComponent *ComponentHead;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+		USceneComponent *ComponentHandJointTargetLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
+		USceneComponent *ComponentHandJointTargetRight;
+
 protected:
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override;
 public:

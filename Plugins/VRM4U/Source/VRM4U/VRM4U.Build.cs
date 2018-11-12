@@ -44,7 +44,9 @@ public class VRM4U : ModuleRules
                 "Engine",
                 "RHI",
                 "RenderCore",
-                "ProceduralMeshComponent"
+                "ProceduralMeshComponent",
+                "AnimGraphRuntime"
+
                 // ... add other public dependencies that you statically link with here ...
 			}
 			);
