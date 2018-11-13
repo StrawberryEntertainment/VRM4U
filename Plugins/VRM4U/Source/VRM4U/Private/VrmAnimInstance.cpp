@@ -115,8 +115,9 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 			t.bAllowStretching = true;
 			t.StartStretchRatio = 1.f;
 			t.MaxStretchScale = 1.1f;
-			//f.bTakeRotationFromEffectorSpace = false;
-			//f.bMaintainEffectorRelRot : 1;
+			//t.bTakeRotationFromEffectorSpace = false;
+			t.bMaintainEffectorRelRot = false;
+			t.bAllowTwist = true;
 
 			t.EffectorLocationSpace = EBoneControlSpace::BCS_WorldSpace;
 
@@ -135,7 +136,6 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 				t.JointTargetLocation = tmp[i]->GetComponentLocation();
 			}
 			//f.JointTarget;
-			t.bAllowTwist = true;
 		}
 
 
@@ -164,15 +164,27 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 			}
 		}
 	}
+
 	ComponentSpacePoseContext.Pose.ConvertToLocalPoses(Output.Pose);
 
-	for (int i=0; i<2; ++i){
+	for (int i=0; i<3; ++i){
 		auto b = GetSkelMeshComponent()->GetBoneIndex(*targetBoneTable[i*2]);
+		if (b == INDEX_NONE) {
+			continue;
+		}
 		FCompactPose::BoneIndexType bi(b);
 		auto t = Output.Pose[bi];
-		t.SetRotation(targetTracking[i].GetRotation());
+		auto tmp = targetTracking[i];
+		//tmp.SetToRelativeTransform(GetComponentTransform());
+		//t.SetRotation( GetComponentTransform().GetRotation().Inverse() * (tmp.GetRotation()) );
+
+		
+		//const FTransform& BoneTM = ComponentSpacePoseContext.Pose.GetComponentSpaceTransform(bi);
+		t.SetRotation( t.GetRotation() * (tmp.GetRotation()) );
 		Output.Pose[bi] = t;
 	}
+
+
 
 
 /*
