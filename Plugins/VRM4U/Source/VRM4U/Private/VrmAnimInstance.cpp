@@ -6,6 +6,7 @@
 #include "Animation/Morphtarget.h"
 #include "BoneControllers/AnimNode_Fabrik.h"
 #include "BoneControllers/AnimNode_TwoBoneIK.h"
+#include "BoneControllers/AnimNode_SplineIK.h"
 
 
 void FVrmAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance) {
@@ -23,9 +24,13 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		E_UpperArm_L,
 		E_Hand_R,
 		E_UpperArm_R,
+		E_Head,
+		E_Spine,
 
 		E_MAX,
 	};
+
+	// boneName
 	FString targetBoneTable[] = {
 		TEXT("leftHand"),
 		TEXT("leftUpperArm"),
@@ -34,13 +39,28 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		TEXT("head"),
 		TEXT("spine"),
 	};
+	{
+		const UVrmMetaObject *meta = animInstance->MetaObject;
+		if (meta) {
+			for (auto &humanoidName : targetBoneTable) {
+				for (auto &modelName : meta->humanoidBoneTable) {
+					if (humanoidName.Compare(modelName.Key, ESearchCase::IgnoreCase) != 0) {
+						continue;
+					}
+					// bone rename
+					humanoidName = modelName.Value;
+					break;
+				}
+			}
+		}
+	}
 
+	// tracking point
 	FTransform targetTracking[] = {
 		animInstance->TransHandLeft,
 		animInstance->TransHandRight,
 		animInstance->TransHead,
 	};
-
 	{
 		const USceneComponent *targetComponent[] = {
 			animInstance->ComponentHandLeft,
@@ -54,20 +74,12 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		}
 	}
 
+	// mainBone Transform
+	//FTeransform boneTransform[E_MAX] = {
 
-	const UVrmMetaObject *meta = animInstance->MetaObject;
-	if (meta) {
-		for (auto &humanoidName : targetBoneTable) {
-			for (auto &modelName : meta->humanoidBoneTable) {
-				if (humanoidName.Compare(modelName.Key, ESearchCase::IgnoreCase) != 0) {
-					continue;
-				}
-				humanoidName = modelName.Value;
-				break;
-			}
-		}
-		//return false;
-	}
+	//};
+
+
 
 	USkeletalMeshComponent *srcMesh = animInstance->BaseSkeletalMeshComponent;
 	if (srcMesh == nullptr) {
@@ -80,7 +92,6 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 
 	FComponentSpacePoseContext ComponentSpacePoseContext(Output.AnimInstanceProxy);
 	ComponentSpacePoseContext.Pose.InitPose(Output.Pose);
-
 
 	for (int i = 0; i < 3; ++i) {
 
@@ -137,7 +148,38 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 			}
 			//f.JointTarget;
 		}
+		FAnimNode_SplineIK s;
+		{
+			s.StartBone.BoneName = *targetBoneTable[E_Spine];
+			s.StartBone.Initialize(this->GetSkeleton());
+			s.EndBone.BoneName = *targetBoneTable[E_Head];
+			s.EndBone.Initialize(this->GetSkeleton());
 
+			s.BoneAxis = ESplineBoneAxis::Y;
+
+			s.bAutoCalculateSpline = false;
+
+			s.PointCount = 2;
+
+			s.ControlPoints.SetNum(2);
+			s.ControlPoints[0].SetIdentity();
+			s.ControlPoints[1] = targetTracking[2];
+			s.ControlPoints[1].SetToRelativeTransform(GetComponentTransform());
+
+			//ComponentSpacePoseContext.
+
+			s.Roll = 0.f;
+
+			s.TwistStart = 0.f;
+
+			s.TwistEnd = 0.f;
+
+			//s.TwistBlend;
+
+			s.Stretch = 0.01f;
+
+			s.Offset = 0.f;
+		}
 
 		{
 
@@ -146,8 +188,22 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 			if (USkeleton* LocalSkeleton = ComponentSpacePoseContext.AnimInstanceProxy->GetSkeleton())
 			{
 				//for (auto& SingleBoneController : InBoneControllers)
-				{
+				if (i != 2) {
 					auto &SingleBoneController = t;
+
+					TArray<FBoneTransform> BoneTransforms;
+					FAnimationCacheBonesContext Proxy(this);
+					SingleBoneController.CacheBones_AnyThread(Proxy);
+					if (SingleBoneController.IsValidToEvaluate(LocalSkeleton, ComponentSpacePoseContext.Pose.GetPose().GetBoneContainer()))
+					{
+						SingleBoneController.EvaluateSkeletalControl_AnyThread(ComponentSpacePoseContext, BoneTransforms);
+						if (BoneTransforms.Num() > 0)
+						{
+							ComponentSpacePoseContext.Pose.LocalBlendCSBoneTransforms(BoneTransforms, 1.0f);
+						}
+					}
+				} else {
+					auto &SingleBoneController = s;
 
 					TArray<FBoneTransform> BoneTransforms;
 					FAnimationCacheBonesContext Proxy(this);
