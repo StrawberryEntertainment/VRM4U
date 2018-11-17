@@ -117,6 +117,9 @@ extern "C" {
         struct ASSIMP_API VRMMaterialTextureProperties {
             int _MainTex;
             int _ShadeTexture;
+            int _BumpMap;
+            int _SphereAdd;
+            int _EmissionMap;
         };
         struct ASSIMP_API VRMMaterial {
             aiString name;

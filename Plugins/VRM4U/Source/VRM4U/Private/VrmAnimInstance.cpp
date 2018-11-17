@@ -93,7 +93,7 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 	FComponentSpacePoseContext ComponentSpacePoseContext(Output.AnimInstanceProxy);
 	ComponentSpacePoseContext.Pose.InitPose(Output.Pose);
 
-	for (int i = 0; i < 3; ++i) {
+	for (int i = 2; i >=0 ; --i) {
 
 		if (targetTracking[i].GetLocation().Size() == 0) {
 			continue;

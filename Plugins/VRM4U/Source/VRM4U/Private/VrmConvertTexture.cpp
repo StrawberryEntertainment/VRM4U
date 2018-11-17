@@ -157,6 +157,30 @@ namespace {
 				}
 			}
 		}
+		{
+			struct TT {
+				FString key;
+				int value;
+			};
+			TT table[] = {
+				TEXT("mtoon_tex_MainTex"),		vrmMat.textureProperties._MainTex,
+				TEXT("mtoon_tex_ShadeTexture"),	vrmMat.textureProperties._ShadeTexture,
+				TEXT("mtoon_tex_BumpMap"),		vrmMat.textureProperties._BumpMap,
+				TEXT("mtoon_tex_SphereAdd"),	vrmMat.textureProperties._SphereAdd,
+				TEXT("mtoon_tex_EmissionMap"),	vrmMat.textureProperties._EmissionMap,
+			};
+			for (auto &t : table) {
+				if (t.value < 0) {
+					continue;
+				}
+				FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
+				v->ParameterInfo.Index = INDEX_NONE;
+				v->ParameterInfo.Name = *t.key;
+				v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+				v->ParameterValue = vrmAssetList->Textures[t.value];
+			}
+
+		}
 
 		return true;
 	}
@@ -169,8 +193,6 @@ namespace {
 #else
 		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public);
 #endif
-//		UMaterial* UnrealMaterial = (UMaterial*)MaterialFactory->FactoryCreateNew(
-//			UMaterial::StaticClass(), vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone|RF_Public, NULL, GWarn );
 
 		if (UnrealMaterial != NULL)
 		{
@@ -222,6 +244,22 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 	vrmAssetList->Textures.Reset(0);
 	vrmAssetList->Materials.Reset(0);
+
+	TArray<bool> NormalBoolTable;
+	NormalBoolTable.SetNum(mScenePtr->mNumTextures);
+	{
+		const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+
+		for (int i = 0; i < meta->materialNum; ++i) {
+			int t = meta->material[i].textureProperties._BumpMap;
+			if (t < 0) continue;
+
+			if (t < NormalBoolTable.Num()) {
+				NormalBoolTable[t] = true;
+			}
+		}
+	}
+
 
 	TArray<UTexture2D*> texArray;
 	if (mScenePtr->HasTextures()) {
@@ -282,6 +320,10 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			// Set options
 			NewTexture2D->SRGB = true;// bUseSRGB;
 			NewTexture2D->CompressionSettings = TC_Default;
+			if (NormalBoolTable[i]) {
+				NewTexture2D->CompressionSettings = TC_Normalmap;
+				NewTexture2D->SRGB = 0;
+			}
 			NewTexture2D->AddressX = TA_Wrap;
 			NewTexture2D->AddressY = TA_Wrap;
 
@@ -301,6 +343,8 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 	TArray<UMaterialInterface*> matArray;
 	if (mScenePtr->HasMaterials()) {
+
+		TArray<FString> MatNameList;
 
 		vrmAssetList->Materials.SetNum(mScenePtr->mNumMaterials);
 		for (uint32_t i = 0; i < mScenePtr->mNumMaterials; ++i) {
@@ -386,7 +430,18 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			//MyComponent2->SetMaterial(0, DynMaterial);
 
 			if (index >= 0 && index < vrmAssetList->Textures.Num()) {
-				UMaterialInstanceConstant* dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *(FString(TEXT("M_")) + NormalizeFileName(aiMat.GetName().C_Str())), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+				
+				UMaterialInstanceConstant* dm = nullptr;
+				{
+					FString name = (FString(TEXT("M_")) + NormalizeFileName(aiMat.GetName().C_Str()));
+
+					while(MatNameList.Find(name) >= 0) {
+						name += TEXT("_2");
+					}
+					MatNameList.Add(name);
+
+					dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+				}
 				dm->Parent = baseM;
 
 				if (dm) {
@@ -397,7 +452,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 							FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
 							v->ParameterInfo.Index = INDEX_NONE;
 							v->ParameterInfo.Name = TEXT("gltf_basecolor");
-							v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;;
+							v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
 							v->ParameterValue = FLinearColor(col.r, col.g, col.b, col.a);
 						}
 					}
