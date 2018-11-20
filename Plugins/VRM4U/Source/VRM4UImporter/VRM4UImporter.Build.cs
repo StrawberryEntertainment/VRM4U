@@ -11,12 +11,18 @@ public class VRM4UImporter : ModuleRules
 			new string[] {
 				"Core",
 				"CoreUObject",
-				"Engine",
+                "InputCore",
+                "EditorStyle",
+                "ApplicationCore",
+                "Engine",
 				"Json",
 				"UnrealEd",
+                "Slate",
+                "SlateCore",
+                "MainFrame",
                 "VRM4U"
 
-			});
+            });
 
 		PrivateIncludePathModuleNames.AddRange(
 			new string[] {

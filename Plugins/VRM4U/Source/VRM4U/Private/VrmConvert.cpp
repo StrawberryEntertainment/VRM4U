@@ -10,6 +10,11 @@
 #include <assimp/pbrmaterial.h>
 #include <assimp/vrm/vrmmeta.h>
 
+#if WITH_EDITOR
+
+#include "VrmOptionWindow.h"
+
+#endif
 
 
 static bool bImportMode = false;
@@ -169,6 +174,23 @@ bool VRMConverter::NormalizeBoneName(const aiScene *mScenePtr) {
 
 	return true;
 }
+
+
+////
+USkeleton *VRMConverter::Options::GetSkeleton() {
+	if (Window == nullptr) return nullptr;
+
+	return Window->Skeleton;
+}
+
+////
+
+
+
+
+
+
+
 
 VrmConvert::VrmConvert()
 {

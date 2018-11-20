@@ -10,10 +10,27 @@
 #include "LoaderBPFunctionLibrary.h"
 #include "VrmAssetListObject.h"
 #include "VrmRuntimeSettings.h"
+#include "VrmOptionWindow.h"
 #include "Engine/Blueprint.h"
+
+#include "Interfaces/IMainFrameModule.h"
+#include "Widgets/SWindow.h"
+#include "Framework/Application/SlateApplication.h"
+#include "HAL/PlatformApplicationMisc.h"
+#include "VrmOptionWindow.h"
+#include "VrmImportUI.h"
+#include "VrmConvert.h"
 
 #define LOCTEXT_NAMESPACE "VRMImporter"
 
+
+/*
+UCLASS(config=EditorPerProjectUserSettings, AutoExpandCategories=(FTransform), HideCategories=Object, MinimalAPI)
+class UFbxImportUI : public UObject, public IImportSettingsParser
+{
+}
+
+*/
 
 UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -24,6 +41,7 @@ UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectIni
 	bCreateNew = false;
 	bEditorImport = true;
 
+	ImportPriority = 90;
 }
 
 
@@ -85,6 +103,62 @@ T* GetObjectFromStringAsset(FStringAssetReference const& AssetRef)
 UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn)
 {
 	
+	auto ImportUI = NewObject<UVrmImportUI>(this, NAME_None, RF_NoFlags);
+	{
+
+		TSharedPtr<SWindow> ParentWindow;
+
+		if( FModuleManager::Get().IsModuleLoaded( "MainFrame" ) )
+		{
+			IMainFrameModule& MainFrame = FModuleManager::LoadModuleChecked<IMainFrameModule>( "MainFrame" );
+			ParentWindow = MainFrame.GetParentWindow();
+		}
+
+		// Compute centered window position based on max window size, which include when all categories are expanded
+		const float FbxImportWindowWidth = 410.0f;
+		const float FbxImportWindowHeight = 750.0f;
+		FVector2D FbxImportWindowSize = FVector2D(FbxImportWindowWidth, FbxImportWindowHeight); // Max window size it can get based on current slate
+
+
+		FSlateRect WorkAreaRect = FSlateApplicationBase::Get().GetPreferredWorkArea();
+		FVector2D DisplayTopLeft(WorkAreaRect.Left, WorkAreaRect.Top);
+		FVector2D DisplaySize(WorkAreaRect.Right - WorkAreaRect.Left, WorkAreaRect.Bottom - WorkAreaRect.Top);
+
+		float ScaleFactor = FPlatformApplicationMisc::GetDPIScaleFactorAtPoint(DisplayTopLeft.X, DisplayTopLeft.Y);
+		FbxImportWindowSize *= ScaleFactor;
+
+		FVector2D WindowPosition = (DisplayTopLeft + (DisplaySize - FbxImportWindowSize) / 2.0f) / ScaleFactor;
+
+
+		TSharedRef<SWindow> Window = SNew(SWindow)
+			.Title(NSLOCTEXT("UnrealEd", "FBXImportOpionsTitle", "FBX Import Options"))
+			.SizingRule(ESizingRule::Autosized)
+			.AutoCenter(EAutoCenter::None)
+			.ClientSize(FbxImportWindowSize)
+			.ScreenPosition(WindowPosition);
+
+		TSharedPtr<SVrmOptionWindow> VrmOptionWindow;
+		Window->SetContent
+		(
+			SAssignNew(VrmOptionWindow, SVrmOptionWindow)
+			.ImportUI(ImportUI)
+			.WidgetWindow(Window)
+			.FullPath(FText::FromString(fullFileName))
+			//.ForcedImportType( bForceImportType ? TOptional<EFBXImportType>( ImportType ) : TOptional<EFBXImportType>() )
+			//.IsObjFormat( bIsObjFormat )
+			.MaxWindowHeight(FbxImportWindowHeight)
+			.MaxWindowWidth(FbxImportWindowWidth)
+		);
+
+		// @todo: we can make this slow as showing progress bar later
+		FSlateApplication::Get().AddModalWindow(Window, ParentWindow, false);
+
+		if (VrmOptionWindow->ShouldImport() == false) {
+			return nullptr;
+		}
+
+	}
+
 	//static ConstructorHelpers::FObjectFinder<UObject> MatClass(TEXT("/Game/test/NewMaterial.NewMaterial"));
 	//static ConstructorHelpers::FObjectFinder<UClass> MatClass(TEXT("Blueprint'/VRM4U/VrmObjectListBP.VrmObjectListBP_C'"));
 	//static ConstructorHelpers::FObjectFinder<UVrmAssetListObject> MatClass(TEXT("Blueprint'/VRM4U/VrmObjectListBP'"));
@@ -131,6 +205,9 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		//auto a = NewObject<UVrmAssetListObject>(MatClass.Object, NAME_None, RF_Transactional);
 		//MatClass.Object; 
 		//ULoaderBPFunctionLibrary::LoadVRMFile(nullptr, fullFileName);
+
+		auto &g = VRMConverter::Options::Get();
+		g.SetVrmOption(ImportUI);
 		ULoaderBPFunctionLibrary::SetImportMode(true, Cast<UPackage>(InParent));
 		ULoaderBPFunctionLibrary::LoadVRMFile(m, fullFileName);
 		ULoaderBPFunctionLibrary::SetImportMode(false, nullptr);
@@ -183,4 +260,120 @@ UObject* USpriterImporterFactory::ImportAsset(const FString& SourceFilename, con
 //////////////////////////////////////////////////////////////////////////
 
 //#undef SPRITER_IMPORT_ERROR
+
+
+
+
+
+////
+
+UVrmImportUI::UVrmImportUI(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	bIsReimport = false;
+	//bAutomatedImportShouldDetectType = true;
+	//Make sure we are transactional to allow undo redo
+	this->SetFlags(RF_Transactional);
+
+	/*
+	StaticMeshImportData = CreateDefaultSubobject<UFbxStaticMeshImportData>(TEXT("StaticMeshImportData"));
+	StaticMeshImportData->SetFlags(RF_Transactional);
+	StaticMeshImportData->LoadOptions();
+
+	SkeletalMeshImportData = CreateDefaultSubobject<UFbxSkeletalMeshImportData>(TEXT("SkeletalMeshImportData"));
+	SkeletalMeshImportData->SetFlags(RF_Transactional);
+	SkeletalMeshImportData->LoadOptions();
+
+	AnimSequenceImportData = CreateDefaultSubobject<UFbxAnimSequenceImportData>(TEXT("AnimSequenceImportData"));
+	AnimSequenceImportData->SetFlags(RF_Transactional);
+	AnimSequenceImportData->LoadOptions();
+
+	TextureImportData = CreateDefaultSubobject<UFbxTextureImportData>(TEXT("TextureImportData"));
+	TextureImportData->SetFlags(RF_Transactional);
+	TextureImportData->LoadOptions();
+	*/
+}
+
+
+bool UVrmImportUI::CanEditChange( const UProperty* InProperty ) const
+{
+	/*
+	bool bIsMutable = Super::CanEditChange( InProperty );
+	if( bIsMutable && InProperty != NULL )
+	{
+		FName PropName = InProperty->GetFName();
+
+		if(PropName == TEXT("StartFrame") || PropName == TEXT("EndFrame"))
+		{
+			bIsMutable = AnimSequenceImportData->AnimationLength == FBXALIT_SetRange && bImportAnimations;
+		}
+		else if(PropName == TEXT("bImportCustomAttribute") || PropName == TEXT("AnimationLength"))
+		{
+			bIsMutable = bImportAnimations;
+		}
+
+		if(bIsObjImport && InProperty->GetBoolMetaData(TEXT("OBJRestrict")))
+		{
+			bIsMutable = false;
+		}
+	}
+
+	return bIsMutable;
+	*/
+	return true;
+}
+
+void UVrmImportUI::ParseFromJson(TSharedRef<class FJsonObject> ImportSettingsJson)
+{
+	/*
+	// Skip instanced object references. 
+	int64 SkipFlags = CPF_InstancedReference;
+	FJsonObjectConverter::JsonObjectToUStruct(ImportSettingsJson, GetClass(), this, 0, SkipFlags);
+
+	bAutomatedImportShouldDetectType = true;
+	if(ImportSettingsJson->TryGetField("MeshTypeToImport").IsValid())
+	{
+		// Import type was specified by the user if MeshTypeToImport exists
+		bAutomatedImportShouldDetectType = false;
+	}
+
+	const TSharedPtr<FJsonObject>* StaticMeshImportJson = nullptr;
+	ImportSettingsJson->TryGetObjectField(TEXT("StaticMeshImportData"), StaticMeshImportJson);
+	if(StaticMeshImportJson)
+	{
+		FJsonObjectConverter::JsonObjectToUStruct(StaticMeshImportJson->ToSharedRef(), StaticMeshImportData->GetClass(), StaticMeshImportData, 0, 0);
+	}
+
+	const TSharedPtr<FJsonObject>* SkeletalMeshImportJson = nullptr;
+	ImportSettingsJson->TryGetObjectField(TEXT("SkeletalMeshImportData"), SkeletalMeshImportJson);
+	if (SkeletalMeshImportJson)
+	{
+		FJsonObjectConverter::JsonObjectToUStruct(SkeletalMeshImportJson->ToSharedRef(), SkeletalMeshImportData->GetClass(), SkeletalMeshImportData, 0, 0);
+	}
+
+	const TSharedPtr<FJsonObject>* AnimImportJson = nullptr;
+	ImportSettingsJson->TryGetObjectField(TEXT("AnimSequenceImportData"), AnimImportJson);
+	if (AnimImportJson)
+	{
+		FJsonObjectConverter::JsonObjectToUStruct(AnimImportJson->ToSharedRef(), AnimSequenceImportData->GetClass(), AnimSequenceImportData, 0, 0);
+	}
+
+	const TSharedPtr<FJsonObject>* TextureImportJson = nullptr;
+	ImportSettingsJson->TryGetObjectField(TEXT("TextureImportData"), TextureImportJson);
+	if (TextureImportJson)
+	{
+		FJsonObjectConverter::JsonObjectToUStruct(TextureImportJson->ToSharedRef(), TextureImportData->GetClass(), TextureImportData, 0, 0);
+	}
+	*/
+}
+
+void UVrmImportUI::ResetToDefault()
+{
+	ReloadConfig();
+}
+
+
+
+
+
 #undef LOCTEXT_NAMESPACE

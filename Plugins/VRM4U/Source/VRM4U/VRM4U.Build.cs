@@ -61,9 +61,14 @@ public class VRM4U : ModuleRules
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
-		
-		
-		DynamicallyLoadedModuleNames.AddRange(
+
+        if (Target.bBuildEditor == true)
+        {
+            PrivateDependencyModuleNames.Add("VRM4UImporter");
+            PrivateIncludePaths.Add("VRM4UImporter/Private");
+        }
+
+        DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
             }

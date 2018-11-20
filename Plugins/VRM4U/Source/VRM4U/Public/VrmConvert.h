@@ -32,6 +32,24 @@ public:
 
 	static bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+
+	class Options {
+	public:
+		static Options & Get() {
+			static Options s;
+			return s;
+		}
+
+		class UVrmImportUI *Window;
+		void SetVrmOption(class UVrmImportUI *p) {
+			Window = p;
+		}
+
+		class USkeleton *GetSkeleton();
+		bool IsSkipRootBone() const;
+
+
+	};
 };
 
 
