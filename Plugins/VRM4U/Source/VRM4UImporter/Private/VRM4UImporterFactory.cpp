@@ -12,6 +12,8 @@
 #include "VrmRuntimeSettings.h"
 #include "VrmOptionWindow.h"
 #include "Engine/Blueprint.h"
+#include "Templates/SharedPointer.h"
+#include "Misc/FeedbackContext.h"
 
 #include "Interfaces/IMainFrameModule.h"
 #include "Widgets/SWindow.h"
@@ -103,8 +105,13 @@ T* GetObjectFromStringAsset(FStringAssetReference const& AssetRef)
 UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn)
 {
 	
-	auto ImportUI = NewObject<UVrmImportUI>(this, NAME_None, RF_NoFlags);
+	static UVrmImportUI *ImportUI = nullptr;
+	
 	{
+		if (ImportUI == nullptr){
+			ImportUI = NewObject<UVrmImportUI>(this, NAME_None, RF_NoFlags);
+			ImportUI->AddToRoot();
+		}
 
 		TSharedPtr<SWindow> ParentWindow;
 
@@ -115,7 +122,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		}
 
 		// Compute centered window position based on max window size, which include when all categories are expanded
-		const float FbxImportWindowWidth = 410.0f;
+		const float FbxImportWindowWidth = 410.0f*2.f;
 		const float FbxImportWindowHeight = 750.0f;
 		FVector2D FbxImportWindowSize = FVector2D(FbxImportWindowWidth, FbxImportWindowHeight); // Max window size it can get based on current slate
 
@@ -131,7 +138,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 
 
 		TSharedRef<SWindow> Window = SNew(SWindow)
-			.Title(NSLOCTEXT("UnrealEd", "FBXImportOpionsTitle", "FBX Import Options"))
+			.Title(NSLOCTEXT("UnrealEd", "VRMImportOpionsTitle", "VRM Import Options"))
 			.SizingRule(ESizingRule::Autosized)
 			.AutoCenter(EAutoCenter::None)
 			.ClientSize(FbxImportWindowSize)
@@ -206,11 +213,21 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		//MatClass.Object; 
 		//ULoaderBPFunctionLibrary::LoadVRMFile(nullptr, fullFileName);
 
+		GWarn->BeginSlowTask( NSLOCTEXT("UnrealEd", "ImportVRM", "Importing VRM"), true );
+
+		int ret = true;
 		auto &g = VRMConverter::Options::Get();
 		g.SetVrmOption(ImportUI);
 		ULoaderBPFunctionLibrary::SetImportMode(true, Cast<UPackage>(InParent));
-		ULoaderBPFunctionLibrary::LoadVRMFile(m, fullFileName);
+		ret = ULoaderBPFunctionLibrary::LoadVRMFile(m, fullFileName);
 		ULoaderBPFunctionLibrary::SetImportMode(false, nullptr);
+		g.SetVrmOption(nullptr);
+
+		GWarn->EndSlowTask();
+
+		if (ret == false) {
+			return false;
+		}
 	}
 
 	return InParent;

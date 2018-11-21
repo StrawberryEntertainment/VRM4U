@@ -53,6 +53,12 @@ static bool saveObject(UObject *u) {
 	return true;
 }
 
+static void UpdateProgress(int prog) {
+#if WITH_EDITOR
+	GWarn->UpdateProgress( prog, 100 );
+#endif
+}
+
 ////
 
 static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVrmMetaObject *meta, const USkeleton *displaySkeleton) {
@@ -195,6 +201,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 
 	mScenePtr = mImporter.ReadFile(file, aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes);
 
+	UpdateProgress(20);
 	if (mScenePtr == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("VRM4U: read failure.\n"));
@@ -221,14 +228,23 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	src->BaseFileName = VRMConverter::NormalizeFileName(baseFileName);
 	src->Package = package;
 
-	VRMConverter::NormalizeBoneName(mScenePtr);
-	VRMConverter::ConvertTextureAndMaterial(src, mScenePtr);
-	VRMConverter::ConvertVrmMeta(src, mScenePtr);	// use texture.
-	VRMConverter::ConvertModel(src, mScenePtr);
+	{
+		bool ret = true;
+		ret &= VRMConverter::NormalizeBoneName(mScenePtr);
+		ret &= VRMConverter::ConvertTextureAndMaterial(src, mScenePtr);
+		UpdateProgress(40);
+		ret &= VRMConverter::ConvertVrmMeta(src, mScenePtr);	// use texture.
+		UpdateProgress(60);
+		ret &= VRMConverter::ConvertModel(src, mScenePtr);
 #if WITH_EDITOR
-	VRMConverter::ConvertMorphTarget(src, mScenePtr);
-	VRMConverter::ConvertHumanoid(src, mScenePtr);
+		ret &= VRMConverter::ConvertMorphTarget(src, mScenePtr);
+		ret &= VRMConverter::ConvertHumanoid(src, mScenePtr);
 #endif
+		UpdateProgress(80);
+		if (ret == false) {
+			return false;
+		}
+	}
 	src->VrmMetaObject->SkeletalMesh = src->SkeletalMesh;
 
 	if (src->bAssetSave) {
@@ -264,6 +280,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		}
 
 	}
+	UpdateProgress(100);
 	return true;
 }
 

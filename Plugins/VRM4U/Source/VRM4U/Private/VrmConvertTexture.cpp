@@ -168,6 +168,7 @@ namespace {
 				TEXT("mtoon_tex_BumpMap"),		vrmMat.textureProperties._BumpMap,
 				TEXT("mtoon_tex_SphereAdd"),	vrmMat.textureProperties._SphereAdd,
 				TEXT("mtoon_tex_EmissionMap"),	vrmMat.textureProperties._EmissionMap,
+				TEXT("mtoon_tex_OutlineWidthTexture"),	vrmMat.textureProperties._OutlineWidthTexture,
 			};
 			for (auto &t : table) {
 				if (t.value < 0) {

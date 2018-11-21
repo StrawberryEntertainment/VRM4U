@@ -12,10 +12,11 @@
 UENUM(BlueprintType)
 enum EVRMImportMaterialType
 {
-	VRMIMT_Auto		UMETA(DisplayName="Auto"),
-	VRMIMT_MToon	UMETA(DisplayName="MToon Material"),
-	VRMIMT_Unlit	UMETA(DisplayName="Unlit"),
-	VRMIMT_glTF		UMETA(DisplayName="PBR(glTF)"),
+	VRMIMT_Auto			UMETA(DisplayName="Auto"),
+	VRMIMT_MToon		UMETA(DisplayName="MToon Material"),
+	VRMIMT_MToonUnlit	UMETA(DisplayName="MToon Unlit"),
+	VRMIMT_Unlit		UMETA(DisplayName="Unlit"),
+	VRMIMT_glTF			UMETA(DisplayName="PBR(glTF2)"),
 
 	VRMIMT_MAX,
 };
@@ -29,8 +30,8 @@ class UVrmImportUI : public UObject, public IImportSettingsParser
 
 public:
 	/** Whether or not the imported file is in OBJ format */
-	UPROPERTY(BlueprintReadWrite, Category = Miscellaneous)
-	bool bIsObjImport;
+	//UPROPERTY(BlueprintReadWrite, Category = Miscellaneous)
+	//bool bIsObjImport;
 
 	/** The original detected type of this import */
 	//UPROPERTY(BlueprintReadWrite, Category = Miscellaneous)
@@ -48,25 +49,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Import root bone only"))
 	bool bSkipRoot = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Delete bone without mesh"))
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Delete bone without mesh"))
 	bool bSkipNoMeshBone = false;
 
-	/** Whether to import the incoming FBX as a Subdivision Surface (could be made a combo box together with bImportAsSkeletal) (Experimental, Early work in progress) */
-	/** Whether to import the mesh. Allows animation only import when importing a skeletal mesh. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Mesh, meta=(ImportType="SkeletalMesh"))
-	bool bImportMesh;
-
 	/** Skeleton to use for imported asset. When importing a mesh, leaving this as "None" will create a new skeleton. When importing an animation this MUST be specified to import the asset. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Mesh, meta=(ImportType="SkeletalMesh|Animation"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Mesh, meta=(ImportType="SkeletalMesh"))
 	class USkeleton* Skeleton;
 
+	/** Materal Type */
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	TEnumAsByte<enum EVRMImportMaterialType> MaterialType;
+
+
 	/** If checked, create new PhysicsAsset if it doesn't have it */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, config, Category=Mesh, meta=(ImportType="SkeletalMesh"))
-	uint32 bCreatePhysicsAsset:1;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, config, Category=Mesh, meta=(ImportType="SkeletalMesh"))
+	//uint32 bCreatePhysicsAsset:1;
 
 	/** If this is set, use this PhysicsAsset. It is possible bCreatePhysicsAsset == false, and PhysicsAsset == NULL. It is possible they do not like to create anything. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category=Mesh, meta=(ImportType="SkeletalMesh", editcondition="!bCreatePhysicsAsset"))
-	class UPhysicsAsset* PhysicsAsset;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category=Mesh, meta=(ImportType="SkeletalMesh", editcondition="!bCreatePhysicsAsset"))
+	//class UPhysicsAsset* PhysicsAsset;
 
 	UFUNCTION(BlueprintCallable, Category = Miscellaneous)
 	void ResetToDefault();

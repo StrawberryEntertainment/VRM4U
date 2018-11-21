@@ -120,6 +120,7 @@ extern "C" {
             int _BumpMap;
             int _SphereAdd;
             int _EmissionMap;
+            int _OutlineWidthTexture;
         };
         struct ASSIMP_API VRMMaterial {
             aiString name;

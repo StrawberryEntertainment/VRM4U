@@ -15,7 +15,7 @@ class UMaterialInterface;
 class USkeletalMesh;
 class UVrmAssetListObject;
 
-class VRMConverter {
+class VRM4U_API VRMConverter {
 public:
 	static bool IsImportMode();
 	static void SetImportMode(bool bImportMode);
@@ -33,21 +33,19 @@ public:
 	static bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
-	class Options {
+	class VRM4U_API Options {
 	public:
-		static Options & Get() {
-			static Options s;
-			return s;
-		}
+		static Options & Get();
 
-		class UVrmImportUI *Window;
+		class UVrmImportUI *Window = nullptr;
 		void SetVrmOption(class UVrmImportUI *p) {
 			Window = p;
 		}
 
 		class USkeleton *GetSkeleton();
-		bool IsSkipRootBone() const;
+		bool IsRootBoneOnly() const;
 
+		bool IsSkipNoMeshBone() const;
 
 	};
 };

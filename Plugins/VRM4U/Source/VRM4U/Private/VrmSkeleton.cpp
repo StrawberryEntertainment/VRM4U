@@ -9,6 +9,9 @@
 #include <assimp/scene.h>       // Output data structure
 #include <assimp/mesh.h>       // Output data structure
 
+#if WITH_EDITOR
+#include "VrmConvert.h"
+#endif
 
 static void aaaa(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
 
@@ -87,7 +90,7 @@ bool UVrmSkeleton::IsPostLoadThreadSafe() const
 	return true;
 }
 
-int countParent(aiNode *node, TArray<aiNode*> &t, int c) {
+static int countParent(aiNode *node, TArray<aiNode*> &t, int c) {
 	for (auto &a : t) {
 		for (uint32_t i = 0; i < a->mNumChildren; ++i) {
 			if (node == a->mChildren[i]) {
@@ -98,14 +101,118 @@ int countParent(aiNode *node, TArray<aiNode*> &t, int c) {
 	return c;
 }
 
-void rr(aiNode *node, TArray<aiNode*> &t) {
+static int countChild(aiNode *node, int c) {
+	c += node->mNumChildren;
+	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
+		countChild(node->mChildren[i], c);
+	}
+	return c;
+}
+
+bool findActiveBone(aiNode *node, TArray<FString> &table) {
+
+	if (table.Find(node->mName.C_Str()) != INDEX_NONE) {
+		return true;
+	}
+	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
+		if (findActiveBone(node->mChildren[i], table)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+TArray<FString> makeActiveBone(aiScene *scene) {
+	TArray <FString> boneNameTable;
+	for (uint32 m = 0; m < scene->mNumMeshes; ++m) {
+		auto &aiM = *scene->mMeshes[m];
+
+		for (uint32 b = 0; b < aiM.mNumBones; ++b) {
+			auto &aiB = *aiM.mBones[b];
+			boneNameTable.AddUnique(aiB.mName.C_Str());
+		}
+	}
+	return boneNameTable;
+}
+
+
+static bool hasMeshInChild(aiNode *node) {
+	if (node == nullptr) {
+		return false;
+	}
+	if (node->mNumMeshes > 0) {
+		return true;
+	}
+	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
+		bool b = hasMeshInChild(node->mChildren[i]);
+		if (b) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+static void rr3(aiNode *node, TArray<aiNode*> &t, bool &bHasMesh, const bool bOnlyRootBone) {
+	bHasMesh = false;
 	if (node == nullptr) {
 		return;
 	}
+	if (node->mNumMeshes > 0) {
+		bHasMesh = true;
+	}
+
 	t.Push(node);
 	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
-		rr(node->mChildren[i], t);
+		bool b = false;
+		rr3(node->mChildren[i], t, b, bOnlyRootBone);
+
+		if (b) {
+			bHasMesh = true;
+		}
 	}
+	if (bHasMesh==false && bOnlyRootBone) {
+		//t.Remove(node);
+	}
+}
+
+static void rr(aiNode *node, TArray<aiNode*> &t, bool &bHasMesh, const bool bOnlyRootBone, aiScene *scene) {
+
+	auto target = node;
+
+	if (bOnlyRootBone) {
+
+		int maxIndex = -1;
+		int maxChild = 0;
+
+		for (uint32 i = 0; i < node->mNumChildren; ++i) {
+			int t = countChild(node->mChildren[i], 0);
+
+			if (t > maxChild) {
+				maxChild = t;
+				maxIndex = i;
+			}
+
+		}
+
+		auto table = makeActiveBone(scene);
+
+		for (uint32 i = 0; i < node->mNumChildren; ++i) {
+			if (i == maxIndex) {
+				continue;
+			}
+			if (findActiveBone(node->mChildren[i], table)){
+				maxIndex = -1;
+				break;
+			}
+		}
+
+		if (maxIndex >= 0) {
+			target = node->mChildren[maxIndex];
+		}
+	}
+
+	rr3(target, t, bHasMesh, bOnlyRootBone);
 }
 
 void UVrmSkeleton::applyBoneFrom(const USkeleton *src, const UVrmMetaObject *meta) {
@@ -171,7 +278,14 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 		//boneOffset = offset-1;
 
 		TArray<aiNode*> bone;
-		rr(s->mRootNode, bone);
+		{
+			bool dummy = false;
+			bool bOnlyRootBone = false;
+#if WITH_EDITOR
+			bOnlyRootBone = VRMConverter::Options::Get().IsRootBoneOnly();
+#endif
+			rr(s->mRootNode, bone, dummy, bOnlyRootBone, s);
+		}
 
 		{
 

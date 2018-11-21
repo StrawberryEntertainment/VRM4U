@@ -177,10 +177,28 @@ bool VRMConverter::NormalizeBoneName(const aiScene *mScenePtr) {
 
 
 ////
+
+VRMConverter::Options& VRMConverter::Options::Get(){
+	static VRMConverter::Options o;
+	return o;
+}
+
 USkeleton *VRMConverter::Options::GetSkeleton() {
 	if (Window == nullptr) return nullptr;
 
 	return Window->Skeleton;
+}
+
+bool VRMConverter::Options::IsSkipNoMeshBone() const {
+	if (Window == nullptr) return false;
+
+	return Window->bSkipNoMeshBone;
+}
+
+bool VRMConverter::Options::IsRootBoneOnly() const {
+	if (Window == nullptr) return false;
+
+	return Window->bSkipRoot;
 }
 
 ////

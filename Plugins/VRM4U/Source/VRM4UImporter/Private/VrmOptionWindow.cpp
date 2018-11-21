@@ -72,7 +72,7 @@ void SVrmOptionWindow::Construct(const FArguments& InArgs)
 			[
 				SAssignNew(InspectorBox, SBox)
 				.MaxDesiredHeight(650.0f)
-				.WidthOverride(400.0f)
+				.WidthOverride(400.0f*2.f)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()

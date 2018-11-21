@@ -342,7 +342,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	}
 
 	USkeletalMesh *sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-	USkeleton *k = NewObject<USkeleton>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	USkeleton *k = Options::Get().GetSkeleton();
+	if (k == nullptr){
+		k = NewObject<USkeleton>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	}
 
 	static int boneOffset = 0;
 	{
@@ -357,7 +360,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			sk_tmp->Skeleton = k_tmp;
 			sk_tmp->RefSkeleton = k_tmp->GetReferenceSkeleton();
 
-			k->MergeAllBonesToBoneTree(sk_tmp);
+			bool b = k->MergeAllBonesToBoneTree(sk_tmp);
+			if (b == false) {
+				// import failure
+				return false;
+			}
 		}
 
 		sk->RefSkeleton = k->GetReferenceSkeleton();
