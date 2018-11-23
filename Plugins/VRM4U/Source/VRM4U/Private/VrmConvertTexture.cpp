@@ -145,11 +145,13 @@ namespace {
 				switch ((int)(vrmMat.floatProperties._BlendMode)) {
 				case 0:
 				case 1:
-					replaceParent = vrmAssetList->BaseMToonOpaqueMaterial;
+					//replaceParent = vrmAssetList->BaseMToonOpaqueMaterial;
 					break;
 				case 2:
 				case 3:
-					replaceParent = vrmAssetList->BaseMToonTransparentMaterial;
+					//replaceParent = vrmAssetList->BaseMToonTransparentMaterial;
+					dm->BasePropertyOverrides.bOverride_BlendMode = true;
+					dm->BasePropertyOverrides.BlendMode = EBlendMode::BLEND_Translucent;
 					break;
 				}
 				if (replaceParent) {
@@ -362,26 +364,37 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 				aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
 
 				FString ShaderName = aiMat.mShaderName.C_Str();
-				if (ShaderName.Find(TEXT("UnlitTexture")) >= 0) {
-					baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
-				}
-				if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
-					baseM = vrmAssetList->BaseUnlitTransparentMaterial;
-				}
-				if (ShaderName.Find(TEXT("MToon")) >= 0) {
+				switch (Options::Get().GetMaterialType()) {
+				case EVRMImportMaterialType::VRMIMT_MToon:
+					baseM = vrmAssetList->BaseMToonOpaqueMaterial;
 					bMToon = true;
-					FString alpha = alphaMode.C_Str();
-					if (alpha == TEXT("BLEND")) {
-						baseM = vrmAssetList->BaseMToonTransparentMaterial;
+					break;
+				case EVRMImportMaterialType::VRMIMT_MToonUnlit:
+					baseM = vrmAssetList->BaseMToonUnlitOpaqueMaterial;
+					bMToon = true;
+					break;
+				case EVRMImportMaterialType::VRMIMT_Unlit:
+					baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
+					break;
+				case EVRMImportMaterialType::VRMIMT_glTF:
+					baseM = vrmAssetList->BasePBROpaqueMaterial;
+					break;
+				}
+				if (baseM == nullptr) {
+					if (ShaderName.Find(TEXT("UnlitTexture")) >= 0) {
+						baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
 					}
-					else {
+					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
+						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
+					}
+					if (ShaderName.Find(TEXT("MToon")) >= 0) {
+						bMToon = true;
 						baseM = vrmAssetList->BaseMToonOpaqueMaterial;
 					}
+					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
+						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
+					}
 				}
-				if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
-					baseM = vrmAssetList->BaseUnlitTransparentMaterial;
-				}
-
 
 				if (baseM == nullptr) {
 					baseM = vrmAssetList->BaseMToonOpaqueMaterial;
@@ -450,7 +463,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 				dm->Parent = baseM;
 
 				if (dm) {
-					if (bMToon) {
+					{
 						aiColor4D col;
 						aiReturn result = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, col);
 						if (result == 0) {
@@ -462,7 +475,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						}
 					}
 
-					if (bMToon) {
+					{
 						float f[2] = { 1,1 };
 						aiReturn result0 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, f[0]);
 						aiReturn result1 = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, f[1]);
@@ -486,6 +499,18 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
 						v->ParameterValue = vrmAssetList->Textures[index];
 					}
+					{
+						aiString alphaMode;
+						aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+						FString alpha = alphaMode.C_Str();
+						if (alpha == TEXT("BLEND")) {
+							dm->BasePropertyOverrides.bOverride_BlendMode = true;;
+							dm->BasePropertyOverrides.BlendMode = EBlendMode::BLEND_Translucent;
+						}
+					}
+
+
+					// mtoon
 					if (bMToon) {
 						createAndAddMaterial(dm, i, vrmAssetList, mScenePtr);
 					}

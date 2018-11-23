@@ -213,6 +213,16 @@ bool VRMConverter::Options::IsRootBoneOnly() const {
 #endif
 }
 
+EVRMImportMaterialType VRMConverter::Options::GetMaterialType() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return EVRMImportMaterialType::VRMIMT_Auto;
+
+	return Window->MaterialType;
+#else
+	return EVRMImportMaterialType::VRMIMT_Auto;
+#endif
+}
+
 ////
 
 

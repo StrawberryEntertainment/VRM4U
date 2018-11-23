@@ -35,10 +35,16 @@ public:
 	UMaterialInterface* BaseMToonTransparentMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* BaseMToonUnlitOpaqueMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BaseUnlitOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BaseUnlitTransparentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* BasePBROpaqueMaterial;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	//USkeleton* BaseSkeleton;

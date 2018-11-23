@@ -6,20 +6,8 @@
 #include "UObject/ObjectMacros.h"
 #include "UObject/Object.h"
 #include "Factories/ImportSettings.h"
+#include "VrmConvert.h"
 #include "VrmImportUI.generated.h"
-
-/** Import mesh type */
-UENUM(BlueprintType)
-enum EVRMImportMaterialType
-{
-	VRMIMT_Auto			UMETA(DisplayName="Auto"),
-	VRMIMT_MToon		UMETA(DisplayName="MToon Material"),
-	VRMIMT_MToonUnlit	UMETA(DisplayName="MToon Unlit"),
-	VRMIMT_Unlit		UMETA(DisplayName="Unlit"),
-	VRMIMT_glTF			UMETA(DisplayName="PBR(glTF2)"),
-
-	VRMIMT_MAX,
-};
 
 DECLARE_DELEGATE(FOnResolveFbxReImport);
 
@@ -57,7 +45,7 @@ public:
 	class USkeleton* Skeleton;
 
 	/** Materal Type */
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	TEnumAsByte<enum EVRMImportMaterialType> MaterialType;
 
 

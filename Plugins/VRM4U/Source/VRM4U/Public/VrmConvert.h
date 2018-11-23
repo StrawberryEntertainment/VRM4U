@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+#include "UObject/Object.h"
 #include "Misc/EngineVersionComparison.h"
 
 /**
@@ -14,6 +16,19 @@ class UTexture2D;
 class UMaterialInterface;
 class USkeletalMesh;
 class UVrmAssetListObject;
+
+UENUM(BlueprintType)
+enum EVRMImportMaterialType
+{
+	VRMIMT_Auto			UMETA(DisplayName="Auto"),
+	VRMIMT_MToon		UMETA(DisplayName="MToon Material"),
+	VRMIMT_MToonUnlit	UMETA(DisplayName="MToon Unlit"),
+	VRMIMT_Unlit		UMETA(DisplayName="Unlit"),
+	VRMIMT_glTF			UMETA(DisplayName="PBR(glTF2)"),
+
+	VRMIMT_MAX,
+};
+
 
 class VRM4U_API VRMConverter {
 public:
@@ -48,6 +63,7 @@ public:
 
 		bool IsSkipNoMeshBone() const;
 
+		EVRMImportMaterialType GetMaterialType() const;
 	};
 };
 

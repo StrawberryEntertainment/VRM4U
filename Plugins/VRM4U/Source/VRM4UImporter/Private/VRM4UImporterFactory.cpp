@@ -226,7 +226,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		GWarn->EndSlowTask();
 
 		if (ret == false) {
-			return false;
+			return nullptr;
 		}
 	}
 
