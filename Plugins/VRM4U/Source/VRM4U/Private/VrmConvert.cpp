@@ -184,21 +184,33 @@ VRMConverter::Options& VRMConverter::Options::Get(){
 }
 
 USkeleton *VRMConverter::Options::GetSkeleton() {
+#if WITH_EDITOR
 	if (Window == nullptr) return nullptr;
 
 	return Window->Skeleton;
+#else
+	return nullptr;
+#endif
 }
 
 bool VRMConverter::Options::IsSkipNoMeshBone() const {
+#if WITH_EDITOR
 	if (Window == nullptr) return false;
 
 	return Window->bSkipNoMeshBone;
+#else
+	return false;
+#endif
 }
 
 bool VRMConverter::Options::IsRootBoneOnly() const {
+#if WITH_EDITOR
 	if (Window == nullptr) return false;
 
 	return Window->bSkipRoot;
+#else
+	return true;
+#endif
 }
 
 ////

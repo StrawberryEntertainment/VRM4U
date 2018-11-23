@@ -32,6 +32,7 @@
 //#include "Engine/.h"
 
 namespace {
+#if WITH_EDITOR
 	struct Table {
 		FString BoneUE4;
 		FString BoneVRM;
@@ -112,13 +113,12 @@ namespace {
 	{"Custom_4",""},
 	{"Custom_5",""},
 	};
-
-
+#endif
 }
 
 
 bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
-
+#if WITH_EDITOR
 	FString name = FString(TEXT("RIG_")) + vrmAssetList->BaseFileName;
 	UNodeMappingContainer* mc = NewObject<UNodeMappingContainer>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
 
@@ -169,6 +169,9 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	}
 	//mc->AddMapping
 	vrmAssetList->HumanoidRig = mc;
+
+#else
+#endif
 
 	return true;
 
