@@ -32,6 +32,7 @@ public:
 
 	static bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+	static bool ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
 	class VRM4U_API Options {
 	public:

@@ -13,7 +13,7 @@ class USkeleton;
 class UVrmMetaObject;
 class UVrmLicenseObject;
 struct FReturnedData;
-
+class UNodeMappingContainer;
 
 /**
  * 
@@ -61,6 +61,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	TArray<UMaterialInterface*> Materials;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
+	UNodeMappingContainer *HumanoidRig;
+
 	UPROPERTY()
 	UPackage *Package;
 
@@ -74,4 +77,6 @@ public:
 
 	UPROPERTY()
 	USkeletalMesh* HumanoidSkeletalMesh;
+
+
 };

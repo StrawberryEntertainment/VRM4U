@@ -13,6 +13,7 @@
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Animation/MorphTarget.h"
+#include "Animation/NodeMappingContainer.h"
 
 //#include ".h"
 
@@ -236,6 +237,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		ret &= VRMConverter::ConvertVrmMeta(src, mScenePtr);	// use texture.
 		UpdateProgress(60);
 		ret &= VRMConverter::ConvertModel(src, mScenePtr);
+		ret &= VRMConverter::ConvertRig(src, mScenePtr);
 #if WITH_EDITOR
 		ret &= VRMConverter::ConvertMorphTarget(src, mScenePtr);
 		ret &= VRMConverter::ConvertHumanoid(src, mScenePtr);
@@ -259,6 +261,8 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		saveObject(src->VrmMetaObject);
 		saveObject(src->VrmLicenseObject);
 		saveObject(src->HumanoidSkeletalMesh);
+		saveObject(src->HumanoidRig);
+
 	}
 
 	if (VRMConverter::IsImportMode() == false){

@@ -53,7 +53,7 @@ bool VRMConverter::ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiSc
 	const USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 	const USkeleton *k = sk->Skeleton;
 
-	USkeleton *base = DuplicateObject<USkeleton>(k, vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_humanoid_Skeleton")));
+	USkeleton *base = DuplicateObject<USkeleton>(k, vrmAssetList->Package, *(TEXT("SKEL_") + vrmAssetList->BaseFileName + TEXT("_humanoid")));
 	USkeletalMesh *ss = DuplicateObject<USkeletalMesh>(sk, vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName + TEXT("_humanoid")));
 
 	renameToHumanoidBone(base, vrmAssetList->VrmMetaObject);

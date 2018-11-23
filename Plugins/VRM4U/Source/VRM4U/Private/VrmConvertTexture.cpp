@@ -292,6 +292,10 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			if (baseName.Len() == 0) {
 				baseName = FString::FromInt(i);
 			}
+			if (NormalBoolTable[i]) {
+				baseName += TEXT("_N");
+
+			}
 
 			UTexture2D* NewTexture2D = createTex(Width, Height, FString(TEXT("T_")) + baseName, vrmAssetList->Package);
 			//UTexture2D* NewTexture2D = _CreateTransient(Width, Height, PF_B8G8R8A8, t.mFilename.C_Str());

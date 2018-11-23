@@ -25,9 +25,6 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 
-
-//#include "Engine/.h"
-
 #if WITH_EDITOR
 typedef FSoftSkinVertex FSoftSkinVertexLocal;
 
@@ -344,7 +341,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	USkeletalMesh *sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	USkeleton *k = Options::Get().GetSkeleton();
 	if (k == nullptr){
-		k = NewObject<USkeleton>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Skeleton")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		k = NewObject<USkeleton>(vrmAssetList->Package, *(TEXT("SKEL_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	}
 
 	static int boneOffset = 0;
@@ -806,7 +803,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 		if (meta->sprintNum > 0) {
 
-			pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Physics")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(TEXT("PHYS_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 			pa->Modify();
 			pa->SetPreviewMesh(sk);
 			sk->PhysicsAsset = pa;
@@ -925,9 +922,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	}
 
 	//NewAsset->FindSocket
-
 	return true;
 }
+
 
 VrmConvertModel::VrmConvertModel()
 {
