@@ -61,6 +61,8 @@ public:
 		class USkeleton *GetSkeleton();
 		bool IsRootBoneOnly() const;
 
+		bool IsSkipPhysics() const;
+
 		bool IsSkipNoMeshBone() const;
 
 		EVRMImportMaterialType GetMaterialType() const;

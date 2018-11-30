@@ -213,6 +213,18 @@ bool VRMConverter::Options::IsRootBoneOnly() const {
 #endif
 }
 
+bool VRMConverter::Options::IsSkipPhysics() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bSkipPhysics;
+#else
+	return true;
+#endif
+}
+
+
+
 EVRMImportMaterialType VRMConverter::Options::GetMaterialType() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return EVRMImportMaterialType::VRMIMT_Auto;

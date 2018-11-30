@@ -122,6 +122,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	FString name = FString(TEXT("RIG_")) + vrmAssetList->BaseFileName;
 	UNodeMappingContainer* mc = NewObject<UNodeMappingContainer>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
 
+	auto *k = vrmAssetList->SkeletalMesh->Skeleton;
 	vrmAssetList->SkeletalMesh->NodeMappingData.Add(mc);
 
 	//USkeletalMeshComponent* PreviewMeshComp = PreviewScenePtr.Pin()->GetPreviewMeshComponent();
@@ -140,16 +141,23 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	mc->SetTargetAsset(vrmAssetList->SkeletalMesh);
 	mc->AddDefaultMapping();
 
+	FString PelvisBoneName;
 	{
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
 		for (auto &t : table) {
-			if (t.BoneVRM.Len() == 0) {
+			FString target = t.BoneVRM;
+			const FString &ue4 = t.BoneUE4;
+
+			if (ue4.Compare(TEXT("Root"), ESearchCase::IgnoreCase) == 0) {
+				auto &a = vrmAssetList->SkeletalMesh->Skeleton->GetReferenceSkeleton().GetRefBoneInfo();
+				target = a[0].Name.ToString();
+			}
+			
+			if (target.Len() == 0) {
 				continue;
 			}
 
-			FString target = t.BoneVRM;
-			FString ue4 = t.BoneUE4;
 
 			for (auto b : meta->humanoidBone) {
 
@@ -159,12 +167,38 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				target = b.nodeName.C_Str();
 				break;
 			}
-			if (ue4.Compare(TEXT("Root"), ESearchCase::IgnoreCase) == 0) {
-				auto &a = vrmAssetList->SkeletalMesh->Skeleton->GetReferenceSkeleton().GetRefBoneInfo();
-				target = a[0].Name.ToString();
+
+			if (PelvisBoneName.Len() == 0) {
+				if (ue4.Compare(TEXT("Pelvis"), ESearchCase::IgnoreCase) == 0) {
+					PelvisBoneName = target;
+				}
 			}
 			mc->AddMapping(*ue4, *target);
 			vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*ue4, *target);
+		}
+	}
+
+	{
+		int bone = -1;
+		for (int i = 0; i < k->GetReferenceSkeleton().GetRawBoneNum(); ++i) {
+			//const int32 BoneIndex = k->GetReferenceSkeleton().FindBoneIndex(InBoneName);
+			k->SetBoneTranslationRetargetingMode(i, EBoneTranslationRetargetingMode::Skeleton);
+			//FAssetNotifications::SkeletonNeedsToBeSaved(k);
+			if (k->GetReferenceSkeleton().GetBoneName(i).Compare(*PelvisBoneName) == 0) {
+				bone = i;
+			}
+		}
+
+		bool first = true;
+		while(bone >= 0){
+			if (first) {
+				k->SetBoneTranslationRetargetingMode(bone, EBoneTranslationRetargetingMode::AnimationScaled);
+			} else {
+				k->SetBoneTranslationRetargetingMode(bone, EBoneTranslationRetargetingMode::Animation);
+			}
+			first = false;
+
+			bone = k->GetReferenceSkeleton().GetParentIndex(bone);
 		}
 	}
 	//mc->AddMapping

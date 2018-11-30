@@ -799,7 +799,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	}
 
 	UPhysicsAsset *pa = nullptr;
-	if (mScenePtr->mVRMMeta) {
+	if (mScenePtr->mVRMMeta && Options::Get().IsSkipPhysics()==false) {
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 		if (meta->sprintNum > 0) {
 
@@ -807,12 +807,26 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			pa->Modify();
 			pa->SetPreviewMesh(sk);
 			sk->PhysicsAsset = pa;
-			{
 
+			TArray<FString> addedList;
+			{
 				for (int i = 0; i < meta->sprintNum; ++i) {
 					auto &spring = meta->springs[i];
 					for (int j = 0; j < spring.boneNum; ++j) {
 						auto &sbone = spring.bones_name[j];
+
+						{
+							FString s = sbone.C_Str();
+							if (addedList.Find(s) >= 0) {
+								continue;
+							}
+							addedList.Add(s);
+						}
+
+						if (sk->RefSkeleton.FindRawBoneIndex(sbone.C_Str()) == INDEX_NONE) {
+							continue;
+						}
+
 						USkeletalBodySetup *bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
 
 						//int nodeID = mScenePtr->mRootNode->FindNode(sbone.c_str());
@@ -899,6 +913,14 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 															//sk->SkeletalBodySetups.Num();
 					bs->InvalidatePhysicsData();
 					bs->CreatePhysicsMeshes();
+
+					{
+						FString s = c.node_name.C_Str();
+						if (addedList.Find(s) >= 0) {
+							continue;
+						}
+						addedList.Add(s);
+					}
 
 					pa->SkeletalBodySetups.Add(bs);
 

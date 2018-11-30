@@ -104,7 +104,7 @@ static int countParent(aiNode *node, TArray<aiNode*> &t, int c) {
 static int countChild(aiNode *node, int c) {
 	c += node->mNumChildren;
 	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
-		countChild(node->mChildren[i], c);
+		c = countChild(node->mChildren[i], c);
 	}
 	return c;
 }
@@ -316,15 +316,17 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 						char tmp[512];
 						snprintf(tmp, 512, "%s_DUP", (n[0]->mName.C_Str()));
 						if (t[0] < t[1]) {
-							//n[0]->mName = tmp;
+							n[0]->mName = tmp;
 						}else {
-							//n[1]->mName = tmp;
+							n[1]->mName = tmp;
 						}
 
 						//countParent(
 
 						//continue;
 					}
+
+					continue;
 
 					TMap<FString, FString> renameTable;
 					{
