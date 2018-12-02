@@ -31,7 +31,7 @@ public class VRM4U : ModuleRules
 		PrivateIncludePaths.AddRange(
 			new string[] {
                 "VRM4U/Private",
-				// ... add other private include paths required here ...
+                // ... add other private include paths required here ...
 			}
 			);
 			
@@ -44,11 +44,12 @@ public class VRM4U : ModuleRules
                 "Engine",
                 "RHI",
                 "RenderCore",
-                "AnimGraphRuntime"
+                "AnimGraphRuntime",
+                "ProceduralMeshComponent",
 
                 // ... add other public dependencies that you statically link with here ...
 			}
-			);
+            );
 
 
         PrivateDependencyModuleNames.AddRange(
@@ -59,7 +60,7 @@ public class VRM4U : ModuleRules
                 "Engine",
 				// ... add private dependencies that you statically link with here ...	
 			}
-			);
+            );
 
         if (Target.bBuildEditor == true)
         {

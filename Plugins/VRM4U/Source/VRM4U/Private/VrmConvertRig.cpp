@@ -38,7 +38,7 @@ namespace {
 		FString BoneVRM;
 	};
 
-	const Table table[] = {
+	static const Table table[] = {
 	{"Root",""},
 	{"Pelvis","hips"},
 	{"spine_01","spine"},
