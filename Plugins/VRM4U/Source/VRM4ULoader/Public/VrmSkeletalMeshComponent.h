@@ -9,8 +9,9 @@
 /**
  * 
  */
-UCLASS(meta=(BlueprintSpawnableComponent))
-class VRM4U_API UVrmSkeletalMeshComponent : public USkeletalMeshComponent
+//UCLASS(meta=(BlueprintSpawnableComponent))
+UCLASS()
+class VRM4ULOADER_API UVrmSkeletalMeshComponent : public USkeletalMeshComponent
 {
 	GENERATED_UCLASS_BODY()
 	

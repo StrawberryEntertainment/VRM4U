@@ -43,7 +43,7 @@ UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectIni
 	bCreateNew = false;
 	bEditorImport = true;
 
-	ImportPriority = 90;
+	ImportPriority = DefaultImportPriority - 10;
 }
 
 

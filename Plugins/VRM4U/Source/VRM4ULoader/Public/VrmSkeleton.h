@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class VRM4U_API UVrmSkeleton : public USkeleton
+class VRM4ULOADER_API UVrmSkeleton : public USkeleton
 {
 	GENERATED_BODY()
 	

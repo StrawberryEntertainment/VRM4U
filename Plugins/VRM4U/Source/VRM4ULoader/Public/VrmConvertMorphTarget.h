@@ -7,7 +7,7 @@
 /**
  * 
  */
-class VRM4U_API VrmConvertMorphTarget
+class VRM4ULOADER_API VrmConvertMorphTarget
 {
 public:
 	VrmConvertMorphTarget();

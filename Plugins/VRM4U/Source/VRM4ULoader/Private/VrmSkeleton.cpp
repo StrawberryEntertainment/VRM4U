@@ -13,20 +13,6 @@
 #include "VrmConvert.h"
 #endif
 
-static void aaaa(USkeleton *targetSkeleton, const UVrmMetaObject *meta) {
-
-	//k->RemoveBonesFromSkeleton()
-	auto &allbone = const_cast<TArray<FMeshBoneInfo> &>(targetSkeleton->GetReferenceSkeleton().GetRawRefBoneInfo());
-
-	for (auto &a : allbone) {
-		auto p = meta->humanoidBoneTable.FindKey(a.Name.ToString());
-		if (p == nullptr) {
-			continue;
-		}
-		a.Name = **p;
-	}
-}
-
 #if	UE_VERSION_NEWER_THAN(4,20,0)
 USkeletalMesh* UVrmSkeleton::GetPreviewMesh(bool bFindIfNotSet)
 {

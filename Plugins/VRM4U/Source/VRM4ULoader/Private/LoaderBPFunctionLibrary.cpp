@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "LoaderBPFunctionLibrary.h"
-#include "VRM4U.h"
+//#include "VRM4U.h"
 #include "VrmSkeleton.h"
 #include "VrmSkeletalMesh.h"
 #include "VrmModelActor.h"
@@ -10,6 +10,7 @@
 
 #include "VrmConvert.h"
 
+#include "Components/SkeletalMeshComponent.h"
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Animation/MorphTarget.h"
@@ -29,6 +30,7 @@
 #include "SkeletalMeshLODModel.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
+#include "Misc/FeedbackContext.h"
 
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"

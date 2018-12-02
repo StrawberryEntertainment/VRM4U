@@ -22,7 +22,6 @@ public class VRM4U : ModuleRules
         PublicIncludePaths.AddRange(
 			new string[] {
                 "VRM4U/Public",
-                Path.Combine(ThirdPartyPath, "assimp/include")
 				// ... add public include paths required here ...
 			}
 		);
@@ -62,31 +61,10 @@ public class VRM4U : ModuleRules
 			}
             );
 
-        if (Target.bBuildEditor == true)
-        {
-            PrivateDependencyModuleNames.Add("VRM4UImporter");
-            PrivateIncludePaths.Add("VRM4UImporter/Private");
-        }
-
         DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
             }
             );
-
-        if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
-        {
-            string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
-            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib",PlatformString, "assimp-vc140-mt.lib"));
-
-            RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(ThirdPartyPath, "assimp/bin",PlatformString, "assimp-vc140-mt.dll")));
-        }
-        if (Target.Platform == UnrealTargetPlatform.Android)
-        {
-            string PlatformString = "android";
-            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, "libassimp.so"));
-
-            //RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(ThirdPartyPath, "assimp/bin", PlatformString, "assimp-vc140-mt.dll")));
-        }
     }
 }

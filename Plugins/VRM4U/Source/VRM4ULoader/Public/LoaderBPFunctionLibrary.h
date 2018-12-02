@@ -70,7 +70,7 @@ struct FReturnedData
  * 
  */
 UCLASS()
-class VRM4U_API ULoaderBPFunctionLibrary : public UBlueprintFunctionLibrary
+class VRM4ULOADER_API ULoaderBPFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

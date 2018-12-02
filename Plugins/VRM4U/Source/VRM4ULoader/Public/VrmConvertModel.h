@@ -7,7 +7,7 @@
 /**
  * 
  */
-class VRM4U_API VrmConvertModel
+class VRM4ULOADER_API VrmConvertModel
 {
 public:
 	VrmConvertModel();

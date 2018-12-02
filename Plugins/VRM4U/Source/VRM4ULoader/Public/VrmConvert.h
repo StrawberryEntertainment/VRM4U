@@ -30,7 +30,7 @@ enum EVRMImportMaterialType
 };
 
 
-class VRM4U_API VRMConverter {
+class VRM4ULOADER_API VRMConverter {
 public:
 	static bool IsImportMode();
 	static void SetImportMode(bool bImportMode);
@@ -49,7 +49,7 @@ public:
 	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
-	class VRM4U_API Options {
+	class VRM4ULOADER_API Options {
 	public:
 		static Options & Get();
 
@@ -70,7 +70,7 @@ public:
 };
 
 
-class VRM4U_API VrmConvert
+class VRM4ULOADER_API VrmConvert
 {
 public:
 	VrmConvert();

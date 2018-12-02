@@ -79,7 +79,7 @@ public:
 	UPROPERTY()
 	FString BaseFileName;
 
-	FReturnedData *Result;
+	//FReturnedData *Result;
 
 	UPROPERTY()
 	USkeletalMesh* HumanoidSkeletalMesh;

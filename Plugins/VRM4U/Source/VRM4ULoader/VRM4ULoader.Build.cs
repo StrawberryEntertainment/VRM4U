@@ -19,6 +19,13 @@ public class VRM4ULoader : ModuleRules
 	{
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        PublicIncludePaths.AddRange(
+            new string[] {
+                Path.Combine(ThirdPartyPath, "assimp/include")
+                // ... add public include paths required here ...
+            }
+        );
+
         PrivateDependencyModuleNames.AddRange(
 			new string[] {
 				"Core",
@@ -32,7 +39,12 @@ public class VRM4ULoader : ModuleRules
                 "Slate",
                 "SlateCore",
                 "MainFrame",
-                "VRM4U"
+                "VRM4U",
+
+                "RHI",
+                "RenderCore",
+                "AnimGraphRuntime",
+                "ProceduralMeshComponent",
 
             });
 
@@ -47,6 +59,12 @@ public class VRM4ULoader : ModuleRules
 				"AssetTools",
 				"AssetRegistry"
 			});
+
+        if (Target.bBuildEditor == true)
+        {
+            PrivateDependencyModuleNames.Add("VRM4UImporter");
+            PrivateIncludePaths.Add("VRM4UImporter/Private");
+        }
 
         if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
         {

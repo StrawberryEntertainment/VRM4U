@@ -7,7 +7,7 @@
 /**
  * 
  */
-class VRM4U_API VrmConvertTexture
+class VRM4ULOADER_API VrmConvertTexture
 {
 public:
 	VrmConvertTexture();

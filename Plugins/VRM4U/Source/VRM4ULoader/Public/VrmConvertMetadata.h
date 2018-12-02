@@ -7,7 +7,7 @@
 /**
  * 
  */
-class VRM4U_API VrmConvertMetadata
+class VRM4ULOADER_API VrmConvertMetadata
 {
 public:
 	VrmConvertMetadata();

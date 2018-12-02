@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "VrmAssetListObject.h"
-#include "LoaderBPFunctionLibrary.h"
+//#include "LoaderBPFunctionLibrary.h"
 
 
 
@@ -10,5 +10,5 @@ UVrmAssetListObject::UVrmAssetListObject(const FObjectInitializer& ObjectInitial
 {
 	Package = GetTransientPackage();
 
-	Result = new FReturnedData();
+	//Result = new FReturnedData();
 }

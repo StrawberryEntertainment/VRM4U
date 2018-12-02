@@ -302,7 +302,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		return false;
 	}
 
-	FReturnedData &result = *(vrmAssetList->Result);
+	auto a_tmp = new FReturnedData();
+	FReturnedData &result = *(a_tmp);
+	//FReturnedData &result = *(vrmAssetList->Result);
 
 	result.bSuccess = false;
 	result.meshInfo.Empty();

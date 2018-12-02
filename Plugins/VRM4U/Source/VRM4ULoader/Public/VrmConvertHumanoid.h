@@ -7,7 +7,7 @@
 /**
  * 
  */
-class VRM4U_API VrmConvertHumanoid
+class VRM4ULOADER_API VrmConvertHumanoid
 {
 public:
 	VrmConvertHumanoid();

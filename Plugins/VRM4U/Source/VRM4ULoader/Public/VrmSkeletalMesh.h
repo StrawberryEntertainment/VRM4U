@@ -10,7 +10,7 @@
  * 
  */
 UCLASS()
-class VRM4U_API UVrmSkeletalMesh : public USkeletalMesh
+class VRM4ULOADER_API UVrmSkeletalMesh : public USkeletalMesh
 {
 	GENERATED_BODY()
 	
