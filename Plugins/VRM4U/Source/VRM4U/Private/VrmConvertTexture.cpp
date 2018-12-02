@@ -75,17 +75,17 @@ namespace {
 				float* value;
 			};
 			TT table[] = {
-				TEXT("_Color"),			vrmMat.vectorProperties._Color,
-				TEXT("_ShadeColor"),	vrmMat.vectorProperties._ShadeColor,
-				TEXT("_MainTex"),		vrmMat.vectorProperties._MainTex,
-				TEXT("_ShadeTexture"),	vrmMat.vectorProperties._ShadeTexture,
-				TEXT("_BumpMap"),				vrmMat.vectorProperties._BumpMap,
-				TEXT("_ReceiveShadowTexture"),	vrmMat.vectorProperties._ReceiveShadowTexture,
-				TEXT("_SphereAdd"),				vrmMat.vectorProperties._SphereAdd,
-				TEXT("_EmissionColor"),			vrmMat.vectorProperties._EmissionColor,
-				TEXT("_EmissionMap"),			vrmMat.vectorProperties._EmissionMap,
-				TEXT("_OutlineWidthTexture"),	vrmMat.vectorProperties._OutlineWidthTexture,
-				TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor,
+				{TEXT("_Color"),			vrmMat.vectorProperties._Color},
+				{TEXT("_ShadeColor"),	vrmMat.vectorProperties._ShadeColor},
+				{TEXT("_MainTex"),		vrmMat.vectorProperties._MainTex},
+				{TEXT("_ShadeTexture"),	vrmMat.vectorProperties._ShadeTexture},
+				{TEXT("_BumpMap"),				vrmMat.vectorProperties._BumpMap},
+				{TEXT("_ReceiveShadowTexture"),	vrmMat.vectorProperties._ReceiveShadowTexture},
+				{TEXT("_SphereAdd"),				vrmMat.vectorProperties._SphereAdd},
+				{TEXT("_EmissionColor"),			vrmMat.vectorProperties._EmissionColor},
+				{TEXT("_EmissionMap"),			vrmMat.vectorProperties._EmissionMap},
+				{TEXT("_OutlineWidthTexture"),	vrmMat.vectorProperties._OutlineWidthTexture},
+				{TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor},
 			};
 
 			for (auto &t : table) {
@@ -102,25 +102,25 @@ namespace {
 				float& value;
 			};
 			TT table[] = {
-				TEXT("_Cutoff"),		vrmMat.floatProperties._Cutoff,
-				TEXT("_BumpScale"),	vrmMat.floatProperties._BumpScale,
-				TEXT("_ReceiveShadowRate"),	vrmMat.floatProperties._ReceiveShadowRate,
-				TEXT("_ShadeShift"),			vrmMat.floatProperties._ShadeShift,
-				TEXT("_ShadeToony"),			vrmMat.floatProperties._ShadeToony,
-				TEXT("_LightColorAttenuation"),	vrmMat.floatProperties._LightColorAttenuation,
-				TEXT("_OutlineWidth"),			vrmMat.floatProperties._OutlineWidth,
-				TEXT("_OutlineScaledMaxDistance"),	vrmMat.floatProperties._OutlineScaledMaxDistance,
-				TEXT("_OutlineLightingMix"),			vrmMat.floatProperties._OutlineLightingMix,
-				TEXT("_DebugMode"),				vrmMat.floatProperties._DebugMode,
-				TEXT("_BlendMode"),				vrmMat.floatProperties._BlendMode,
-				TEXT("_OutlineWidthMode"),		vrmMat.floatProperties._OutlineWidthMode,
-				TEXT("_OutlineColorMode"),	vrmMat.floatProperties._OutlineColorMode,
-				TEXT("_CullMode"),			vrmMat.floatProperties._CullMode,
-				TEXT("_OutlineCullMode"),		vrmMat.floatProperties._OutlineCullMode,
-				TEXT("_SrcBlend"),			vrmMat.floatProperties._SrcBlend,
-				TEXT("_DstBlend"),			vrmMat.floatProperties._DstBlend,
-				TEXT("_ZWrite"),				vrmMat.floatProperties._ZWrite,
-				TEXT("_IsFirstSetup"),		vrmMat.floatProperties._IsFirstSetup,
+				{TEXT("_Cutoff"),		vrmMat.floatProperties._Cutoff},
+				{TEXT("_BumpScale"),	vrmMat.floatProperties._BumpScale},
+				{TEXT("_ReceiveShadowRate"),	vrmMat.floatProperties._ReceiveShadowRate},
+				{TEXT("_ShadeShift"),			vrmMat.floatProperties._ShadeShift},
+				{TEXT("_ShadeToony"),			vrmMat.floatProperties._ShadeToony},
+				{TEXT("_LightColorAttenuation"),	vrmMat.floatProperties._LightColorAttenuation},
+				{TEXT("_OutlineWidth"),			vrmMat.floatProperties._OutlineWidth},
+				{TEXT("_OutlineScaledMaxDistance"),	vrmMat.floatProperties._OutlineScaledMaxDistance},
+				{TEXT("_OutlineLightingMix"),			vrmMat.floatProperties._OutlineLightingMix},
+				{TEXT("_DebugMode"),				vrmMat.floatProperties._DebugMode},
+				{TEXT("_BlendMode"),				vrmMat.floatProperties._BlendMode},
+				{TEXT("_OutlineWidthMode"),		vrmMat.floatProperties._OutlineWidthMode},
+				{TEXT("_OutlineColorMode"),	vrmMat.floatProperties._OutlineColorMode},
+				{TEXT("_CullMode"),			vrmMat.floatProperties._CullMode},
+				{TEXT("_OutlineCullMode"),		vrmMat.floatProperties._OutlineCullMode},
+				{TEXT("_SrcBlend"),			vrmMat.floatProperties._SrcBlend},
+				{TEXT("_DstBlend"),			vrmMat.floatProperties._DstBlend},
+				{TEXT("_ZWrite"),				vrmMat.floatProperties._ZWrite},
+				{TEXT("_IsFirstSetup"),		vrmMat.floatProperties._IsFirstSetup},
 			};
 
 			for (auto &t : table) {
@@ -165,12 +165,12 @@ namespace {
 				int value;
 			};
 			TT table[] = {
-				TEXT("mtoon_tex_MainTex"),		vrmMat.textureProperties._MainTex,
-				TEXT("mtoon_tex_ShadeTexture"),	vrmMat.textureProperties._ShadeTexture,
-				TEXT("mtoon_tex_BumpMap"),		vrmMat.textureProperties._BumpMap,
-				TEXT("mtoon_tex_SphereAdd"),	vrmMat.textureProperties._SphereAdd,
-				TEXT("mtoon_tex_EmissionMap"),	vrmMat.textureProperties._EmissionMap,
-				TEXT("mtoon_tex_OutlineWidthTexture"),	vrmMat.textureProperties._OutlineWidthTexture,
+				{TEXT("mtoon_tex_MainTex"),		vrmMat.textureProperties._MainTex},
+				{TEXT("mtoon_tex_ShadeTexture"),	vrmMat.textureProperties._ShadeTexture},
+				{TEXT("mtoon_tex_BumpMap"),		vrmMat.textureProperties._BumpMap},
+				{TEXT("mtoon_tex_SphereAdd"),	vrmMat.textureProperties._SphereAdd},
+				{TEXT("mtoon_tex_EmissionMap"),	vrmMat.textureProperties._EmissionMap},
+				{TEXT("mtoon_tex_OutlineWidthTexture"),	vrmMat.textureProperties._OutlineWidthTexture},
 			};
 			for (auto &t : table) {
 				if (t.value < 0) {
@@ -354,8 +354,8 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 		TArray<FString> MatNameList;
 
 		vrmAssetList->Materials.SetNum(mScenePtr->mNumMaterials);
-		for (uint32_t i = 0; i < mScenePtr->mNumMaterials; ++i) {
-			auto &aiMat = *mScenePtr->mMaterials[i];
+		for (uint32_t iMat = 0; iMat < mScenePtr->mNumMaterials; ++iMat) {
+			auto &aiMat = *mScenePtr->mMaterials[iMat];
 
 			UMaterialInterface *baseM = nullptr;;
 			bool bMToon = false;
@@ -512,7 +512,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 					// mtoon
 					if (bMToon) {
-						createAndAddMaterial(dm, i, vrmAssetList, mScenePtr);
+						createAndAddMaterial(dm, iMat, vrmAssetList, mScenePtr);
 					}
 
 					dm->InitStaticPermutation();

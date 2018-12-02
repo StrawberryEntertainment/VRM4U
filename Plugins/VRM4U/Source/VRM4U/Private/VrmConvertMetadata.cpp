@@ -66,19 +66,19 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 			FString &dst;
 		};
 		const TT table[] = {
-			TEXT("version"),		lic->version,
-			TEXT("author"),			lic->author,
-			TEXT("contactInformation"),	lic->contactInformation,
-			TEXT("reference"),		lic->reference,
-			// texture skip
-			TEXT("title"),			lic->title,
-			TEXT("allowedUserName"),	lic->allowedUserName,
-			TEXT("violentUssageName"),	lic->violentUssageName,
-			TEXT("sexualUssageName"),	lic->sexualUssageName,
-			TEXT("commercialUssageName"),	lic->commercialUssageName,
-			TEXT("otherPermissionUrl"),		lic->otherPermissionUrl,
-			TEXT("licenseName"),			lic->licenseName,
-			TEXT("otherLicenseUrl"),		lic->otherLicenseUrl,
+			{TEXT("version"),		lic->version},
+			{TEXT("author"),			lic->author},
+			{TEXT("contactInformation"),	lic->contactInformation},
+			{TEXT("reference"),		lic->reference},
+				// texture skip
+			{TEXT("title"),			lic->title},
+			{TEXT("allowedUserName"),	lic->allowedUserName},
+			{TEXT("violentUssageName"),	lic->violentUssageName},
+			{TEXT("sexualUssageName"),	lic->sexualUssageName},
+			{TEXT("commercialUssageName"),	lic->commercialUssageName},
+			{TEXT("otherPermissionUrl"),		lic->otherPermissionUrl},
+			{TEXT("licenseName"),			lic->licenseName},
+			{TEXT("otherLicenseUrl"),		lic->otherLicenseUrl},
 		};
 		for (int i = 0; i < meta->license.licensePairNum; ++i) {
 

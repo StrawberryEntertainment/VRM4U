@@ -9,8 +9,6 @@
 #include "VrmAnimInstanceCopy.generated.h"
 
 class UVrmMetaObject;
-class USkeleton;
-
 
 USTRUCT()
 struct VRM4U_API FVrmAnimInstanceCopyProxy : public FAnimInstanceProxy {
@@ -42,19 +40,13 @@ class VRM4U_API UVrmAnimInstanceCopy : public UAnimInstance
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	UVrmMetaObject *MetaObject;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	USkeleton *SrcSkeleton;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	USkeletalMeshComponent *SrcSkeletalMeshComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	UVrmMetaObject *SrcVrmMetaObject;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
-		USceneComponent *ComponentHandJointTargetLeft;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Tracking)
-		USceneComponent *ComponentHandJointTargetRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	UVrmMetaObject *DstVrmMetaObject;
 
 protected:
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override;
@@ -71,13 +63,6 @@ public:
 	// Executed when begin play is called on the owning component
 	virtual void NativeBeginPlay()override;
 
-	//virtual USkeleton* GetTargetSkeleton() const override;
-
-	UFUNCTION(BlueprintCallable, Category="Animation")
-	void SetMorphTargetVRM(EVrmMorphGroupType type, float Value);
-
-	
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void SetVrmData(USkeletalMeshComponent *baseSkeletalMesh, UVrmMetaObject *meta);
-
+	void SetSkeletalMeshCopyData(UVrmMetaObject *dstMeta, USkeletalMeshComponent *srcSkeletalMesh, UVrmMetaObject *srcMeta);
 };

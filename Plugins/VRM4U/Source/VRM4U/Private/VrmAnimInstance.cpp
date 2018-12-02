@@ -353,9 +353,12 @@ void UVrmAnimInstance::NativeUninitializeAnimation() {
 void UVrmAnimInstance::NativeBeginPlay() {
 }
 
-static TArray<FString> shapeBlend = {
-	"Neutral","A","I","U","E","O","Blink","Joy","Angry","Sorrow","Fun","LookUp","LookDown","LookLeft","LookRight","Blink_L","Blink_R",
-};
+namespace {
+
+	static TArray<FString> shapeBlend = {
+		"Neutral","A","I","U","E","O","Blink","Joy","Angry","Sorrow","Fun","LookUp","LookDown","LookLeft","LookRight","Blink_L","Blink_R",
+	};
+}
 
 
 void UVrmAnimInstance::SetMorphTargetVRM(EVrmMorphGroupType type, float Value) {

@@ -10,7 +10,65 @@
 #include "BoneControllers/AnimNode_SplineIK.h"
 
 namespace {
-	const FName table[] = {
+	const FString table[] = {
+		"hips",
+		"leftUpperLeg",
+		"rightUpperLeg",
+		"leftLowerLeg",
+		"rightLowerLeg",
+		"leftFoot",
+		"rightFoot",
+		"spine",
+		"chest",
+		"neck",
+		"head",
+		"leftShoulder",
+		"rightShoulder",
+		"leftUpperArm",
+		"rightUpperArm",
+		"leftLowerArm",
+		"rightLowerArm",
+		"leftHand",
+		"rightHand",
+		"leftToes",
+		"rightToes",
+		"leftEye",
+		"rightEye",
+		"jaw",
+		"leftThumbProximal",
+		"leftThumbIntermediate",
+		"leftThumbDistal",
+		"leftIndexProximal",
+		"leftIndexIntermediate",
+		"leftIndexDistal",
+		"leftMiddleProximal",
+		"leftMiddleIntermediate",
+		"leftMiddleDistal",
+		"leftRingProximal",
+		"leftRingIntermediate",
+		"leftRingDistal",
+		"leftLittleProximal",
+		"leftLittleIntermediate",
+		"leftLittleDistal",
+		"rightThumbProximal",
+		"rightThumbIntermediate",
+		"rightThumbDistal",
+		"rightIndexProximal",
+		"rightIndexIntermediate",
+		"rightIndexDistal",
+		"rightMiddleProximal",
+		"rightMiddleIntermediate",
+		"rightMiddleDistal",
+		"rightRingProximal",
+		"rightRingIntermediate",
+		"rightRingDistal",
+		"rightLittleProximal",
+		"rightLittleIntermediate",
+		"rightLittleDistal",
+		"upperChest"
+	};
+	/*
+	const FString table[] = {
 		"Root",
 		"Pelvis",
 		"spine_01",
@@ -85,6 +143,7 @@ namespace {
 		"Custom_4",
 		"Custom_5",
 	};
+	*/
 }
 
 
@@ -98,27 +157,47 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		return false;
 	}
 
-	const UVrmMetaObject *meta = animInstance->MetaObject;
+	const UVrmMetaObject *srcMeta = animInstance->SrcVrmMetaObject;
+	const UVrmMetaObject *dstMeta = animInstance->DstVrmMetaObject;
+	if (srcMeta == nullptr || dstMeta == nullptr){
+		return false;
+	}
 
-	//auto srcSkeleton = animInstance->SrcSkeleton;
+
 	auto srcSkeletalMeshComp = animInstance->SrcSkeletalMeshComponent;
 
 	if (srcSkeletalMeshComp == nullptr) {
 		return false;
 	}
 
+	// ref pose
 	const auto &dstRefSkeletonTransform = GetSkelMeshComponent()->SkeletalMesh->RefSkeleton.GetRefBonePose();
 	const auto &srcRefSkeletonTransform = srcSkeletalMeshComp->SkeletalMesh->RefSkeleton.GetRefBonePose();
 
 	auto &pose = Output.Pose;
 
-	for (auto t : table) {
-		auto srcName = srcSkeletalMeshComp->SkeletalMesh->Skeleton->GetRigBoneMapping(t);
+	for (const auto &t : table) {
+		FName srcName, dstName;
+		srcName = dstName = NAME_None;
+
+		{
+			auto a = srcMeta->humanoidBoneTable.Find(t);
+			if (a) {
+				srcName = **a;
+			}
+		}
+		//auto srcName = srcSkeletalMeshComp->SkeletalMesh->Skeleton->GetRigBoneMapping(t);
 		if (srcName == NAME_None) {
 			continue;
 		}
 
-		auto dstName = GetSkelMeshComponent()->SkeletalMesh->Skeleton->GetRigBoneMapping(t);
+		{
+			auto a = dstMeta->humanoidBoneTable.Find(t);
+			if (a) {
+				dstName = **a;
+			}
+		}
+		//auto dstName = GetSkelMeshComponent()->SkeletalMesh->Skeleton->GetRigBoneMapping(t);
 		if (dstName == NAME_None) {
 			continue;
 		}
@@ -137,7 +216,7 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		const auto srcRefTrans = srcRefSkeletonTransform[srcIndex];
 		const auto dstRefTrans = dstRefSkeletonTransform[dstIndex];
 
-		FQuat diff = srcCurrentTrans.GetRotation();// *srcRefTrans.GetRotation().Inverse();
+		FQuat diff = srcCurrentTrans.GetRotation()*srcRefTrans.GetRotation().Inverse();
 
 		FTransform dstTrans = dstRefTrans;
 		dstTrans.SetRotation( dstTrans.GetRotation()*diff );
@@ -154,39 +233,7 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		FCompactPose::BoneIndexType bi(dstIndex);
 		pose[bi] = dstTrans;
 	}
-	
-/*
 
-	for (auto &boneName : meta->humanoidBoneTable) {
-	
-		if (boneName.Key == TEXT("leftEye") || boneName.Key == TEXT("rightEye")) {
-			continue;
-		}
-		srcSkeleton
-
-		//auto i = srcMesh->GetBoneIndex();
-		if (srcMesh->GetBoneIndex(*(boneName.Key)) < 0) {
-			continue;
-		}
-
-		auto t = srcMesh->GetSocketTransform(*(boneName.Key), RTS_ParentBoneSpace);
-		
-		auto i = GetSkelMeshComponent()->GetBoneIndex(*(boneName.Value));
-		if (i < 0) {
-			continue;
-		}
-		auto refLocation = RefSkeletonTransform[i].GetLocation();
-		
-		FVector newLoc = t.GetLocation();
-		if (newLoc.Normalize()) {
-			newLoc *= refLocation.Size();
-			t.SetLocation(newLoc);
-		}
-
-		FCompactPose::BoneIndexType bi(i);
-		pose[bi] = t;
-	}
-*/
 	return true;
 }
 void FVrmAnimInstanceCopyProxy::UpdateAnimationNode(float DeltaSeconds) {
@@ -208,128 +255,16 @@ FAnimInstanceProxy* UVrmAnimInstanceCopy::CreateAnimInstanceProxy() {
 void UVrmAnimInstanceCopy::NativeInitializeAnimation() {
 }
 void UVrmAnimInstanceCopy::NativeUpdateAnimation(float DeltaSeconds) {
-
-	{
-		if (SrcSkeletalMeshComponent == nullptr) {
-			return;
-		}
-		auto a = SrcSkeletalMeshComponent->GetAnimInstance();
-		if (a == nullptr) {
-			return;
-		}
-
-		if (SrcSkeletalMeshComponent->SkeletalMesh == nullptr) {
-			return;
-		}
-
-		a->CurrentSkeleton = SrcSkeletalMeshComponent->SkeletalMesh->Skeleton;
-	}
-
-//	USkeletalMesh *m;
-
-	auto targetComponent = Cast<USkeletalMeshComponent>(this);
-
-	//BaseSkeletalMeshComponent->GetSocketTransform();
-	//const auto boneTree = BaseSkeletalMeshComponent->SkeletalMesh->Skeleton->GetBoneTree();
-
-	if (targetComponent) {
-		for (auto &a : targetComponent->BoneSpaceTransforms) {
-		//	a.SetIdentity();
-		}
-	}
-
-	//for (auto &b : boneTree) {
-	//}
 }
 void UVrmAnimInstanceCopy::NativePostEvaluateAnimation() {
-	auto targetComponent = Cast<USkeletalMeshComponent>(this);
-	if (targetComponent) {
-		for (auto &a : targetComponent->BoneSpaceTransforms) {
-			//a.SetIdentity();
-		}
-	}
-
-	if (SrcSkeletalMeshComponent) {
-		if (SrcSkeletalMeshComponent->AnimScriptInstance) {
-			IAnimClassInterface* AnimClassInterface = IAnimClassInterface::GetFromClass(this->GetClass());
-			//const USkeleton* AnimSkeleton = (AnimClassInterface) ? AnimClassInterface->GetTargetSkeleton() : nullptr;
-			if (AnimClassInterface) {
-				//AnimClassInterface->
-			}
-			//BaseSkeletalMeshComponent->AnimScriptInstance->target
-			//BaseSkeletalMeshComponent->AnimScriptInstance->CurrentSkeleton = 
-				//BaseSkeletalMeshComponent->SkeletalMesh->Skeleton;
-
-		}
-	}
 }
 void UVrmAnimInstanceCopy::NativeUninitializeAnimation() {
 }
 void UVrmAnimInstanceCopy::NativeBeginPlay() {
 }
 
-static TArray<FString> shapeBlend = {
-	"Neutral","A","I","U","E","O","Blink","Joy","Angry","Sorrow","Fun","LookUp","LookDown","LookLeft","LookRight","Blink_L","Blink_R",
-};
-
-
-void UVrmAnimInstanceCopy::SetMorphTargetVRM(EVrmMorphGroupType type, float Value) {
-
-	if (MetaObject == nullptr){
-		return;
-	}
-
-	USkeletalMeshComponent *skc = GetOwningComponent();
-	//auto &morphMap = skc->GetMorphTargetCurves();
-	for (auto &a : MetaObject->BlendShapeGroup) {
-		if (a.name != shapeBlend[(int)type]) {
-			continue;
-		}
-
-		for (auto &b : a.BlendShape) {
-			//b.meshName
-
-			SetMorphTarget(*(b.morphTargetName), Value);
-
-			/*
-			for (auto &m : skc->SkeletalMesh->MorphTargets) {
-				auto s = m->GetName();
-				//if (s.Find(b.meshName) < 0) {
-				//	continue;
-				//}
-				auto s1 = FString::Printf(TEXT("%02d_"), b.meshID);
-				if (s.Find(s1) < 0) {
-					continue;
-				}
-				auto s2 = FString::Printf(TEXT("_%02d"), b.shapeIndex);
-				if (s.Find(s2) < 0) {
-					continue;
-				}
-				SetMorphTarget(*s, Value);
-			}
-			*/
-		}
-	}
-
-
-}
-
-void UVrmAnimInstanceCopy::SetVrmData(USkeletalMeshComponent *baseSkeletalMesh, UVrmMetaObject *meta) {
-	IAnimClassInterface* AnimClassInterface = IAnimClassInterface::GetFromClass(this->GetClass());
-	//const USkeleton* AnimSkeleton = (AnimClassInterface) ? AnimClassInterface->GetTargetSkeleton() : nullptr;
-
-	if (meta) {
-		USkeletalMeshComponent *skc = GetOwningComponent();
-		skc->SetSkeletalMesh(meta->SkeletalMesh);
-	}
-
-	SrcSkeletalMeshComponent = baseSkeletalMesh;
-	MetaObject = meta;
-
-	//if (AnimClassInterface) {
-	//	AnimClassInterface->
-	//}
-	//BaseSkeletalMeshComponent->AnimScriptInstance->target
-	//BaseSkeletalMeshComponent->AnimScriptInstance->CurrentSkeleton = 
-	//BaseSkeletalMeshComponent->SkeletalMesh->Skeleton;
+void UVrmAnimInstanceCopy::SetSkeletalMeshCopyData(UVrmMetaObject *dstMeta, USkeletalMeshComponent *srcSkeletalMesh, UVrmMetaObject *srcMeta) {
+	SrcSkeletalMeshComponent = srcSkeletalMesh;
+	SrcVrmMetaObject = srcMeta;
+	DstVrmMetaObject = dstMeta;
 }

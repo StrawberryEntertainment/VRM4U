@@ -44,7 +44,6 @@ public class VRM4U : ModuleRules
                 "Engine",
                 "RHI",
                 "RenderCore",
-                "ProceduralMeshComponent",
                 "AnimGraphRuntime"
 
                 // ... add other public dependencies that you statically link with here ...
@@ -80,6 +79,13 @@ public class VRM4U : ModuleRules
             PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib",PlatformString, "assimp-vc140-mt.lib"));
 
             RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(ThirdPartyPath, "assimp/bin",PlatformString, "assimp-vc140-mt.dll")));
+        }
+        if (Target.Platform == UnrealTargetPlatform.Android)
+        {
+            string PlatformString = "android";
+            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, "libassimp.so"));
+
+            //RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(ThirdPartyPath, "assimp/bin", PlatformString, "assimp-vc140-mt.dll")));
         }
     }
 }
