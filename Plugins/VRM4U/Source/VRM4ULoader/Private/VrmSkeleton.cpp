@@ -435,6 +435,13 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 			}
 			RefSkelModifier.Add(info, pose);
 			totalBoneCount++;
+
+			if (totalBoneCount == 1) {
+				if (VRMConverter::Options::Get().IsDebugOneBone()) {
+					// root only
+					break;
+				}
+			}
 		}
 	}
 

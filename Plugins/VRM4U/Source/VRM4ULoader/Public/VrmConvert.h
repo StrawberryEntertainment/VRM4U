@@ -65,6 +65,8 @@ public:
 
 		bool IsSkipNoMeshBone() const;
 
+		bool IsDebugOneBone() const;
+
 		EVRMImportMaterialType GetMaterialType() const;
 	};
 };

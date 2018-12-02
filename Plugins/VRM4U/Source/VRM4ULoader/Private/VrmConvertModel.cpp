@@ -547,6 +547,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 				auto &aiM = mScenePtr->mMeshes[meshID];
 				TArray<int> bonemap;
+				bonemap.Add(0);
 				//mScenePtr->mRootNode->mMeshes
 				for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
 					auto &aiB = aiM->mBones[boneIndex];
@@ -578,6 +579,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 							}
 							if (tabledIndex > 255) {
 								UE_LOG(LogTemp, Warning, TEXT("bonemap over!"));
+							}
+
+							if (Options::Get().IsDebugOneBone()) {
+								tabledIndex = 0;
 							}
 
 							s.InfluenceBones[jj] = tabledIndex;
@@ -715,9 +720,6 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						if (maxWeight < w.InfluenceWeights[i]) {
 							maxWeight = w.InfluenceWeights[i];
 							maxIndex = i;
-						}
-						if (w.InfluenceBones[i] == 3) {
-							UE_LOG(LogTemp, Warning, TEXT("overr"));
 						}
 					}
 					if (f > 255) {

@@ -203,6 +203,16 @@ bool VRMConverter::Options::IsSkipNoMeshBone() const {
 #endif
 }
 
+bool VRMConverter::Options::IsDebugOneBone() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bDebugOneBone;
+#else
+	return false;
+#endif
+}
+
 bool VRMConverter::Options::IsRootBoneOnly() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return false;
