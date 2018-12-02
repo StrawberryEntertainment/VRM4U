@@ -20,7 +20,8 @@ public class VRM4UImporter : ModuleRules
                 "Slate",
                 "SlateCore",
                 "MainFrame",
-                "VRM4U"
+                "VRM4U",
+                "VRM4ULoader",
 
             });
 

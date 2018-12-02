@@ -20,9 +20,22 @@
 			"LoadingPhase": "Default"
 		},
 		{
+			"Name": "VRM4ULoader",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms" :
+			[
+				"Win64"
+			]
+		},
+		{
 			"Name": "VRM4UImporter",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms" :
+			[
+				"Win64"
+			]
 		}
 	]
 }
