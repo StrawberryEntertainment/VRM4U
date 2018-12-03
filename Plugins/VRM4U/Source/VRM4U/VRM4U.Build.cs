@@ -21,7 +21,7 @@ public class VRM4U : ModuleRules
 
         PublicIncludePaths.AddRange(
 			new string[] {
-                "VRM4U/Public",
+                //"VRM4U/Public",
 				// ... add public include paths required here ...
 			}
 		);
@@ -29,7 +29,7 @@ public class VRM4U : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-                "VRM4U/Private",
+                //"VRM4U/Private",
                 // ... add other private include paths required here ...
 			}
 			);
@@ -44,7 +44,6 @@ public class VRM4U : ModuleRules
                 "RHI",
                 "RenderCore",
                 "AnimGraphRuntime",
-                "ProceduralMeshComponent",
 
                 // ... add other public dependencies that you statically link with here ...
 			}

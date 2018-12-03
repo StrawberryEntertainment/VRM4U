@@ -172,10 +172,10 @@ static void rr(aiNode *node, TArray<aiNode*> &t, bool &bHasMesh, const bool bOnl
 		int maxChild = 0;
 
 		for (uint32 i = 0; i < node->mNumChildren; ++i) {
-			int t = countChild(node->mChildren[i], 0);
+			int cc = countChild(node->mChildren[i], 0);
 
-			if (t > maxChild) {
-				maxChild = t;
+			if (cc > maxChild) {
+				maxChild = cc;
 				maxIndex = i;
 			}
 
@@ -206,11 +206,13 @@ void UVrmSkeleton::applyBoneFrom(const USkeleton *src, const UVrmMetaObject *met
 
 	FReferenceSkeletonModifier RefSkelModifier(ReferenceSkeleton, this);
 
-	FTransform t;
-	t.SetIdentity();
+	{
+		FTransform t;
+		t.SetIdentity();
 
-	for (int i = 0; i < GetBoneTree().Num(); ++i) {
-		RefSkelModifier.UpdateRefPoseTransform(i, t);
+		for (int i = 0; i < ReferenceSkeleton.GetRawBoneNum(); ++i) {
+			RefSkelModifier.UpdateRefPoseTransform(i, t);
+		}
 	}
 
 	auto allbone = ReferenceSkeleton.GetRawRefBoneInfo();
@@ -234,7 +236,7 @@ void UVrmSkeleton::applyBoneFrom(const USkeleton *src, const UVrmMetaObject *met
 #endif
 }
 
-void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
+void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 
 	boneOffset = 0;
 	//FBoneNode n;
@@ -248,11 +250,13 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 
 	FReferenceSkeletonModifier RefSkelModifier(ReferenceSkeleton, this);
 
-	FTransform t;
-	t.SetIdentity();
+	{
+		FTransform t;
+		t.SetIdentity();
 
-	for (int i = 0; i < GetBoneTree().Num(); ++i) {
-		RefSkelModifier.UpdateRefPoseTransform(i, t);
+		for (int i = 0; i < ReferenceSkeleton.GetRawBoneNum(); ++i) {
+			RefSkelModifier.UpdateRefPoseTransform(i, t);
+		}
 	}
 
 
@@ -270,7 +274,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 #if WITH_EDITOR
 			bOnlyRootBone = VRMConverter::Options::Get().IsRootBoneOnly();
 #endif
-			rr(s->mRootNode, bone, dummy, bOnlyRootBone, s);
+			rr(scene->mRootNode, bone, dummy, bOnlyRootBone, scene);
 		}
 
 		{
@@ -291,8 +295,8 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 					if (rec_orig[f] == UTF8_TO_TCHAR(a->mName.C_Str())) {
 						// same name node!
 						aiNode *n[] = {
-							s->mRootNode->FindNode(a->mName),
-							s->mRootNode->FindNode(TCHAR_TO_ANSI(*rec_orig[f])),
+							scene->mRootNode->FindNode(a->mName),
+							scene->mRootNode->FindNode(TCHAR_TO_ANSI(*rec_orig[f])),
 						};
 						int t[] = {
 							countParent(n[0], bone, 0),
@@ -329,8 +333,8 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 
 
 					//add
-					for (uint32_t meshID = 0; meshID < s->mNumMeshes; ++meshID) {
-						auto &aiM = *(s->mMeshes[meshID]);
+					for (uint32_t meshID = 0; meshID < scene->mNumMeshes; ++meshID) {
+						auto &aiM = *(scene->mMeshes[meshID]);
 						
 						for (uint32_t allBoneID = 0; allBoneID < aiM.mNumBones; ++allBoneID) {
 							auto &aiB = *(aiM.mBones[allBoneID]);
@@ -360,8 +364,8 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 					a->mName.Set(TCHAR_TO_ANSI(*str));
 
 					//add
-					for (uint32_t meshID = 0; meshID < s->mNumMeshes; ++meshID) {
-						auto &aiM = *(s->mMeshes[meshID]);
+					for (uint32_t meshID = 0; meshID < scene->mNumMeshes; ++meshID) {
+						auto &aiM = *(scene->mMeshes[meshID]);
 
 						for (uint32_t allBoneID = 0; allBoneID < aiM.mNumBones; ++allBoneID) {
 							auto &aiB = *(aiM.mBones[allBoneID]);
@@ -418,7 +422,7 @@ void UVrmSkeleton::readVrmBone(aiScene* s, int &boneOffset) {
 				m.M[0][2] = t.c1; m.M[1][2] = t.c2; m.M[2][2] = t.c3; m.M[3][2] = t.b4*100.f;//t.c4*100.f;
 				m.M[0][3] = t.d1; m.M[1][3] = t.d2; m.M[2][3] = t.d3; m.M[3][3] = t.d4;
 
-				if (a == s->mRootNode) {
+				if (a == scene->mRootNode) {
 					//pose.SetScale3D(FVector(100));
 				}
 				

@@ -73,7 +73,7 @@ static void ReTransformHumanoidBone(USkeleton *targetHumanoidSkeleton, const UVr
 
 	FReferenceSkeletonModifier RefSkelModifier(ReferenceSkeleton, targetHumanoidSkeleton);
 
-	for (int ind_target = 0; ind_target < targetHumanoidSkeleton->GetBoneTree().Num(); ++ind_target) {
+	for (int ind_target = 0; ind_target < targetHumanoidSkeleton->GetReferenceSkeleton().GetRawBoneNum(); ++ind_target) {
 		FTransform t;
 		t.SetIdentity();
 		RefSkelModifier.UpdateRefPoseTransform(ind_target, t);

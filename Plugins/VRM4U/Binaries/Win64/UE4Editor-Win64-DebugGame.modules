@@ -1,9 +1,0 @@
-{
-	"BuildId": "4212847",
-	"Modules": 
-	{
-		"VRM4U": "UE4Editor-VRM4U-Win64-DebugGame.dll",
-		"VRM4UImporter": "UE4Editor-VRM4UImporter-Win64-DebugGame.dll",
-		"VRM4ULoader": "UE4Editor-VRM4ULoader-Win64-DebugGame.dll"
-	}
-}

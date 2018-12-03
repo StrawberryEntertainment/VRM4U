@@ -456,7 +456,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	{
 		FSkeletalMeshLODRenderData &rd = sk->GetResourceForRendering()->LODRenderData[0];
 
-		for (int i = 0; i < sk->Skeleton->GetBoneTree().Num(); ++i) {
+		for (int i = 0; i < sk->Skeleton->GetReferenceSkeleton().GetRawBoneNum(); ++i) {
 			rd.RequiredBones.Add(i);
 			rd.ActiveBoneIndices.Add(i);
 		}

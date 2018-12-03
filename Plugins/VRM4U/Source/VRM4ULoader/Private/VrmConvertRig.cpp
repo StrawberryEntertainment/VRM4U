@@ -118,6 +118,7 @@ namespace {
 
 
 bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 #if WITH_EDITOR
 	FString name = FString(TEXT("RIG_")) + vrmAssetList->BaseFileName;
 	UNodeMappingContainer* mc = NewObject<UNodeMappingContainer>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
@@ -206,7 +207,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 
 #else
 #endif
-
+#endif //420
 	return true;
 
 }
