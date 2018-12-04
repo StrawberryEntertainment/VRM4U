@@ -37,4 +37,10 @@
       ]
     }
   ]
+  "Plugins": [
+     {
+       "Name": "ProceduralMeshComponent",
+       "Enabled": true
+     }
+ ]
 }
