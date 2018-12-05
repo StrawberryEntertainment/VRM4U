@@ -38,6 +38,14 @@
 #include "AssetRegistryModule.h"
 #include "UObject/Package.h"
 
+//#include "Windows/WindowsSystemIncludes.h"
+
+#if PLATFORM_WINDOWS
+#include "AllowWindowsPlatformTypes.h"
+#include <windows.h>
+#include "HideWindowsPlatformTypes.h"
+#endif
+
 // tem
 UPackage *package = nullptr;
 FString baseFileName;
@@ -170,6 +178,36 @@ void ULoaderBPFunctionLibrary::SetImportMode(bool bIm, class UPackage *p) {
 	package = p;
 }
 
+namespace {
+#if PLATFORM_WINDOWS
+	std::string utf_16_to_shift_jis(const std::wstring& str) {
+		static_assert(sizeof(wchar_t) == 2, "this function is windows only");
+		const int len = ::WideCharToMultiByte(932/*CP_ACP*/, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
+		std::string re(len * 2, '\0');
+		if (!::WideCharToMultiByte(CP_ACP, 0, str.c_str(), -1, &re[0], len, nullptr, nullptr)) {
+			const auto ec = ::GetLastError();
+			switch (ec)
+			{
+			case ERROR_INSUFFICIENT_BUFFER:
+				//throw std::runtime_error("in function utf_16_to_shift_jis, WideCharToMultiByte fail. cause: ERROR_INSUFFICIENT_BUFFER"); break;
+			case ERROR_INVALID_FLAGS:
+				//throw std::runtime_error("in function utf_16_to_shift_jis, WideCharToMultiByte fail. cause: ERROR_INVALID_FLAGS"); break;
+			case ERROR_INVALID_PARAMETER:
+				//throw std::runtime_error("in function utf_16_to_shift_jis, WideCharToMultiByte fail. cause: ERROR_INVALID_PARAMETER"); break;
+			default:
+				//throw std::runtime_error("in function utf_16_to_shift_jis, WideCharToMultiByte fail. cause: unknown(" + std::to_string(ec) + ')'); break;
+				break;
+			}
+		}
+		const std::size_t real_len = std::strlen(re.c_str());
+		re.resize(real_len);
+		re.shrink_to_fit();
+		return re;
+	}
+#endif
+}
+
+
 bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString filepath) {
 
 	Assimp::Importer mImporter;
@@ -193,9 +231,15 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	//{
 	//case EPathType::Absolute:
 	//file = TCHAR_TO_UTF8(filepath.GetCharArray().GetData());
-	//file = TCHAR_TO_ANSI( UTF8_TO_TCHAR(*filepath) );
+	//file = TCHAR_TO_ANSI( *filepath );
 	//file = TCHAR_TO_UTF8(*filepath.ReplaceCharWithEscapedChar());
+	//file = TCHAR_TO_UTF8(*filepath);
+#if PLATFORM_WINDOWS
+	file = utf_16_to_shift_jis(*filepath);
+#else
 	file = TCHAR_TO_UTF8(*filepath);
+#endif
+
 	//	break;
 	//case EPathType::Relative:
 	//	file = TCHAR_TO_UTF8(*FPaths::Combine(FPaths::ProjectContentDir(), filepath));
