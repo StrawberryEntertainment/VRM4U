@@ -1,5 +1,5 @@
 
-::call build_ver.bat 4.19 VRM4U_4_19.zip
+call build_ver.bat 4.19 VRM4U_4_19.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
