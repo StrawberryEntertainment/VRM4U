@@ -36,7 +36,7 @@
         "Win64"
       ]
     }
-  ]
+  ],
   "Plugins": [
      {
        "Name": "ProceduralMeshComponent",
