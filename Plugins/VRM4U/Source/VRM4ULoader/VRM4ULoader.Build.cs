@@ -30,35 +30,30 @@ public class VRM4ULoader : ModuleRules
 			new string[] {
 				"Core",
 				"CoreUObject",
-                "InputCore",
-                "EditorStyle",
-                "ApplicationCore",
                 "Engine",
-				"Json",
-				"UnrealEd",
-                "Slate",
-                "SlateCore",
-                "MainFrame",
-                "VRM4U",
-
                 "RHI",
                 "RenderCore",
                 "AnimGraphRuntime",
                 "ProceduralMeshComponent",
+                "VRM4U",
 
             });
 
-		PrivateIncludePathModuleNames.AddRange(
-			new string[] {
-				"AssetTools",
-				"AssetRegistry"
-			});
+        PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "Slate",
+                "SlateCore",
+                "Engine",
+				// ... add private dependencies that you statically link with here ...	
+			}
+            );
 
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[] {
-				"AssetTools",
-				"AssetRegistry"
-			});
+        DynamicallyLoadedModuleNames.AddRange(
+            new string[]
+            {
+            }
+            );
 
         if (Target.bBuildEditor == true)
         {
