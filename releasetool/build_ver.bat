@@ -44,6 +44,6 @@ powershell -ExecutionPolicy RemoteSigned .\compress.ps1 %ZIPNAME%
 exit /b 0
 
 :err
-exit  1
+exit /b 1
 
 
