@@ -95,7 +95,7 @@ class FVRM4ULoaderModule : public IModuleInterface {
 															  //FWindowsApplication* WindowsApplication = (FWindowsApplication*)GenericApplication.Get();
 				TSharedPtr<GenericApplication> App = FSlateApplication::Get().GetPlatformApplication();
 
-				auto WindowsApplication = reinterpret_cast<FWindowsApplication*>(App.Get());
+				auto WindowsApplication = (FWindowsApplication*)(App.Get());
 
 				//WindowsApplication->SetMessageHandler(DropMessageHandler);
 				WindowsApplication->AddMessageHandler(DropMessageHandler);

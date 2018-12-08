@@ -13,6 +13,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
+#include "Animation/Skeleton.h"
 #include "Animation/MorphTarget.h"
 #include "Animation/NodeMappingContainer.h"
 
@@ -164,7 +165,9 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 #endif
 #endif
 
+#if WITH_EDITORONLY_DATA
 	k->SetPreviewMesh(sk);
+#endif
 	k->RecreateBoneTree(sk);
 
 	return true;

@@ -73,7 +73,10 @@ bool VRMConverter::ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiSc
 	ss->UpdateGenerateUpToData();
 #endif
 #endif
+
+#if WITH_EDITORONLY_DATA
 	base->SetPreviewMesh(ss);
+#endif
 	base->RecreateBoneTree(ss);
 
 	vrmAssetList->HumanoidSkeletalMesh = ss;

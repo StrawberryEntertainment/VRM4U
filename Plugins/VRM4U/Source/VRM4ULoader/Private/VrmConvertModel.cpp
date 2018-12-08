@@ -385,7 +385,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		sk->GetImportedModel()->LODModels.Reset();
 #endif
 
+#if WITH_EDITORONLY_DATA
 		k->SetPreviewMesh(sk);
+#endif
 		k->RecreateBoneTree(sk);
 
 		// changet retarget option
@@ -809,7 +811,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 			pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(TEXT("PHYS_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 			pa->Modify();
+#if WITH_EDITORONLY_DATA
 			pa->SetPreviewMesh(sk);
+#endif
 			sk->PhysicsAsset = pa;
 
 			TArray<FString> addedList;

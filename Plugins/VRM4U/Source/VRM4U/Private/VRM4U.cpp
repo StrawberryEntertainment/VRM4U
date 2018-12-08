@@ -2,7 +2,9 @@
 #include "VRM4U.h"
 #include "Modules/ModuleManager.h"
 #include "VrmRuntimeSettings.h"
-#include "ISettingsModule.h"
+#include "Developer/Settings/Public/ISettingsModule.h"
+
+//#include "ISettingsModule.h"
 
 
 #define LOCTEXT_NAMESPACE "FVRM4UModule"
