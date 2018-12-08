@@ -1,6 +1,9 @@
 
 set UE4VER=%1
-set ZIPNAME=%2
+set PLATFORM=%2
+set ZIPNAME=%4
+::set PROJECTNAMEEDITOR="MyProjectBuildScriptEtidor"
+set PROJECTNAMEEDITOR=%3
 
 
 cd ../Plugins
@@ -19,7 +22,6 @@ set CLEAN="D:\Program Files\Epic Games\%UE4PATH%\Engine\Build\BatchFiles\Clean.b
 set BUILD="D:\Program Files\Epic Games\%UE4PATH%\Engine\Build\BatchFiles\Build.bat"
 set REBUILD="D:\Program Files\Epic Games\%UE4PATH%\Engine\Build\BatchFiles\Rebuild.bat"
 set PROJECTNAME="../MyProjectBuildScript.uproject"
-set PROJECTNAMEEDITOR="MyProjectBuildScriptEditor"
 
 
 call %UNREALVERSIONSELECTOR% /projectfiles %UPROJECT%
@@ -28,8 +30,8 @@ if not %errorlevel% == 0 (
     goto err
 )
 
-call %CLEAN% %PROJECTNAMEEDITOR% Win64 Development %UPROJECT% -waitmutex
-call %BUILD% %PROJECTNAMEEDITOR% Win64 Development %UPROJECT% -waitmutex
+call %CLEAN% %PROJECTNAMEEDITOR% %PLATFORM% Development %UPROJECT% -waitmutex
+call %BUILD% %PROJECTNAMEEDITOR% %PLATFORM% Development %UPROJECT% -waitmutex
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
