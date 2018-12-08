@@ -203,6 +203,17 @@ bool VRMConverter::Options::IsSkipNoMeshBone() const {
 #endif
 }
 
+bool VRMConverter::Options::IsCreateHumanoidRenamedMesh() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bCreateHumanoidRenamedMesh;
+#else
+	return false;
+#endif
+}
+
+
 bool VRMConverter::Options::IsDebugOneBone() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return false;
@@ -213,11 +224,11 @@ bool VRMConverter::Options::IsDebugOneBone() const {
 #endif
 }
 
-bool VRMConverter::Options::IsRootBoneOnly() const {
+bool VRMConverter::Options::IsSimpleRootBone() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return false;
 
-	return Window->bSkipRoot;
+	return Window->bSimpleRoot;
 #else
 	return true;
 #endif

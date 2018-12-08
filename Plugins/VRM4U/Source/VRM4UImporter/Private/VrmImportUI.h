@@ -33,18 +33,22 @@ public:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, config, Category=Miscellaneous, meta=(OBJRestrict="true"))
 	//uint32 bOverrideFullName:1;
 
-	/** Whether to import the incoming FBX as a skeletal object */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Import root bone only"))
-	bool bSkipRoot = true;
+	/** Remove bone has no mesh */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Remove bone used DCC tool"))
+	bool bSimpleRoot = true;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Delete bone without mesh"))
 	bool bSkipNoMeshBone = false;
 
-	/** Whether to import the incoming FBX as a skeletal object */
+	/** Duplicate mesh and renamed humanoid bone */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Create renamed humanoid mesh"))
+	bool bCreateHumanoidRenamedMesh = false;
+
+	/** Physics asset */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="No physics asset"))
 	bool bSkipPhysics = false;
 
-	/** Whether to import the incoming FBX as a skeletal object */
+	/** for DEBUG. Import root bone only */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="[Debug]One bone only"))
 	bool bDebugOneBone = false;
 

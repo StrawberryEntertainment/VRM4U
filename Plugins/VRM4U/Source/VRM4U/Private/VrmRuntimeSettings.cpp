@@ -6,6 +6,6 @@
 UVrmRuntimeSettings::UVrmRuntimeSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-
+	bDropVRMFileEnable = false;
 	AssetListObject.SetPath(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
 }

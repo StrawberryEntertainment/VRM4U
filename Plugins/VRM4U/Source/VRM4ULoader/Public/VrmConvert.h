@@ -59,11 +59,13 @@ public:
 		}
 
 		class USkeleton *GetSkeleton();
-		bool IsRootBoneOnly() const;
+		bool IsSimpleRootBone() const;
 
 		bool IsSkipPhysics() const;
 
 		bool IsSkipNoMeshBone() const;
+
+		bool IsCreateHumanoidRenamedMesh() const;
 
 		bool IsDebugOneBone() const;
 

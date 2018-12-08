@@ -270,11 +270,11 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 		TArray<aiNode*> bone;
 		{
 			bool dummy = false;
-			bool bOnlyRootBone = false;
+			bool bSimpleRootBone = false;
 #if WITH_EDITOR
-			bOnlyRootBone = VRMConverter::Options::Get().IsRootBoneOnly();
+			bSimpleRootBone = VRMConverter::Options::Get().IsSimpleRootBone();
 #endif
-			rr(scene->mRootNode, bone, dummy, bOnlyRootBone, scene);
+			rr(scene->mRootNode, bone, dummy, bSimpleRootBone, scene);
 		}
 
 		{

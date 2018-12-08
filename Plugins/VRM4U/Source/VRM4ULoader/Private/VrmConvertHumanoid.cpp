@@ -50,6 +50,10 @@ static void renameToHumanoidBone(USkeleton *targetSkeleton, const UVrmMetaObject
 
 
 bool VRMConverter::ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+	if (Options::Get().IsCreateHumanoidRenamedMesh() == false) {
+		return true;
+	}
+
 	const USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 	const USkeleton *k = sk->Skeleton;
 

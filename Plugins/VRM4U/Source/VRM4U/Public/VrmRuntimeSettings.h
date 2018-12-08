@@ -16,12 +16,23 @@ class VRM4U_API UVrmRuntimeSettings : public UObject
 	
 	GENERATED_UCLASS_BODY()
 
-	// Enables experimental *incomplete and unsupported* texture atlas groups that sprites can be assigned to
-	//UPROPERTY(EditAnywhere, config, Category=Settings)
-	//bool bEnableSpriteAtlasGroups;
+		// Enables experimental *incomplete and unsupported* texture atlas groups that sprites can be assigned to
+		//UPROPERTY(EditAnywhere, config, Category=Settings)
+		//bool bEnableSpriteAtlasGroups;
+
+	//
+	UPROPERTY(config, EditAnywhere, Category = Settings, meta = (
+		ConfigRestartRequired=true
+		))
+	uint32 bDropVRMFileEnable:1;
 
 	//UPROPERTY(config, EditAnywhere, Category = Settings, meta = (AllowedClasses = "VrmAssetListObject", ExactClass = false))
-	UPROPERTY(config, EditAnywhere, Category = Settings, meta = (AllowedClasses = "Object", ExactClass = false))
+
+	// Asset List
+	UPROPERTY(config, EditAnywhere, Category = Settings, meta = (
+		AllowedClasses = "Object",
+		ExactClass = false
+		))
 	FSoftObjectPath AssetListObject;
 
 
