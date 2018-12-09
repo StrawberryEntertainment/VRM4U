@@ -893,6 +893,13 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				for (int i = 0; i < meta->colliderGroupNum; ++i) {
 					auto &c = meta->colliderGroups[i];
 
+					{
+						FString s = c.node_name.C_Str();
+						if (addedList.Find(s) >= 0) {
+							continue;
+						}
+						addedList.Add(s);
+					}
 					//bs->constrai
 					FKAggregateGeom agg;
 
