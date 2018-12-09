@@ -855,17 +855,16 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						// newly created bodies default to simulating
 						bs->PhysicsType = PhysType_Kinematic;	// fix
 																//bs->get
+						bs->CollisionReponse = EBodyCollisionResponse::BodyCollision_Disabled;
 
 						bs->InvalidatePhysicsData();
 						bs->CreatePhysicsMeshes();
 						pa->SkeletalBodySetups.Add(bs);
 
 						pa->UpdateBodySetupIndexMap();
-						pa->UpdateBoundsBodiesArray();
 #if WITH_EDITOR
-						pa->InvalidateAllPhysicsMeshes();
+						//pa->InvalidateAllPhysicsMeshes();
 #endif
-						pa->UpdateBoundsBodiesArray();
 
 						{
 							//Material = (UMaterial*)StaticDuplicateObject(OriginalMaterial, GetTransientPackage(), NAME_None, ~RF_Standalone, UPreviewMaterial::StaticClass()); 
@@ -877,6 +876,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 								bs2->BoneName = k->GetReferenceSkeleton().GetBoneName(c);
 								bs2->PhysicsType = PhysType_Simulated;
+								bs2->CollisionReponse = EBodyCollisionResponse::BodyCollision_Enabled;
 								//bs2->profile
 								bs2->DefaultInstance.InertiaTensorScale.Set(2, 2, 2);
 
@@ -896,9 +896,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					{
 						FString s = c.node_name.C_Str();
 						if (addedList.Find(s) >= 0) {
-							continue;
+							//continue;
 						}
-						addedList.Add(s);
+						//addedList.Add(s);
 					}
 					//bs->constrai
 					FKAggregateGeom agg;
@@ -929,20 +929,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					bs->InvalidatePhysicsData();
 					bs->CreatePhysicsMeshes();
 
-					{
-						FString s = c.node_name.C_Str();
-						if (addedList.Find(s) >= 0) {
-							continue;
-						}
-						addedList.Add(s);
-					}
-
 					pa->SkeletalBodySetups.Add(bs);
 
 					pa->UpdateBodySetupIndexMap();
-					pa->UpdateBoundsBodiesArray();
 #if WITH_EDITOR
-					pa->InvalidateAllPhysicsMeshes();
+					//pa->InvalidateAllPhysicsMeshes();
 #endif
 				}
 			}
