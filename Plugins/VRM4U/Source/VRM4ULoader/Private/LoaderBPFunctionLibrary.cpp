@@ -264,10 +264,10 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 
 		baseFileName = FPaths::GetBaseFilename(filepath);
 
-		if (VRMConverter::IsImportMode() == false) {
-			FString name = basepath + baseFileName + TEXT("/") + VRMConverter::NormalizeFileName(FPaths::GetBaseFilename(filepath));
-			package = CreatePackage(nullptr, *name);
-		}
+		//if (VRMConverter::IsImportMode() == false) {
+		//	FString name = basepath + baseFileName + TEXT("/") + VRMConverter::NormalizeFileName(FPaths::GetBaseFilename(filepath));
+		//	package = CreatePackage(nullptr, *name);
+		//}
 
 		if (package == nullptr) {
 			package = GetTransientPackage();
@@ -315,11 +315,11 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 	}
 
 	if (VRMConverter::IsImportMode() == false){
-		FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
-		FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
-		FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);
+		//FString fullpath = FPaths::GameUserDeveloperDir() + TEXT("VRM/");
+		//FString basepath = FPackageName::FilenameToLongPackageName(fullpath);
+		//FPackageName::RegisterMountPoint("/VRMImportData/", fullpath);
 
-		ULevel::LevelDirtiedEvent.Broadcast();
+		//ULevel::LevelDirtiedEvent.Broadcast();
 	}
 
 	// force delete vrmdata

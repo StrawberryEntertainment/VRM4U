@@ -351,7 +351,8 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 	TArray<UMaterialInterface*> matArray;
 	if (mScenePtr->HasMaterials()) {
 
-		TArray<FString> MatNameList;
+		//TArray<FString> MatNameList;
+		TMap<FString, int> MatNameList;
 
 		vrmAssetList->Materials.SetNum(mScenePtr->mNumMaterials);
 		for (uint32_t iMat = 0; iMat < mScenePtr->mNumMaterials; ++iMat) {
@@ -451,12 +452,13 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 				
 				UMaterialInstanceConstant* dm = nullptr;
 				{
-					FString name = (FString(TEXT("M_")) + NormalizeFileName(aiMat.GetName().C_Str()));
+					const FString origname = (FString(TEXT("M_")) + NormalizeFileName(aiMat.GetName().C_Str()));
+					FString name = origname;
 
-					while(MatNameList.Find(name) >= 0) {
-						name += TEXT("_2");
+					if (MatNameList.Find(origname)) {
+						name += FString::Printf(TEXT("_%03d"), MatNameList[name]);// TEXT("_2");
 					}
-					MatNameList.Add(name);
+					MatNameList.FindOrAdd(origname)++;
 
 					dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 				}
