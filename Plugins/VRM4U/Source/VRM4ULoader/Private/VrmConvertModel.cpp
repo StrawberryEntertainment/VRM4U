@@ -216,22 +216,32 @@ static void FindMesh(const aiScene* scene, aiNode* node, FReturnedData& retdata)
 	}
 }
 
-
-static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, FName con2){
+static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, VRM::VRMSpring &spring, FName con1, FName con2){
 	UPhysicsConstraintTemplate *ct = NewObject<UPhysicsConstraintTemplate>(pa, NAME_None, RF_Transactional);
+	pa->ConstraintSetup.Add(ct);
+
 	//"skirt_01_01"
 	ct->Modify(false);
-	ct->DefaultInstance.JointName = TCHAR_TO_ANSI(*(con1.ToString() + TEXT("_") + con2.ToString()));
+	{
+		FString orgname = con1.ToString() + TEXT("_") + con2.ToString();
+		FString cname = orgname;
+		int Index = 0;
+		while(pa->FindConstraintIndex(*cname) != INDEX_NONE)
+		{
+			cname = FString::Printf(TEXT("%s_%d"), *orgname, Index++);
+		}
+		ct->DefaultInstance.JointName = *cname;
+	}
+
 	ct->DefaultInstance.ConstraintBone1 = con1;
 	ct->DefaultInstance.ConstraintBone2 = con2;
 
+	ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 20);
+	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 20);
+	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 20);
 
-	ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 10);
-	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 10);
-	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 10);
-
-	ct->DefaultInstance.ProfileInstance.ConeLimit.Stiffness = 100.f;
-	ct->DefaultInstance.ProfileInstance.TwistLimit.Stiffness = 100.f;
+	ct->DefaultInstance.ProfileInstance.ConeLimit.Stiffness = 100.f * spring.stiffiness;
+	ct->DefaultInstance.ProfileInstance.TwistLimit.Stiffness = 100.f * spring.stiffiness;
 
 	const int32 BoneIndex1 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone1);
 	const int32 BoneIndex2 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone2);
@@ -248,18 +258,23 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 	const FTransform BoneTransform1 = t[BoneIndex1];//sk->GetBoneTransform(BoneIndex1);
 	FTransform BoneTransform2 = t[BoneIndex2];//EditorSkelComp->GetBoneTransform(BoneIndex2);
 
-	int32 tb = BoneIndex2;
-	while (sk->RefSkeleton.GetRawParentIndex(tb) != BoneIndex1) {
-		int32 p = sk->RefSkeleton.GetRawParentIndex(tb);
-		if (p < 0) break;
+	{
+		int32 tb = BoneIndex2;
+		while (1) {
+			int32 p = sk->RefSkeleton.GetRawParentIndex(tb);
+			if (p < 0) break;
 
-		FTransform f = t[p];
-		BoneTransform2 = f.GetRelativeTransform(BoneTransform2);
+			const FTransform &f = t[p];
+			//BoneTransform2 = f.GetRelativeTransform(BoneTransform2);
 
-		tb = p;
+			if (p == BoneIndex1) {
+				break;
+			}
+			tb = p;
+		}
 	}
 
-	auto b = BoneTransform1;
+	//auto b = BoneTransform1;
 	ct->DefaultInstance.Pos1 = FVector::ZeroVector;
 	ct->DefaultInstance.PriAxis1 = FVector(1, 0, 0);
 	ct->DefaultInstance.SecAxis1 = FVector(0, 1, 0);
@@ -288,10 +303,6 @@ static void createConstraint(USkeletalMesh *sk, UPhysicsAsset *pa, FName con1, F
 	ct->SetDefaultProfile(ct->DefaultInstance);
 #endif
 	//ct->DefaultInstance.InitConstraint();
-
-
-	pa->ConstraintSetup.Add(ct);
-	pa->DisableCollision(BoneIndex1, BoneIndex2);
 
 }
 
@@ -818,6 +829,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 			TArray<FString> addedList;
 			{
+				TArray<int> swingBoneIndexArray;
+
 				for (int i = 0; i < meta->sprintNum; ++i) {
 					auto &spring = meta->springs[i];
 					for (int j = 0; j < spring.boneNum; ++j) {
@@ -859,7 +872,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 						bs->InvalidatePhysicsData();
 						bs->CreatePhysicsMeshes();
-						pa->SkeletalBodySetups.Add(bs);
+						int BodyIndex1 = pa->SkeletalBodySetups.Add(bs);
 
 						pa->UpdateBodySetupIndexMap();
 #if WITH_EDITOR
@@ -879,13 +892,24 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 								bs2->CollisionReponse = EBodyCollisionResponse::BodyCollision_Enabled;
 								//bs2->profile
 								bs2->DefaultInstance.InertiaTensorScale.Set(2, 2, 2);
+								bs2->DefaultInstance.LinearDamping = 10.0f * spring.dragForce;
+								bs2->DefaultInstance.AngularDamping = 10.0f * spring.dragForce;
 
-								pa->SkeletalBodySetups.Add(bs2);
+								int BodyIndex2 = pa->SkeletalBodySetups.Add(bs2);
+								createConstraint(sk, pa, spring, UTF8_TO_TCHAR(sbone.C_Str()), bs2->BoneName);
+								pa->DisableCollision(BodyIndex1, BodyIndex2);
 
-
-
-								createConstraint(sk, pa, UTF8_TO_TCHAR(sbone.C_Str()), bs2->BoneName);
+								swingBoneIndexArray.AddUnique(BodyIndex2);
 							}
+						}
+					}
+				}
+				{
+					swingBoneIndexArray.Sort();
+
+					for (int i = 0; i < swingBoneIndexArray.Num()-1; ++i) {
+						for (int j = i+1; j < swingBoneIndexArray.Num(); ++j) {
+							pa->DisableCollision(swingBoneIndexArray[i], swingBoneIndexArray[j]);
 						}
 					}
 				}
