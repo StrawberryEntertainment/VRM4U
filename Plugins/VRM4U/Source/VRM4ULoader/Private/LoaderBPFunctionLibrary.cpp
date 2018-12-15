@@ -150,7 +150,7 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 	//sk->RefSkeleton.RebuildRefSkeleton(sk->Skeleton, true);
 	//sk->Proc();
 
-	//src->RefSkeleton = sk->RefSkeleton;
+	//out->RefSkeleton = sk->RefSkeleton;
 	
 	sk->Skeleton = k;
 	sk->RefSkeleton = k->GetReferenceSkeleton();
@@ -210,12 +210,15 @@ namespace {
 }
 
 
-bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString filepath) {
+bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset, UVrmAssetListObject *&OutVrmAsset, FString filepath) {
 
 	Assimp::Importer mImporter;
 	const aiScene* mScenePtr = nullptr;
 
-	if (src == nullptr) {
+	UVrmAssetListObject *out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, GetTransientPackage(), NAME_None));
+	OutVrmAsset = out;
+
+	if (out == nullptr) {
 		UE_LOG(LogTemp, Warning, TEXT("VRM4U: no UVrmAssetListObject.\n"));
 		return false;
 	}
@@ -274,43 +277,43 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(UVrmAssetListObject *src, FString fil
 		}
 	}
 
-	src->OrigFileName = baseFileName;
-	src->BaseFileName = VRMConverter::NormalizeFileName(baseFileName);
-	src->Package = package;
+	out->OrigFileName = baseFileName;
+	out->BaseFileName = VRMConverter::NormalizeFileName(baseFileName);
+	out->Package = package;
 
 	{
 		bool ret = true;
 		ret &= VRMConverter::NormalizeBoneName(mScenePtr);
-		ret &= VRMConverter::ConvertTextureAndMaterial(src, mScenePtr);
+		ret &= VRMConverter::ConvertTextureAndMaterial(out, mScenePtr);
 		UpdateProgress(40);
-		ret &= VRMConverter::ConvertVrmMeta(src, mScenePtr);	// use texture.
+		ret &= VRMConverter::ConvertVrmMeta(out, mScenePtr);	// use texture.
 		UpdateProgress(60);
-		ret &= VRMConverter::ConvertModel(src, mScenePtr);
-		ret &= VRMConverter::ConvertRig(src, mScenePtr);
+		ret &= VRMConverter::ConvertModel(out, mScenePtr);
+		ret &= VRMConverter::ConvertRig(out, mScenePtr);
 #if WITH_EDITOR
-		ret &= VRMConverter::ConvertMorphTarget(src, mScenePtr);
-		ret &= VRMConverter::ConvertHumanoid(src, mScenePtr);
+		ret &= VRMConverter::ConvertMorphTarget(out, mScenePtr);
+		ret &= VRMConverter::ConvertHumanoid(out, mScenePtr);
 #endif
 		UpdateProgress(80);
 		if (ret == false) {
 			return false;
 		}
 	}
-	src->VrmMetaObject->SkeletalMesh = src->SkeletalMesh;
+	out->VrmMetaObject->SkeletalMesh = out->SkeletalMesh;
 
-	if (src->bAssetSave) {
-		for (auto &t : src->Textures) {
+	if (out->bAssetSave) {
+		for (auto &t : out->Textures) {
 			saveObject(t);
 		}
-		for (auto &t : src->Materials) {
+		for (auto &t : out->Materials) {
 			saveObject(t);
 		}
-		saveObject(src->SkeletalMesh);
-		saveObject(src->SkeletalMesh->PhysicsAsset);
-		saveObject(src->VrmMetaObject);
-		saveObject(src->VrmLicenseObject);
-		saveObject(src->HumanoidSkeletalMesh);
-		saveObject(src->HumanoidRig);
+		saveObject(out->SkeletalMesh);
+		saveObject(out->SkeletalMesh->PhysicsAsset);
+		saveObject(out->VrmMetaObject);
+		saveObject(out->VrmLicenseObject);
+		saveObject(out->HumanoidSkeletalMesh);
+		saveObject(out->HumanoidRig);
 
 	}
 

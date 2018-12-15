@@ -180,11 +180,13 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 	{
 		const UVrmRuntimeSettings* Settings = GetDefault<UVrmRuntimeSettings>();
 
-		FSoftObjectPath r = Settings->AssetListObject; //(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
-		UObject *u = r.TryLoad();
-		if (u) {
-			if (Cast<UBlueprint>(u)) {
-				c = (UClass*)(Cast<UBlueprint>(u)->GeneratedClass);
+		{
+			FSoftObjectPath r = Settings->AssetListObject; //(TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP"));
+			UObject *u = r.TryLoad();
+			if (u) {
+				if (Cast<UBlueprint>(u)) {
+					c = (UClass*)(Cast<UBlueprint>(u)->GeneratedClass);
+				}
 			}
 		}
 
@@ -219,7 +221,10 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		auto &g = VRMConverter::Options::Get();
 		g.SetVrmOption(ImportUI);
 		ULoaderBPFunctionLibrary::SetImportMode(true, Cast<UPackage>(InParent));
-		ret = ULoaderBPFunctionLibrary::LoadVRMFile(m, fullFileName);
+		{
+			UVrmAssetListObject *mret = nullptr;
+			ret = ULoaderBPFunctionLibrary::LoadVRMFile(m, mret, fullFileName);
+		}
 		ULoaderBPFunctionLibrary::SetImportMode(false, nullptr);
 		g.SetVrmOption(nullptr);
 
