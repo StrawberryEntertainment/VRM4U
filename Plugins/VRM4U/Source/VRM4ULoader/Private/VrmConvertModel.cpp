@@ -948,7 +948,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						auto &sbone = spring.bones_name[j];
 
 						{
-							FString s = sbone.C_Str();
+							FString s = UTF8_TO_TCHAR(sbone.C_Str());
+							s = s.ToLower();
 							if (addedList.Find(s) >= 0) {
 								continue;
 							}
@@ -968,7 +969,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						//aaaaaa(vrmAssetList, spring, parentName, swingBoneIndexArray, sboneIndex);
 
 					}
-				}
+				} // all spring
 				{
 					swingBoneIndexArray.Sort();
 
@@ -979,19 +980,35 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}
 				}
 
+				// collision
 				for (int i = 0; i < meta->colliderGroupNum; ++i) {
 					auto &c = meta->colliderGroups[i];
 
+					USkeletalBodySetup *bs = nullptr;
 					{
-						FString s = c.node_name.C_Str();
-						if (addedList.Find(s) >= 0) {
-							//continue;
-						}
-						//addedList.Add(s);
-					}
-					//bs->constrai
-					FKAggregateGeom agg;
+						FString s = UTF8_TO_TCHAR(c.node_name.C_Str());
+						s = s.ToLower();
+						// addlist changed recur...
+						if (1){//addedList.Find(s) >= 0) {
+							for (auto &a : pa->SkeletalBodySetups) {
+								if (a->BoneName.IsEqual(*s)) {
+									bs = a;
+									break;
+								}
+							}
 
+						}else {
+							addedList.Add(s);
+						}
+					}
+					if (bs == nullptr) {
+						bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
+						bs->InvalidatePhysicsData();
+
+						pa->SkeletalBodySetups.Add(bs);
+					}
+
+					FKAggregateGeom agg;
 					for (int j = 0; j < c.colliderNum; ++j) {
 						FKSphereElem SphereElem;
 						VRM::vec3 v = {
@@ -1004,7 +1021,6 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						SphereElem.Radius = c.colliders[j].radius * 100.f;
 						agg.SphereElems.Add(SphereElem);
 					}
-					USkeletalBodySetup *bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
 
 					bs->Modify();
 					bs->BoneName = UTF8_TO_TCHAR(c.node_name.C_Str());
@@ -1015,17 +1031,15 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 															//bs.constra
 															//sk->SkeletalBodySetups.Num();
-					bs->InvalidatePhysicsData();
 					bs->CreatePhysicsMeshes();
 
-					pa->SkeletalBodySetups.Add(bs);
-
-					pa->UpdateBodySetupIndexMap();
 #if WITH_EDITOR
 					//pa->InvalidateAllPhysicsMeshes();
 #endif
-				}
+				}// collision
 			}
+
+			pa->UpdateBodySetupIndexMap();
 
 			RefreshSkelMeshOnPhysicsAssetChange(sk);
 #if WITH_EDITOR
