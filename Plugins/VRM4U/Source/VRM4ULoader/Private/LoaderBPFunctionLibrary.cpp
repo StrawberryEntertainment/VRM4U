@@ -32,6 +32,7 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 #include "Misc/FeedbackContext.h"
+#include "Misc/FileHelper.h"
 
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
@@ -251,7 +252,19 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	//	break;
 	//}
 
-	mScenePtr = mImporter.ReadFile(file, aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes);
+	{
+		TArray<uint8> Result;
+		if (FFileHelper::LoadFileToArray(Result, *filepath)) {
+		}
+		const FString ext = FPaths::GetExtension(filepath);
+		std::string e = utf_16_to_shift_jis(*ext);
+
+		mScenePtr = mImporter.ReadFileFromMemory(Result.GetData(), Result.Num(),
+			aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes,
+			e.c_str());
+
+	}
+//	mScenePtr = mImporter.ReadFile(file, aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes);
 
 	UpdateProgress(20);
 	if (mScenePtr == nullptr)
