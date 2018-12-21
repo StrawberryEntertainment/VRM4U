@@ -65,6 +65,8 @@ public:
 
 		bool IsSkipNoMeshBone() const;
 
+		bool IsSkipMorphTarget() const;
+
 		bool IsCreateHumanoidRenamedMesh() const;
 
 		bool IsDebugOneBone() const;

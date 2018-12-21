@@ -304,7 +304,9 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		ret &= VRMConverter::ConvertModel(out, mScenePtr);
 		ret &= VRMConverter::ConvertRig(out, mScenePtr);
 #if WITH_EDITOR
-		ret &= VRMConverter::ConvertMorphTarget(out, mScenePtr);
+		if (out->bSkipMorphTarget == false) {
+			ret &= VRMConverter::ConvertMorphTarget(out, mScenePtr);
+		}
 		ret &= VRMConverter::ConvertHumanoid(out, mScenePtr);
 #endif
 		UpdateProgress(80);

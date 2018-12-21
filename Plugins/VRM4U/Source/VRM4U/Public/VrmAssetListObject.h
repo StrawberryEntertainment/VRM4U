@@ -25,8 +25,11 @@ class VRM4U_API UVrmAssetListObject : public UObject
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InSave")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InOption")
 	bool bAssetSave;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InOption")
+	bool bSkipMorphTarget=false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BaseMToonOpaqueMaterial;
