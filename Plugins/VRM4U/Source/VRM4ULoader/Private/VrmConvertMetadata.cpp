@@ -24,11 +24,19 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 	VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
 	UVrmMetaObject *m;
-	m = NewObject<UVrmMetaObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Meta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	if (vrmAssetList->Package == GetTransientPackage()) {
+		m = NewObject<UVrmMetaObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+	}else {
+		m = NewObject<UVrmMetaObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Meta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	}
 	vrmAssetList->VrmMetaObject = m;
 
 	UVrmLicenseObject *lic;
-	lic = NewObject<UVrmLicenseObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_License")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	if (vrmAssetList->Package == GetTransientPackage()) {
+		lic = NewObject<UVrmLicenseObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+	}else {
+		lic = NewObject<UVrmLicenseObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_License")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	}
 	vrmAssetList->VrmLicenseObject = lic;
 
 	if (meta == nullptr) {

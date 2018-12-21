@@ -31,13 +31,18 @@ namespace {
 			(InSizeX % GPixelFormats[format].BlockSizeX) == 0 &&
 			(InSizeY % GPixelFormats[format].BlockSizeY) == 0)
 		{
-			NewTexture = NewObject<UTexture2D>(
-				// GetTransientPackage(),
-				package,
-				*name,
-				//RF_Transient
-				RF_Public | RF_Standalone
-				);
+			if (package == GetTransientPackage()) {
+				NewTexture = NewObject<UTexture2D>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+			}
+			else {
+				NewTexture = NewObject<UTexture2D>(
+					// GetTransientPackage(),
+					package,
+					*name,
+					//RF_Transient
+					RF_Public | RF_Standalone
+					);
+			}
 
 			NewTexture->PlatformData = new FTexturePlatformData();
 			NewTexture->PlatformData->SizeX = InSizeX;
@@ -192,7 +197,13 @@ namespace {
 		//auto MaterialFactory = NewObject<UMaterialFactoryNew>();
 
 #if	UE_VERSION_NEWER_THAN(4,20,0)
-		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone|RF_Public, NULL, GWarn );
+		UMaterial* UnrealMaterial = nullptr;
+		if (vrmAssetList->Package == GetTransientPackage()) {
+			UnrealMaterial = NewObject<UMaterial>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+		}
+		else {
+			UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public, NULL, GWarn);
+		}
 #else
 		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public);
 #endif
@@ -460,7 +471,11 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					}
 					MatNameList.FindOrAdd(origname)++;
 
-					dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+					if (vrmAssetList->Package == GetTransientPackage()) {
+						dm = NewObject<UMaterialInstanceConstant>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+					} else {
+						dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+					}
 				}
 				dm->Parent = baseM;
 

@@ -462,10 +462,20 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		result.bSuccess = true;
 	}
 
-	USkeletalMesh *sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	USkeletalMesh *sk = nullptr;
+	if (vrmAssetList->Package == GetTransientPackage()) {
+		sk = NewObject<USkeletalMesh>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+	}else {
+		sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	}
+
 	USkeleton *k = Options::Get().GetSkeleton();
 	if (k == nullptr){
-		k = NewObject<USkeleton>(vrmAssetList->Package, *(TEXT("SKEL_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		if (vrmAssetList->Package == GetTransientPackage()) {
+			k = NewObject<USkeleton>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+		}else {
+			k = NewObject<USkeleton>(vrmAssetList->Package, *(TEXT("SKEL_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		}
 	}
 
 	static int boneOffset = 0;
@@ -930,8 +940,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	if (mScenePtr->mVRMMeta && Options::Get().IsSkipPhysics()==false) {
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 		if (meta->sprintNum > 0) {
-
-			pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(TEXT("PHYS_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			if (vrmAssetList->Package == GetTransientPackage()) {
+				pa = NewObject<UPhysicsAsset>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+			}else {
+				pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(TEXT("PHYS_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			}
 			pa->Modify();
 #if WITH_EDITORONLY_DATA
 			pa->SetPreviewMesh(sk);
