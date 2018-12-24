@@ -176,10 +176,12 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 
 	auto &pose = Output.Pose;
 
+	int BoneCount = 0;
 	for (const auto &t : table) {
 		FName srcName, dstName;
 		srcName = dstName = NAME_None;
 
+		++BoneCount;
 		{
 			auto a = srcMeta->humanoidBoneTable.Find(t);
 			if (a) {
@@ -216,18 +218,25 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		const auto srcRefTrans = srcRefSkeletonTransform[srcIndex];
 		const auto dstRefTrans = dstRefSkeletonTransform[dstIndex];
 
-		FQuat diff = srcCurrentTrans.GetRotation()*srcRefTrans.GetRotation().Inverse();
 
 		FTransform dstTrans = dstRefTrans;
-		dstTrans.SetRotation( dstTrans.GetRotation()*diff );
+
+		{
+			FQuat diff = srcCurrentTrans.GetRotation()*srcRefTrans.GetRotation().Inverse();
+			dstTrans.SetRotation(dstTrans.GetRotation()*diff);
+		}
 		//dstTrans.SetLocation(dstRefTrans.GetLocation());// +srcCurrentTrans.GetLocation() - srcRefTrans.GetLocation());
 
-		FVector newLoc = dstTrans.GetLocation();
-		if (newLoc.Normalize()) {
-			//auto dstRefLocation = dstRefTrans.GetLocation();
-			//newLoc *= dstRefLocation.Size();
-			//dstTrans.SetLocation(newLoc);
-			
+		//FVector newLoc = dstTrans.GetLocation();
+		if (BoneCount==1){
+			FVector diff = srcCurrentTrans.GetLocation() - srcRefTrans.GetLocation();
+			FVector scale = dstRefTrans.GetLocation() / srcRefTrans.GetLocation();
+			dstTrans.SetTranslation(dstRefTrans.GetLocation() + diff * scale);
+			//if (newLoc.Normalize()) {
+				//auto dstRefLocation = dstRefTrans.GetLocation();
+				//newLoc *= dstRefLocation.Size();
+				//dstTrans.SetLocation(newLoc);
+			//}
 		}
 
 		FCompactPose::BoneIndexType bi(dstIndex);
