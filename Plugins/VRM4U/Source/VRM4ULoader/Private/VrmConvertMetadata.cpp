@@ -25,7 +25,7 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 
 	UVrmMetaObject *m;
 	if (vrmAssetList->Package == GetTransientPackage()) {
-		m = NewObject<UVrmMetaObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+		m = NewObject<UVrmMetaObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 	}else {
 		m = NewObject<UVrmMetaObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Meta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	}
@@ -33,7 +33,7 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 
 	UVrmLicenseObject *lic;
 	if (vrmAssetList->Package == GetTransientPackage()) {
-		lic = NewObject<UVrmLicenseObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+		lic = NewObject<UVrmLicenseObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 	}else {
 		lic = NewObject<UVrmLicenseObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_License")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	}
