@@ -213,6 +213,10 @@ namespace {
 
 bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset, UVrmAssetListObject *&OutVrmAsset, FString filepath) {
 
+	if (InVrmAsset == nullptr) {
+		return false;
+	}
+
 	Assimp::Importer mImporter;
 	const aiScene* mScenePtr = nullptr;
 
@@ -381,4 +385,111 @@ void ULoaderBPFunctionLibrary::VRMGetMaterialPropertyOverrides(const UMaterialIn
 	ShadingModel	= Material->GetShadingModel();
 	IsTwoSided		= Material->IsTwoSided();
 	IsMasked		= Material->IsMasked();
+}
+
+
+
+
+bool ULoaderBPFunctionLibrary::CopyPhysicsAsset(USkeletalMesh *dstMesh, const USkeletalMesh *srcMesh){
+	//GetTransientPackage
+#if WITH_EDITOR
+
+	UPhysicsAsset *srcPA = srcMesh->PhysicsAsset;
+	UPackage *package = srcPA->GetOutermost();
+
+	FString name = srcPA->GetFName().ToString() + TEXT("_copy");
+	UPhysicsAsset *dstPA = NewObject<UPhysicsAsset>(package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	dstPA->Modify();
+	dstPA->SetPreviewMesh(dstMesh);
+
+	for (auto *a : srcPA->SkeletalBodySetups) {
+		const auto rigName = srcMesh->Skeleton->GetRigNodeNameFromBoneName(a->BoneName);
+		const auto dstBoneName = dstMesh->Skeleton->GetRigBoneMapping(rigName);
+
+		USkeletalBodySetup *bs = Cast<USkeletalBodySetup>(StaticDuplicateObject(a, dstPA, NAME_None));
+		bs->BoneName = dstBoneName;
+
+		{
+			auto srcIndex = srcMesh->RefSkeleton.FindBoneIndex(a->BoneName);
+			auto dstIndex = dstMesh->RefSkeleton.FindBoneIndex(dstBoneName);
+			FTransform srcTrans, dstTrans;
+			while (1)
+			{
+				srcIndex = srcMesh->RefSkeleton.GetParentIndex(srcIndex);
+				if (srcIndex < 0) {
+					break;
+				}
+				srcTrans = srcMesh->RefSkeleton.GetRefBonePose()[srcIndex].GetRelativeTransform(srcTrans);
+			}
+			while (1)
+			{
+				dstIndex = dstMesh->RefSkeleton.GetParentIndex(dstIndex);
+				if (dstIndex < 0) {
+					break;
+				}
+				dstTrans = dstMesh->RefSkeleton.GetRefBonePose()[dstIndex].GetRelativeTransform(dstTrans);
+			}
+
+			{
+				for (int i = 0; i < bs->AggGeom.SphylElems.Num(); ++i) {
+					bs->AggGeom.SphylElems[i].Center.Set(0, 0, 0);
+					bs->AggGeom.SphylElems[i].Rotation = FRotator::ZeroRotator;
+					//bs->AggGeom.SphylElems[i].Center.X = 0;// -v.Z;
+					//bs->AggGeom.SphylElems[i].Center.Y = 0;// v.Y;
+					//bs->AggGeom.SphylElems[i].Center.Z = 0;// v.X;
+				}
+				for (auto &a : bs->AggGeom.BoxElems) {
+					a.Center.Set(0, 0, 0);
+					a.Rotation = FRotator::ZeroRotator;
+				}
+			}
+		}
+
+		dstPA->SkeletalBodySetups.Add(bs);
+	}
+	for (auto *a : srcPA->ConstraintSetup) {
+		const auto rigName1 = srcMesh->Skeleton->GetRigNodeNameFromBoneName(a->DefaultInstance.ConstraintBone1);
+		const auto rigName2 = srcMesh->Skeleton->GetRigNodeNameFromBoneName(a->DefaultInstance.ConstraintBone2);
+		const auto rigNameJ = srcMesh->Skeleton->GetRigNodeNameFromBoneName(a->DefaultInstance.JointName);
+
+		UPhysicsConstraintTemplate *ct = Cast<UPhysicsConstraintTemplate>(StaticDuplicateObject(a, dstPA, NAME_None));
+		ct->DefaultInstance.ConstraintBone1 = dstMesh->Skeleton->GetRigBoneMapping(rigName1);
+		ct->DefaultInstance.ConstraintBone2 = dstMesh->Skeleton->GetRigBoneMapping(rigName2);
+		ct->DefaultInstance.JointName = dstMesh->Skeleton->GetRigBoneMapping(rigNameJ);
+
+		{
+			auto ind1 = dstMesh->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone1);
+			auto ind2 = dstMesh->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone2);
+
+			auto t = dstMesh->RefSkeleton.GetRefBonePose()[ind1];
+			while (1) {
+
+				ind1 = dstMesh->RefSkeleton.GetParentIndex(ind1);
+				if (ind1 == ind2) {
+					break;
+				}
+				if (ind1 < 0) {
+					break;
+				}
+				auto v = dstMesh->RefSkeleton.GetRefBonePose()[ind1].GetLocation();
+				t.SetLocation(t.GetLocation() + v);
+			}
+			//auto indParent = dstMesh->RefSkeleton.GetParentIndex(ind1);
+
+
+			ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame1, FTransform::Identity);
+			ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame2, t);
+		}
+
+		dstPA->ConstraintSetup.Add(ct);
+	}
+
+	dstPA->UpdateBodySetupIndexMap();
+
+	dstPA->RefreshPhysicsAssetChange();
+	dstPA->UpdateBoundsBodiesArray();
+
+#endif
+
+	return true;
 }

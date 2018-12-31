@@ -150,7 +150,8 @@ namespace {
 void FVrmAnimInstanceCopyProxy::Initialize(UAnimInstance* InAnimInstance) {
 }
 bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
-	Output.ResetToRefPose();
+
+	//Output.ResetToRefPose();
 
 	UVrmAnimInstanceCopy *animInstance = Cast<UVrmAnimInstanceCopy>(GetAnimInstanceObject());
 	if (animInstance == nullptr) {

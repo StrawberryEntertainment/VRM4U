@@ -98,4 +98,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "VRM4U")
 	static void VRMGetMaterialPropertyOverrides(const UMaterialInterface *Material, TEnumAsByte<EBlendMode> &BlendMode, TEnumAsByte<EMaterialShadingModel> &ShadingModel, bool &IsTwoSided, bool &IsMasked);
 
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	static bool CopyPhysicsAsset(USkeletalMesh *dstMesh, const USkeletalMesh *srcMesh);
+
 };
