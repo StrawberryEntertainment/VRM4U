@@ -25,6 +25,10 @@ public class VRM4UImporter : ModuleRules
 				"Settings",
                 "ProceduralMeshComponent",
 
+                "AnimGraphRuntime",
+                "AnimGraph",
+                "BlueprintGraph",
+
             });
 
 		PrivateIncludePathModuleNames.AddRange(
