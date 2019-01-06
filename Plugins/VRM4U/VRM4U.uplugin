@@ -35,6 +35,14 @@
       "WhitelistPlatforms": [
         "Win64"
       ]
+    },
+    {
+      "Name": "VRM4UMisc",
+      "Type": "Editor",
+      "LoadingPhase": "Default",
+      "WhitelistPlatforms": [
+        "Win64"
+      ]
     }
   ],
   "Plugins": [
