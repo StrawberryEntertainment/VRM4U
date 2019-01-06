@@ -12,3 +12,28 @@ UVrmAssetListObject::UVrmAssetListObject(const FObjectInitializer& ObjectInitial
 
 	//Result = new FReturnedData();
 }
+
+
+void UVrmAssetListObject::CopyMember(UVrmAssetListObject *dst) const {
+	dst->bAssetSave = bAssetSave;
+	dst->bSkipMorphTarget = bSkipMorphTarget;
+
+	dst->BaseMToonOpaqueMaterial = BaseMToonOpaqueMaterial;
+
+	dst->BaseMToonTransparentMaterial = BaseMToonTransparentMaterial;
+	dst->BaseMToonUnlitOpaqueMaterial = BaseMToonUnlitOpaqueMaterial;
+	dst->BaseUnlitOpaqueMaterial = BaseUnlitOpaqueMaterial;
+	dst->BaseUnlitTransparentMaterial = BaseUnlitTransparentMaterial;
+	dst->BasePBROpaqueMaterial = BasePBROpaqueMaterial;
+	dst->BaseSkeletalMesh = BaseSkeletalMesh;
+	dst->VrmMetaObject = VrmMetaObject;
+	dst->VrmLicenseObject = VrmLicenseObject;
+	dst->SkeletalMesh = SkeletalMesh;
+	dst->Textures = Textures;
+	dst->Materials = Materials;
+	dst->HumanoidRig = HumanoidRig;
+	dst->Package = Package;
+	dst->OrigFileName = OrigFileName;
+	dst->BaseFileName = BaseFileName;
+	dst->HumanoidSkeletalMesh = HumanoidSkeletalMesh;
+}

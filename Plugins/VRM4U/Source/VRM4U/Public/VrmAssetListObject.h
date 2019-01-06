@@ -25,6 +25,8 @@ class VRM4U_API UVrmAssetListObject : public UObject
 
 public:
 
+	void CopyMember(UVrmAssetListObject *dst) const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InOption")
 	bool bAssetSave;
 

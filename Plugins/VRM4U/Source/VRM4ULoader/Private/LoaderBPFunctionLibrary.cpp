@@ -49,9 +49,11 @@
 #endif
 
 // tem
-UPackage *package = nullptr;
-FString baseFileName;
-FReturnedData result;
+namespace {
+	UPackage *package = nullptr;
+	FString baseFileName;
+	FReturnedData result;
+}
 
 
 static bool saveObject(UObject *u) {
@@ -220,14 +222,6 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	Assimp::Importer mImporter;
 	const aiScene* mScenePtr = nullptr;
 
-	UVrmAssetListObject *out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, GetTransientPackage(), NAME_None));
-	OutVrmAsset = out;
-
-	if (out == nullptr) {
-		UE_LOG(LogTemp, Warning, TEXT("VRM4U: no UVrmAssetListObject.\n"));
-		return false;
-	}
-
 	if (filepath.IsEmpty())
 	{
 	}
@@ -292,6 +286,21 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		if (package == nullptr) {
 			package = GetTransientPackage();
 		}
+	}
+	UVrmAssetListObject *out = nullptr;
+	if (package == GetTransientPackage()) {
+		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, NAME_None));
+	}else {
+		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, UVrmAssetListObject::StaticClass()));
+		out->Modify();
+		out->SetFlags(EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		InVrmAsset->CopyMember(out);
+	}
+	OutVrmAsset = out;
+
+	if (out == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("VRM4U: no UVrmAssetListObject.\n"));
+		return false;
 	}
 
 	out->OrigFileName = baseFileName;
@@ -395,10 +404,10 @@ bool ULoaderBPFunctionLibrary::CopyPhysicsAsset(USkeletalMesh *dstMesh, const US
 #if WITH_EDITOR
 
 	UPhysicsAsset *srcPA = srcMesh->PhysicsAsset;
-	UPackage *package = srcPA->GetOutermost();
+	UPackage *pk = srcPA->GetOutermost();
 
 	FString name = srcPA->GetFName().ToString() + TEXT("_copy");
-	UPhysicsAsset *dstPA = NewObject<UPhysicsAsset>(package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	UPhysicsAsset *dstPA = NewObject<UPhysicsAsset>(pk, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	dstPA->Modify();
 	dstPA->SetPreviewMesh(dstMesh);
 
@@ -438,9 +447,9 @@ bool ULoaderBPFunctionLibrary::CopyPhysicsAsset(USkeletalMesh *dstMesh, const US
 					//bs->AggGeom.SphylElems[i].Center.Y = 0;// v.Y;
 					//bs->AggGeom.SphylElems[i].Center.Z = 0;// v.X;
 				}
-				for (auto &a : bs->AggGeom.BoxElems) {
-					a.Center.Set(0, 0, 0);
-					a.Rotation = FRotator::ZeroRotator;
+				for (auto &b : bs->AggGeom.BoxElems) {
+					b.Center.Set(0, 0, 0);
+					b.Rotation = FRotator::ZeroRotator;
 				}
 			}
 		}
