@@ -25,18 +25,29 @@ public class VRM4UMisc : ModuleRules
 				"Settings",
                 "ProceduralMeshComponent",
                 "RenderCore",
+
+                "MovieSceneCapture",
+                "RHI",
+                "ShaderCore",
+                "Renderer",
             });
 
 		PrivateIncludePathModuleNames.AddRange(
 			new string[] {
 				"AssetTools",
-				"AssetRegistry"
-			});
+				"AssetRegistry",
+            });
 
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[] {
 				"AssetTools",
 				"AssetRegistry"
 			});
-	}
+
+        PrivateIncludePaths.AddRange(
+        new string[] {
+			// Relative to Engine\Plugins\Runtime\Oculus\OculusVR\Source
+			//"../Runtime/Renderer/Private",
+        });
+    }
 }
