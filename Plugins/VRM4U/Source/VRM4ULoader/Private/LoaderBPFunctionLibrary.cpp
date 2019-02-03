@@ -489,6 +489,19 @@ bool ULoaderBPFunctionLibrary::CopyPhysicsAsset(USkeletalMesh *dstMesh, const US
 			ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame1, FTransform::Identity);
 			ct->DefaultInstance.SetRefFrame(EConstraintFrame::Frame2, t);
 		}
+		{
+			/*
+			auto s1 = a->DefaultInstance->ProfileInstance.ConeLimit.Swing1Motion;
+			auto s2 = a->DefaultInstance->ProfileInstance.ConeLimit.Swing1LimitDegrees;
+			ct->DefaultInstance.SetAngularTwistLimit(s1, s2);
+
+			s1 = a->DefaultInstance->ProfileInstance.ConeLimit.Swing2Motion;
+			s2 = a->DefaultInstance->ProfileInstance.ConeLimit.Swing2LimitDegrees;
+
+			//ct->DefaultInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 10);
+			//ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 10);
+			*/
+		}
 
 		dstPA->ConstraintSetup.Add(ct);
 	}
