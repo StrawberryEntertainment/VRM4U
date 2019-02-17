@@ -734,7 +734,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 					FSkelMeshRenderSection &NewRenderSection = rd.RenderSections[meshID];
 					//NewRenderSection = rd.RenderSections[0];
-					NewRenderSection.MaterialIndex = aiM->mMaterialIndex;// ModelSection.MaterialIndex;
+					if (Options::Get().IsOptimizeMaterial()) {
+						NewRenderSection.MaterialIndex = vrmAssetList->MaterialOptimizeTable[aiM->mMaterialIndex];// ModelSection.MaterialIndex;
+					}else {
+						NewRenderSection.MaterialIndex = aiM->mMaterialIndex;// ModelSection.MaterialIndex;
+					}
 					if (NewRenderSection.MaterialIndex >= vrmAssetList->Materials.Num()) NewRenderSection.MaterialIndex = 0;
 					NewRenderSection.BaseIndex = currentIndex;
 					NewRenderSection.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
@@ -804,7 +808,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 					TMap<int32, TArray<int32>> OverlappingVertices;
 
-					s.MaterialIndex = aiM->mMaterialIndex;
+					if (Options::Get().IsOptimizeMaterial()) {
+						s.MaterialIndex = vrmAssetList->MaterialOptimizeTable[aiM->mMaterialIndex];
+					}else {
+						s.MaterialIndex = aiM->mMaterialIndex;
+					}
 					if (s.MaterialIndex >= vrmAssetList->Materials.Num()) s.MaterialIndex = 0;
 					s.BaseIndex = currentIndex;
 					s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;

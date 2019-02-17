@@ -254,6 +254,16 @@ bool VRMConverter::Options::IsSkipPhysics() const {
 }
 
 
+bool VRMConverter::Options::IsOptimizeMaterial() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bOptimizeMaterial;
+#else
+	return false;
+#endif
+}
+
 
 EVRMImportMaterialType VRMConverter::Options::GetMaterialType() const {
 #if WITH_EDITOR

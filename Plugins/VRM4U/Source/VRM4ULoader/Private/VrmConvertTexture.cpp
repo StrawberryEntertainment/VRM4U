@@ -249,6 +249,62 @@ namespace {
 		}
 		return UnrealMaterial;
 	}
+
+
+	bool isSameMaterial(const UMaterialInterface *mi1, const UMaterialInterface *mi2) {
+		const UMaterialInstanceConstant *m1 = Cast<UMaterialInstanceConstant>(mi1);
+		const UMaterialInstanceConstant *m2 = Cast<UMaterialInstanceConstant>(mi2);
+
+		if (m1 == nullptr || m2 == nullptr) {
+			return false;
+		}
+		// tex
+		{
+			if (m1->TextureParameterValues.Num() != m2->TextureParameterValues.Num()) {
+				return false;
+			}
+			for (int i = 0; i < m1->TextureParameterValues.Num(); ++i) {
+				if (m1->TextureParameterValues[i].ParameterValue != m2->TextureParameterValues[i].ParameterValue) {
+					return false;
+				}
+				if (m1->TextureParameterValues[i].ParameterInfo.Name != m2->TextureParameterValues[i].ParameterInfo.Name) {
+					return false;
+				}
+			}
+		}
+
+		// scalar
+		{
+			if (m1->ScalarParameterValues.Num() != m2->ScalarParameterValues.Num()) {
+				return false;
+			}
+			for (int i = 0; i < m1->ScalarParameterValues.Num(); ++i) {
+				if (m1->ScalarParameterValues[i].ParameterValue != m2->ScalarParameterValues[i].ParameterValue) {
+					return false;
+				}
+				if (m1->ScalarParameterValues[i].ParameterInfo.Name != m2->ScalarParameterValues[i].ParameterInfo.Name) {
+					return false;
+				}
+			}
+		}
+
+		// vector
+		{
+			if (m1->VectorParameterValues.Num() != m2->VectorParameterValues.Num()) {
+				return false;
+			}
+			for (int i = 0; i < m1->VectorParameterValues.Num(); ++i) {
+				if (m1->VectorParameterValues[i].ParameterValue != m2->VectorParameterValues[i].ParameterValue) {
+					return false;
+				}
+				if (m1->VectorParameterValues[i].ParameterInfo.Name != m2->VectorParameterValues[i].ParameterInfo.Name) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
 }
 
 bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
@@ -538,6 +594,20 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			}
 		}
 		vrmAssetList->Materials = matArray;
+
+		vrmAssetList->MaterialOptimizeTable.Reset();
+		for (int i = matArray.Num()-1; i >= 0 ; --i) {
+			vrmAssetList->MaterialOptimizeTable.Add(i,i);
+
+			for (int j = 0; j < i; ++j) {
+				if (isSameMaterial(matArray[i], matArray[j]) == false) {
+					continue;
+				}
+
+				vrmAssetList->MaterialOptimizeTable[i] = j;
+				break;
+			}
+		}
 	}
 
 	return true;

@@ -89,5 +89,6 @@ public:
 	UPROPERTY()
 	USkeletalMesh* HumanoidSkeletalMesh;
 
+	TMap<int, int> MaterialOptimizeTable;
 
 };
