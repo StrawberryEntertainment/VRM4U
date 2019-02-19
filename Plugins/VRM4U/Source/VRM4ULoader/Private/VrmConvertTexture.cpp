@@ -593,20 +593,35 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 				}
 			}
 		}
-		vrmAssetList->Materials = matArray;
 
-		vrmAssetList->MaterialOptimizeTable.Reset();
-		for (int i = matArray.Num()-1; i >= 0 ; --i) {
-			vrmAssetList->MaterialOptimizeTable.Add(i,i);
 
-			for (int j = 0; j < i; ++j) {
-				if (isSameMaterial(matArray[i], matArray[j]) == false) {
-					continue;
+		if (Options::Get().IsOptimizeMaterial() == false) {
+			vrmAssetList->Materials = matArray;
+		} else {
+			TArray<UMaterialInterface*> tmp;
+
+			vrmAssetList->MaterialOptimizeTable.Reset();
+
+			for (int i = 0; i < matArray.Num(); ++i) {
+
+				vrmAssetList->MaterialOptimizeTable.Add(i, 0);
+
+				bool bFind = false;
+				for (int j = 0; j < tmp.Num(); ++j) {
+					if (isSameMaterial(matArray[i], tmp[j]) == false) {
+						continue;
+					}
+					bFind = true;
+					vrmAssetList->MaterialOptimizeTable[i] = j;
+					break;
 				}
-
-				vrmAssetList->MaterialOptimizeTable[i] = j;
-				break;
+				if (bFind == false) {
+					int t = tmp.Add(matArray[i]);
+					vrmAssetList->MaterialOptimizeTable[i] = t;
+				}
 			}
+
+			vrmAssetList->Materials = tmp;
 		}
 	}
 
