@@ -71,6 +71,8 @@ public:
 
 		bool IsDebugOneBone() const;
 
+		bool IsMergeMaterial() const;
+
 		bool IsOptimizeMaterial() const;
 
 		EVRMImportMaterialType GetMaterialType() const;

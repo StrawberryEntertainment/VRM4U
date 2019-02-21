@@ -254,6 +254,16 @@ bool VRMConverter::Options::IsSkipPhysics() const {
 }
 
 
+bool VRMConverter::Options::IsMergeMaterial() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bMergeMaterial;
+#else
+	return false;
+#endif
+}
+
 bool VRMConverter::Options::IsOptimizeMaterial() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return false;

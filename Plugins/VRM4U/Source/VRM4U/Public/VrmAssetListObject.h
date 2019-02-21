@@ -51,6 +51,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BasePBROpaqueMaterial;
 
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* OptimizedMToonOpaqueMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* OptimizedMToonTransparentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UMaterialInterface* OptimizedMToonOUtlineMaterial;
+
+
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	//USkeleton* BaseSkeleton;
 
@@ -73,6 +84,9 @@ public:
 	TArray<UMaterialInterface*> Materials;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
+	TArray<UMaterialInterface*> OutlineMaterials;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	UNodeMappingContainer *HumanoidRig;
 
 	UPROPERTY()
@@ -89,6 +103,6 @@ public:
 	UPROPERTY()
 	USkeletalMesh* HumanoidSkeletalMesh;
 
-	TMap<int, int> MaterialOptimizeTable;
+	TMap<int, int> MaterialMergeTable;
 
 };
