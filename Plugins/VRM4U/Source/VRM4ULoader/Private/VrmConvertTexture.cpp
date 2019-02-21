@@ -314,6 +314,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 	vrmAssetList->Textures.Reset(0);
 	vrmAssetList->Materials.Reset(0);
+	vrmAssetList->OutlineMaterials.Reset(0);
 
 	TArray<bool> NormalBoolTable;
 	NormalBoolTable.SetNum(mScenePtr->mNumTextures);
@@ -415,11 +416,14 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 		vrmAssetList->Textures = texArray;
 	}
 
+	const bool bOptimizeMaterial = Options::Get().IsOptimizeMaterial();
+
 	TArray<UMaterialInterface*> matArray;
 	if (mScenePtr->HasMaterials()) {
 
 		//TArray<FString> MatNameList;
 		TMap<FString, int> MatNameList;
+
 
 		vrmAssetList->Materials.SetNum(mScenePtr->mNumMaterials);
 		for (uint32_t iMat = 0; iMat < mScenePtr->mNumMaterials; ++iMat) {
@@ -430,7 +434,6 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			{
 				aiString alphaMode;
 				aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
-
 				FString ShaderName = aiMat.mShaderName.C_Str();
 				switch (Options::Get().GetMaterialType()) {
 				case EVRMImportMaterialType::VRMIMT_MToon:
@@ -456,8 +459,13 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
 					}
 					if (ShaderName.Find(TEXT("MToon")) >= 0) {
+						if (bOptimizeMaterial) {
+							baseM = vrmAssetList->OptimizedMToonOpaqueMaterial;
+						}
+						if (baseM == nullptr) {
+							baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+						}
 						bMToon = true;
-						baseM = vrmAssetList->BaseMToonOpaqueMaterial;
 					}
 					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
 						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
@@ -625,6 +633,29 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			}
 
 			vrmAssetList->Materials = tmp;
+		}
+
+		// ouline Material
+		{
+			if (bOptimizeMaterial && vrmAssetList->OptimizedMToonOUtlineMaterial){
+				for (const auto aa : vrmAssetList->Materials) {
+					const UMaterialInstanceConstant *a = Cast<UMaterialInstanceConstant>(aa);
+
+					FString s = a->GetName() + TEXT("_outline");
+					//UMaterialInstanceConstant *m = Cast<UMaterialInstanceConstant>(StaticDuplicateObject(a->GetOuter(), a, *s, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, UMaterialInstanceConstant::StaticClass()));
+					UMaterialInstanceConstant *m = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *s, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+
+					if (m) {
+						m->VectorParameterValues = a->VectorParameterValues;
+						m->ScalarParameterValues = a->ScalarParameterValues;
+						m->TextureParameterValues = a->TextureParameterValues;
+						m->Parent = vrmAssetList->OptimizedMToonOUtlineMaterial;
+
+						m->InitStaticPermutation();
+						vrmAssetList->OutlineMaterials.Add(m);
+					}
+				}
+			}
 		}
 	}
 

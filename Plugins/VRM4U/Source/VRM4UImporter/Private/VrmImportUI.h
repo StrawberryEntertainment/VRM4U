@@ -54,7 +54,7 @@ public:
 
 	/** Material merge */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Merge material"))
-	bool bMergeMaterial = false;
+	bool bMergeMaterial = true;
 
 	/** Material optimize */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Optimize material"))

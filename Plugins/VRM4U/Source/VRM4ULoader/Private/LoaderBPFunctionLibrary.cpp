@@ -336,6 +336,9 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		for (auto &t : out->Materials) {
 			saveObject(t);
 		}
+		for (auto &t : out->OutlineMaterials) {
+			saveObject(t);
+		}
 		saveObject(out->SkeletalMesh);
 		saveObject(out->SkeletalMesh->PhysicsAsset);
 		saveObject(out->VrmMetaObject);

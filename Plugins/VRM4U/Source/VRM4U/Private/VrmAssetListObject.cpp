@@ -25,6 +25,11 @@ void UVrmAssetListObject::CopyMember(UVrmAssetListObject *dst) const {
 	dst->BaseUnlitOpaqueMaterial = BaseUnlitOpaqueMaterial;
 	dst->BaseUnlitTransparentMaterial = BaseUnlitTransparentMaterial;
 	dst->BasePBROpaqueMaterial = BasePBROpaqueMaterial;
+
+	dst->OptimizedMToonOpaqueMaterial = OptimizedMToonOpaqueMaterial;
+	dst->OptimizedMToonTransparentMaterial = OptimizedMToonTransparentMaterial;
+	dst->OptimizedMToonOUtlineMaterial = OptimizedMToonOUtlineMaterial;
+
 	dst->BaseSkeletalMesh = BaseSkeletalMesh;
 	dst->VrmMetaObject = VrmMetaObject;
 	dst->VrmLicenseObject = VrmLicenseObject;
