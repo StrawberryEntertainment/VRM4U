@@ -7,6 +7,7 @@
 #include "BoneControllers/AnimNode_Fabrik.h"
 #include "BoneControllers/AnimNode_TwoBoneIK.h"
 #include "BoneControllers/AnimNode_SplineIK.h"
+#include "EngineVersionComparison.h"
 
 
 void FVrmAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance) {
@@ -220,8 +221,11 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 			}
 		}
 	}
-
+	//
+#if	UE_VERSION_NEWER_THAN(4,21,0)
+#else
 	ComponentSpacePoseContext.Pose.ConvertToLocalPoses(Output.Pose);
+#endif
 
 	for (int i=0; i<3; ++i){
 		auto b = GetSkelMeshComponent()->GetBoneIndex(*targetBoneTable[i*2]);
