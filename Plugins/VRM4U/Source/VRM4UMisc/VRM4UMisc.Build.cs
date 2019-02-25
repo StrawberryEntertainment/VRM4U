@@ -28,7 +28,7 @@ public class VRM4UMisc : ModuleRules
 
                 "MovieSceneCapture",
                 "RHI",
-                "ShaderCore",
+                //"ShaderCore",
                 "Renderer",
             });
 
