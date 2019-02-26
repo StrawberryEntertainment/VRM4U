@@ -16,7 +16,7 @@ namespace {
 	TArray<FString> HandBoneTableLeap = {
 //		"L_Wrist",
 		//"L_Palm",
-		"L_thumb_meta",
+		//"L_thumb_meta",
 		"L_thumb_a",
 		"L_thumb_b",
 //		"L_thumb_end",
@@ -43,7 +43,7 @@ namespace {
 
 //		"R_Wrist",
 		//"R_Palm",
-		"R_thumb_meta",
+		//"R_thumb_meta",
 		"R_thumb_a",
 		"R_thumb_b",
 //		"R_thumb_end",
@@ -71,7 +71,7 @@ namespace {
 
 	TArray<FString> HandBoneTableVRoid = {
 		//"J_Bip_L_Hand",
-		"J_Bip_L_Thumb1",
+		//"J_Bip_L_Thumb1",
 		"J_Bip_L_Thumb2",
 		"J_Bip_L_Thumb3",
 		"J_Bip_L_Index1",
@@ -89,7 +89,7 @@ namespace {
 
 
 		//"J_Bip_R_Hand",
-		"J_Bip_R_Thumb1",
+		//"J_Bip_R_Thumb1",
 		"J_Bip_R_Thumb2",
 		"J_Bip_R_Thumb3",
 		"J_Bip_R_Index1",
@@ -109,7 +109,6 @@ namespace {
 }
 
 FAnimNode_VrmCopyHandBone::FAnimNode_VrmCopyHandBone()
-	: SkeletalMeshComponent(nullptr)
 {
 }
 
@@ -130,14 +129,8 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 {
 	check(OutBoneTransforms.Num() == 0);
 
-	if (SkeletalMeshComponent == nullptr) {
-		return;
-	}
-
 	const auto dstRefSkeleton = Output.AnimInstanceProxy->GetSkeleton()->GetReferenceSkeleton();
 
-	const auto &dstRefSkeletonTransform = dstRefSkeleton.GetRefBonePose();
-	const auto &srcRefSkeletonTransform = SkeletalMeshComponent->SkeletalMesh->RefSkeleton.GetRefBonePose();
 	const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
 
 	//dstRefSkeleton.GetParentIndex
@@ -150,46 +143,77 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 
 	auto BoneSpace = EBoneControlSpace::BCS_ParentBoneSpace;
 
+	TArray<USkeletalMeshComponent*> MeshTable = {
+		SkeletalMeshComponentLeft,
+		SkeletalMeshComponentRight,
+	};
 
 	for (int i = 0; i < HandBoneTableLeap.Num(); ++i) {
 		boneIndexTable[i] = -1;
+		int skelNo = -1;
+		for (auto SkeletalMeshComponent : MeshTable) {
+			skelNo++;
 
-		const auto srcIndex = SkeletalMeshComponent->GetBoneIndex(*(HandBoneTableLeap[i]));
-		const auto dstIndex = dstRefSkeleton.FindBoneIndex(*(HandBoneTableVRoid[i]));
+			if (SkeletalMeshComponent == nullptr) {
+				continue;
+			}
 
-		if (srcIndex < 0 || dstIndex < 0) {
-			continue;
+			const auto &dstRefSkeletonTransform = dstRefSkeleton.GetRefBonePose();
+			const auto &srcRefSkeletonTransform = SkeletalMeshComponent->SkeletalMesh->RefSkeleton.GetRefBonePose();
+
+			const auto srcIndex = SkeletalMeshComponent->GetBoneIndex(*(HandBoneTableLeap[i]));
+			const auto dstIndex = dstRefSkeleton.FindBoneIndex(*(HandBoneTableVRoid[i]));
+
+			if (srcIndex < 0 || dstIndex < 0) {
+				continue;
+			}
+
+			const auto& srcCurrentTrans = SkeletalMeshComponent->GetSocketTransform(*(HandBoneTableLeap[i]), RTS_ParentBoneSpace);
+
+			const auto& srcRefTrans = srcRefSkeletonTransform[srcIndex];
+			const auto& dstRefTrans = dstRefSkeletonTransform[dstIndex];
+
+			FCompactPoseBoneIndex CompactPoseBoneToModify(dstIndex);
+
+			auto a = srcCurrentTrans;
+			FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(CompactPoseBoneToModify);
+			FAnimationRuntime::ConvertCSTransformToBoneSpace(ComponentTransform, Output.Pose, NewBoneTM, CompactPoseBoneToModify, BoneSpace);
+
+			FQuat baseDiff = FQuat::FindBetween(srcRefTrans.GetLocation(), dstRefTrans.GetLocation());
+			//FQuat q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f);
+			FQuat q9;
+			
+			if (skelNo == 0) {
+				q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+			} else {
+				q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
+			}
+
+			FQuat q = baseDiff * q9;
+			//FQuat q = FQuat::FindBetween(srcRefTrans.GetLocation(), dstRefTrans.GetLocation());
+
+			//NewBoneTM.SetRotation(q*FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcCurrentTrans.GetRotation() * FQuat(FVector(-1, 0, 0), 3.14f / 2.f));
+			//NewBoneTM.SetRotation(FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcCurrentTrans.GetRotation() * FQuat(FVector(-1, 0, 0), 3.14f / 2.f));
+
+			NewBoneTM.SetRotation(q * srcCurrentTrans.GetRotation() * q.Inverse());
+
+			//NewBoneTM.SetRotation(q9 * baseDiff*srcCurrentTrans.GetRotation() * baseDiff.Inverse() * q9.Inverse());
+			//NewBoneTM.SetRotation(q9 * baseDiff*srcCurrentTrans.GetRotation() * q9.Inverse());
+
+
+			//NewBoneTM.SetLocation(dstRefTrans.GetLocation());
+
+			//NewBoneTM.SetLocation(NewBoneTM.GetRotation() * dstRefTrans.GetLocation() );
+			//NewBoneTM.SetLocation(dstRefTrans.GetLocation());
+			//a.SetLocation(dstRefTrans.GetLocation());
+
+			//FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, a, CompactPoseBoneToModify, EBoneControlSpace::BCS_ParentBoneSpace);
+
+			//OutBoneTransforms.Insert
+			tmpOutTransform[i] = FBoneTransform(CompactPoseBoneToModify, NewBoneTM);
+			boneIndexTable[i] = dstIndex;
+			break;
 		}
-
-		const auto& srcCurrentTrans = SkeletalMeshComponent->GetSocketTransform(*(HandBoneTableLeap[i]), RTS_ParentBoneSpace);
-
-		const auto& srcRefTrans = srcRefSkeletonTransform[srcIndex];
-		const auto& dstRefTrans = dstRefSkeletonTransform[dstIndex];
-
-		FCompactPoseBoneIndex CompactPoseBoneToModify(dstIndex);
-
-		auto a = srcCurrentTrans;
-		FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(CompactPoseBoneToModify);
-		FAnimationRuntime::ConvertCSTransformToBoneSpace(ComponentTransform, Output.Pose, NewBoneTM, CompactPoseBoneToModify, BoneSpace);
-
-		FQuat baseDiff = FQuat::FindBetween(srcRefTrans.GetLocation(), dstRefTrans.GetLocation());
-		//FQuat q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f);
-		FQuat q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
-		//FQuat q = FQuat::FindBetween(srcRefTrans.GetLocation(), dstRefTrans.GetLocation());
-
-		//NewBoneTM.SetRotation(q*FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcCurrentTrans.GetRotation() * FQuat(FVector(-1, 0, 0), 3.14f / 2.f));
-		//NewBoneTM.SetRotation(FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcCurrentTrans.GetRotation() * FQuat(FVector(-1, 0, 0), 3.14f / 2.f));
-		NewBoneTM.SetRotation(baseDiff * q9 * srcCurrentTrans.GetRotation() * q9.Inverse() * baseDiff.Inverse());
-
-		//NewBoneTM.SetLocation(NewBoneTM.GetRotation() * dstRefTrans.GetLocation() );
-		NewBoneTM.SetLocation(dstRefTrans.GetLocation() );
-		//a.SetLocation(dstRefTrans.GetLocation());
-
-		//FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, a, CompactPoseBoneToModify, EBoneControlSpace::BCS_ParentBoneSpace);
-
-		//OutBoneTransforms.Insert
-		tmpOutTransform[i] = FBoneTransform(CompactPoseBoneToModify, NewBoneTM);
-		boneIndexTable[i] = dstIndex;
 	}
 	{
 		tmpOutTransform.Sort();

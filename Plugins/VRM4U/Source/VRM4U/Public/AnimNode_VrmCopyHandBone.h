@@ -64,7 +64,10 @@ struct VRM4U_API FAnimNode_VrmCopyHandBone : public FAnimNode_SkeletalControlBas
 	//	TEnumAsByte<enum EBoneControlSpace> ScaleSpace;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Skeleton, meta=(PinShownByDefault))
-	USkeletalMeshComponent *SkeletalMeshComponent;
+	USkeletalMeshComponent *SkeletalMeshComponentLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Skeleton, meta=(PinShownByDefault))
+	USkeletalMeshComponent *SkeletalMeshComponentRight;
 
 
 	FAnimNode_VrmCopyHandBone();
