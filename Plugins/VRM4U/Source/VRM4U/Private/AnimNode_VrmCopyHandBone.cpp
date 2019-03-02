@@ -183,21 +183,28 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 			//FQuat q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f);
 			FQuat q9;
 			
+			auto v = srcRefTrans.GetLocation().GetSafeNormal();
 			if (skelNo == 0) {
 				if (HandBoneTableLeap[i].Find(TEXT("thumb")) >= 0) {
 					if (HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
-						q9 = srcRefTrans.GetRotation().Inverse();
+						q9 = FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+						//q9 = srcRefTrans.GetRotation().Inverse();
 					} else {
-						q9 = FQuat(FVector(0, 0, 1), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+						q9 = FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+						//q9 = FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
 					}
 				}else {
-					q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+					q9 = FQuat(v, 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
 				}
 			} else {
 				if (HandBoneTableLeap[i].Find(TEXT("thumb")) >= 0 && HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
-					q9 = FQuat(FVector(1, 0, 0), 3.14f) * srcRefTrans.GetRotation().Inverse();
+					if (HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
+						q9 = srcRefTrans.GetRotation().Inverse();
+					} else {
+						q9 = FQuat(v, 3.14f) * srcRefTrans.GetRotation().Inverse();
+					}
 				} else {
-					q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
+					q9 = FQuat(v, 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
 				}
 			}
 
@@ -241,14 +248,9 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 
 			int parentInHandTable = boneIndexTable.Find(parentBoneIndex);
 			if (parentInHandTable >= 0) {
-				auto t = tmpOutTransform[parentInHandTable].Transform.TransformPosition(a.Transform.GetLocation());
-				a.Transform.Accumulate(tmpOutTransform[parentInHandTable].Transform);
-				a.Transform.SetLocation(t);
+				a.Transform *= tmpOutTransform[parentInHandTable].Transform;
 			}else {
-				//a.Transform.SetLocation(a.Transform.GetLocation() * FVector(1,1,-1));
 				FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, a.Transform, a.BoneIndex, BoneSpace);
-				//auto BoneSpace = EBoneControlSpace::BCS_ParentBoneSpace;
-				//FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, a.Transform, a.BoneIndex, EBoneControlSpace::BCS_BoneSpace);
 			}
 			OutBoneTransforms.Add(a);
 		}
