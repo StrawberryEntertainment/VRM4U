@@ -175,7 +175,7 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 
 			FCompactPoseBoneIndex CompactPoseBoneToModify(dstIndex);
 
-			auto a = srcCurrentTrans;
+			//auto a = srcCurrentTrans;
 			FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(CompactPoseBoneToModify);
 			FAnimationRuntime::ConvertCSTransformToBoneSpace(ComponentTransform, Output.Pose, NewBoneTM, CompactPoseBoneToModify, BoneSpace);
 
@@ -184,9 +184,21 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 			FQuat q9;
 			
 			if (skelNo == 0) {
-				q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+				if (HandBoneTableLeap[i].Find(TEXT("thumb")) >= 0) {
+					if (HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
+						q9 = srcRefTrans.GetRotation().Inverse();
+					} else {
+						q9 = FQuat(FVector(0, 0, 1), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+					}
+				}else {
+					q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+				}
 			} else {
-				q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
+				if (HandBoneTableLeap[i].Find(TEXT("thumb")) >= 0 && HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
+					q9 = FQuat(FVector(1, 0, 0), 3.14f) * srcRefTrans.GetRotation().Inverse();
+				} else {
+					q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
+				}
 			}
 
 			FQuat q = baseDiff * q9;
@@ -203,6 +215,7 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 
 			//NewBoneTM.SetLocation(dstRefTrans.GetLocation());
 
+			//NewBoneTM.SetLocation(NewBoneTM.GetLocation() );
 			//NewBoneTM.SetLocation(NewBoneTM.GetRotation() * dstRefTrans.GetLocation() );
 			//NewBoneTM.SetLocation(dstRefTrans.GetLocation());
 			//a.SetLocation(dstRefTrans.GetLocation());
@@ -228,9 +241,14 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 
 			int parentInHandTable = boneIndexTable.Find(parentBoneIndex);
 			if (parentInHandTable >= 0) {
+				auto t = tmpOutTransform[parentInHandTable].Transform.TransformPosition(a.Transform.GetLocation());
 				a.Transform.Accumulate(tmpOutTransform[parentInHandTable].Transform);
+				a.Transform.SetLocation(t);
 			}else {
+				//a.Transform.SetLocation(a.Transform.GetLocation() * FVector(1,1,-1));
 				FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, a.Transform, a.BoneIndex, BoneSpace);
+				//auto BoneSpace = EBoneControlSpace::BCS_ParentBoneSpace;
+				//FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, a.Transform, a.BoneIndex, EBoneControlSpace::BCS_BoneSpace);
 			}
 			OutBoneTransforms.Add(a);
 		}

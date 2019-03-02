@@ -146,21 +146,15 @@ namespace {
 			}
 
 			{
-				auto replaceParent = dm->Parent;
 				switch ((int)(vrmMat.floatProperties._BlendMode)) {
 				case 0:
 				case 1:
-					//replaceParent = vrmAssetList->BaseMToonOpaqueMaterial;
 					break;
 				case 2:
 				case 3:
-					//replaceParent = vrmAssetList->BaseMToonTransparentMaterial;
 					dm->BasePropertyOverrides.bOverride_BlendMode = true;
 					dm->BasePropertyOverrides.BlendMode = EBlendMode::BLEND_Translucent;
 					break;
-				}
-				if (replaceParent) {
-					dm->Parent = replaceParent;
 				}
 			}
 		}
@@ -304,6 +298,22 @@ namespace {
 		}
 
 		return true;
+	}
+
+	void LocalMaterialSetParent(UMaterialInstanceConstant *material, UMaterialInterface *parent) {
+#if WITH_EDITOR
+		material->SetParentEditorOnly(parent);
+#else
+		material->Parent = parent;
+#endif
+	}
+	void LocalMaterialFinishParam(UMaterialInstanceConstant *material) {
+#if WITH_EDITOR
+		material->PreEditChange(NULL);
+		material->PostEditChange();
+#else
+		material->PostLoad();
+#endif
 	}
 }
 
@@ -541,7 +551,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 					}
 				}
-				dm->Parent = baseM;
+				LocalMaterialSetParent(dm, baseM);
 
 				if (dm) {
 					{
@@ -596,7 +606,9 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						createAndAddMaterial(dm, iMat, vrmAssetList, mScenePtr);
 					}
 
-					dm->InitStaticPermutation();
+					LocalMaterialFinishParam(dm);
+
+					//dm->InitStaticPermutation();
 					matArray.Add(dm);
 				}
 			}
@@ -646,12 +658,14 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					UMaterialInstanceConstant *m = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *s, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
 					if (m) {
+						LocalMaterialSetParent(m, vrmAssetList->OptimizedMToonOUtlineMaterial);
+
 						m->VectorParameterValues = a->VectorParameterValues;
 						m->ScalarParameterValues = a->ScalarParameterValues;
 						m->TextureParameterValues = a->TextureParameterValues;
-						m->Parent = vrmAssetList->OptimizedMToonOUtlineMaterial;
 
-						m->InitStaticPermutation();
+						LocalMaterialFinishParam(m);
+						//m->InitStaticPermutation();
 						vrmAssetList->OutlineMaterials.Add(m);
 					}
 				}
