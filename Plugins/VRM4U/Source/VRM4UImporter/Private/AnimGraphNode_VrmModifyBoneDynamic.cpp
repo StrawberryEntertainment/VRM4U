@@ -27,7 +27,7 @@ void UAnimGraphNode_VrmModifyBoneDynamic::ValidateAnimNodeDuringCompilation(USke
 			//if (Node.BoneToModify.BoneName == NAME_None)
 			if (Node.BoneNameToModify == NAME_None)
 			{
-				MessageLog.Warning(*LOCTEXT("NoBoneSelectedToModify", "@@ - You must pick a bone to modify").ToString(), this);
+				//MessageLog.Warning(*LOCTEXT("NoBoneSelectedToModify", "@@ - You must pick a bone to modify").ToString(), this);
 			}
 			else
 			{
@@ -37,7 +37,7 @@ void UAnimGraphNode_VrmModifyBoneDynamic::ValidateAnimNodeDuringCompilation(USke
 
 				FText Msg = FText::Format(LOCTEXT("NoBoneFoundToModify", "@@ - Bone {BoneName} not found in Skeleton"), Args);
 
-				MessageLog.Warning(*Msg.ToString(), this);
+				//MessageLog.Warning(*Msg.ToString(), this);
 			}
 		}
 	}

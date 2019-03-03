@@ -11,6 +11,7 @@
 #include "AnimNode_VrmCopyHandBone.generated.h"
 
 class USkeletalMeshComponent;
+class UVrmMetaObject;
 
 /**
 *	Simple controller that replaces or adds to the translation/rotation of a single bone.
@@ -20,55 +21,14 @@ struct VRM4U_API FAnimNode_VrmCopyHandBone : public FAnimNode_SkeletalControlBas
 {
 	GENERATED_USTRUCT_BODY()
 
-		/** Name of bone to control. This is the main bone chain to modify from. **/
-	//UPROPERTY(EditAnywhere, Category=SkeletalControl) 
-		//FBoneReference BoneToModify;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=SkeletalControl, meta=(PinShownByDefault))
-	//FName BoneNameToModify;
-
-	/** New translation of bone to apply. */
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Translation, meta=(PinShownByDefault))
-	//	FVector Translation;
-
-	/** New rotation of bone to apply. */
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Rotation, meta=(PinShownByDefault))
-	//	FRotator Rotation;
-
-	/** New Scale of bone to apply. This is only worldspace. */
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Scale, meta=(PinShownByDefault))
-	//	FVector Scale;
-
-	/** Whether and how to modify the translation of this bone. */
-	//UPROPERTY(EditAnywhere, Category=Translation)
-	//	TEnumAsByte<EBoneModificationMode> TranslationMode;
-
-	/** Whether and how to modify the translation of this bone. */
-	//UPROPERTY(EditAnywhere, Category=Rotation)
-	//	TEnumAsByte<EBoneModificationMode> RotationMode;
-
-	/** Whether and how to modify the translation of this bone. */
-	//UPROPERTY(EditAnywhere, Category=Scale)
-	//	TEnumAsByte<EBoneModificationMode> ScaleMode;
-
-	/** Reference frame to apply Translation in. */
-	//UPROPERTY(EditAnywhere, Category=Translation)
-	//	TEnumAsByte<enum EBoneControlSpace> TranslationSpace;
-
-	/** Reference frame to apply Rotation in. */
-	//UPROPERTY(EditAnywhere, Category=Rotation)
-	//	TEnumAsByte<enum EBoneControlSpace> RotationSpace;
-
-	/** Reference frame to apply Scale in. */
-	//UPROPERTY(EditAnywhere, Category=Scale)
-	//	TEnumAsByte<enum EBoneControlSpace> ScaleSpace;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Skeleton, meta=(PinShownByDefault))
 	USkeletalMeshComponent *SkeletalMeshComponentLeft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Skeleton, meta=(PinShownByDefault))
 	USkeletalMeshComponent *SkeletalMeshComponentRight;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
+	UVrmMetaObject *VrmMetaObject;
 
 	FAnimNode_VrmCopyHandBone();
 

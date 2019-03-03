@@ -4,6 +4,8 @@
 #include "AnimationRuntime.h"
 #include "Animation/AnimInstanceProxy.h"
 
+#include "VrmMetaObject.h"
+
 #include <algorithm>
 /////////////////////////////////////////////////////
 // FAnimNode_ModifyBone
@@ -13,10 +15,10 @@ namespace {
 		return a.BoneIndex < b.BoneIndex;
 	}
 
-	TArray<FString> HandBoneTableLeap = {
+	const TArray<FString> HandBoneTableLeap = {
 //		"L_Wrist",
 		//"L_Palm",
-		//"L_thumb_meta",
+		"L_thumb_meta",
 		"L_thumb_a",
 		"L_thumb_b",
 //		"L_thumb_end",
@@ -43,7 +45,7 @@ namespace {
 
 //		"R_Wrist",
 		//"R_Palm",
-		//"R_thumb_meta",
+		"R_thumb_meta",
 		"R_thumb_a",
 		"R_thumb_b",
 //		"R_thumb_end",
@@ -69,9 +71,9 @@ namespace {
 //		"R_pinky_end",
 	};
 
-	TArray<FString> HandBoneTableVRoid = {
+	const TArray<FString> HandBoneTableVRoid = {
 		//"J_Bip_L_Hand",
-		//"J_Bip_L_Thumb1",
+		"J_Bip_L_Thumb1",
 		"J_Bip_L_Thumb2",
 		"J_Bip_L_Thumb3",
 		"J_Bip_L_Index1",
@@ -89,7 +91,7 @@ namespace {
 
 
 		//"J_Bip_R_Hand",
-		//"J_Bip_R_Thumb1",
+		"J_Bip_R_Thumb1",
 		"J_Bip_R_Thumb2",
 		"J_Bip_R_Thumb3",
 		"J_Bip_R_Index1",
@@ -104,6 +106,43 @@ namespace {
 		"J_Bip_R_Little1",
 		"J_Bip_R_Little2",
 		"J_Bip_R_Little3",
+	};
+
+	const TArray<FString> HandBoneTableVRM = {
+		//"leftHand",
+		"leftThumbProximal",
+		"leftThumbIntermediate",
+		"leftThumbDistal",
+		"leftIndexProximal",
+		"leftIndexIntermediate",
+		"leftIndexDistal",
+		"leftMiddleProximal",
+		"leftMiddleIntermediate",
+		"leftMiddleDistal",
+		"leftRingProximal",
+		"leftRingIntermediate",
+		"leftRingDistal",
+		"leftLittleProximal",
+		"leftLittleIntermediate",
+		"leftLittleDistal",
+
+		//"rightHand"
+		"rightThumbProximal",
+		"rightThumbIntermediate",
+		"rightThumbDistal",
+		"rightIndexProximal",
+		"rightIndexIntermediate",
+		"rightIndexDistal",
+		"rightMiddleProximal",
+		"rightMiddleIntermediate",
+		"rightMiddleDistal",
+		"rightRingProximal",
+		"rightRingIntermediate",
+		"rightRingDistal",
+		"rightLittleProximal",
+		"rightLittleIntermediate",
+		"rightLittleDistal",
+
 	};
 
 }
@@ -148,7 +187,18 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 		SkeletalMeshComponentRight,
 	};
 
-	for (int i = 0; i < HandBoneTableLeap.Num(); ++i) {
+	for (int i = 0; i < HandBoneTableVRM.Num(); ++i) {
+
+		FString BoneNameModel = HandBoneTableVRoid[i];
+		FString BoneNameLeap = HandBoneTableLeap[i];
+
+		if (VrmMetaObject) {
+			FString *s = VrmMetaObject->humanoidBoneTable.Find(HandBoneTableVRM[i]);
+			if (s) {
+				BoneNameModel = *s;
+			}
+		}
+
 		boneIndexTable[i] = -1;
 		int skelNo = -1;
 		for (auto SkeletalMeshComponent : MeshTable) {
@@ -161,14 +211,14 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 			const auto &dstRefSkeletonTransform = dstRefSkeleton.GetRefBonePose();
 			const auto &srcRefSkeletonTransform = SkeletalMeshComponent->SkeletalMesh->RefSkeleton.GetRefBonePose();
 
-			const auto srcIndex = SkeletalMeshComponent->GetBoneIndex(*(HandBoneTableLeap[i]));
-			const auto dstIndex = dstRefSkeleton.FindBoneIndex(*(HandBoneTableVRoid[i]));
+			const auto srcIndex = SkeletalMeshComponent->GetBoneIndex(*BoneNameLeap);
+			const auto dstIndex = dstRefSkeleton.FindBoneIndex(*BoneNameModel);
 
 			if (srcIndex < 0 || dstIndex < 0) {
 				continue;
 			}
 
-			const auto& srcCurrentTrans = SkeletalMeshComponent->GetSocketTransform(*(HandBoneTableLeap[i]), RTS_ParentBoneSpace);
+			const auto& srcCurrentTrans = SkeletalMeshComponent->GetSocketTransform(*BoneNameLeap, RTS_ParentBoneSpace);
 
 			const auto& srcRefTrans = srcRefSkeletonTransform[srcIndex];
 			const auto& dstRefTrans = dstRefSkeletonTransform[dstIndex];
@@ -185,26 +235,57 @@ void FAnimNode_VrmCopyHandBone::EvaluateSkeletalControl_AnyThread(FComponentSpac
 			
 			auto v = srcRefTrans.GetLocation().GetSafeNormal();
 			if (skelNo == 0) {
-				if (HandBoneTableLeap[i].Find(TEXT("thumb")) >= 0) {
-					if (HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
-						q9 = FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
-						//q9 = srcRefTrans.GetRotation().Inverse();
+				if (BoneNameLeap.Find(TEXT("thumb")) >= 0) {
+					if (BoneNameLeap.Find(TEXT("meta")) < 0) {
+						q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
 					} else {
-						q9 = FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
-						//q9 = FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
+						auto vv = srcRefTrans.GetLocation();
+						vv.Y = srcRefTrans.GetLocation().Z;
+						vv.Z = srcRefTrans.GetLocation().Y;
+
+						FQuat baseDiff2 = FQuat::FindBetween(vv, FVector(1,0,0));
+						q9 = FQuat(v, -3.14f / 2.f) * baseDiff2.Inverse() * srcRefTrans.GetRotation().Inverse();
 					}
 				}else {
 					q9 = FQuat(v, 3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
 				}
 			} else {
-				if (HandBoneTableLeap[i].Find(TEXT("thumb")) >= 0 && HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
-					if (HandBoneTableLeap[i].Find(TEXT("meta")) < 0) {
-						q9 = srcRefTrans.GetRotation().Inverse();
+				if (BoneNameLeap.Find(TEXT("thumb")) >= 0) {
+					if (BoneNameLeap.Find(TEXT("meta")) < 0) {
+						//q9 = srcRefTrans.GetRotation().Inverse();
+						q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(v, -3.14f / 2.f) * srcRefTrans.GetRotation().Inverse();
 					} else {
-						q9 = FQuat(v, 3.14f) * srcRefTrans.GetRotation().Inverse();
+						//q9 = FQuat(-v, 3.14f) * srcRefTrans.GetRotation().Inverse();
+
+						auto vv = srcRefTrans.GetLocation();
+						vv.X = srcRefTrans.GetLocation().X;
+						vv.Y = srcRefTrans.GetLocation().Z;
+						vv.Z = srcRefTrans.GetLocation().Y;
+
+						FQuat baseDiff2 = FQuat::FindBetween(vv, FVector(-1,0,0));
+						auto tt = srcRefTrans;
+						tt.SetLocation(vv);
+						//q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(v, 3.14f / 2.f) * baseDiff2.Inverse() * srcRefTrans.GetRotation().Inverse();
+						//q9 = FQuat(FVector(0, 0, -1), -3.14f / 2.f) * FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(FVector(0, 1, 0), -3.14f / 2.f) * FQuat(v, 3.14f / 2.f) * baseDiff2.Inverse() * srcRefTrans.GetRotation().Inverse();
+						q9 = FQuat(FVector(0, 0, -1), -3.14f / 2.f) * FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(FVector(0, 1, 0), -3.14f / 2.f) * FQuat(v, 3.14f / 2.f) * baseDiff2.Inverse() * srcRefTrans.GetRotation().Inverse();
+						//q9.X *= -1.f;
+						//q9.Y *= -1.f;
+						//q9.Z *= -1.f;
+
+
+/*
+auto vv = srcRefTrans.GetLocation();
+vv.X = -srcRefTrans.GetLocation().X;
+vv.Y = srcRefTrans.GetLocation().Z;
+vv.Z = srcRefTrans.GetLocation().Y;
+
+FQuat baseDiff2 = FQuat::FindBetween(vv, FVector(1,0,0));
+//q9 = FQuat(FVector(1, 0, 0), 3.14f / 2.f) * FQuat(v, 3.14f / 2.f) * baseDiff2.Inverse() * srcRefTrans.GetRotation().Inverse();
+q9 = FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(FVector(0, 1, 0), -3.14f / 2.f) * FQuat(v, 3.14f / 2.f) * baseDiff2.Inverse() * srcRefTrans.GetRotation().Inverse();
+*/
 					}
 				} else {
-					q9 = FQuat(v, 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
+					q9 = FQuat(-v, 3.14f / 2.f) * FQuat(FVector(0, 1, 0), 3.14f) * FQuat(FVector(0, 0, 1), 3.14f) * srcRefTrans.GetRotation().Inverse();
 				}
 			}
 
