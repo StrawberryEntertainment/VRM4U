@@ -67,6 +67,26 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 		}
 	}
 
+	// spring
+	m->VRMSprintMeta.SetNum(meta->sprintNum);
+	for (int i = 0; i < meta->sprintNum; ++i) {
+		const auto &vrms = meta->springs[i];
+
+		auto &s = m->VRMSprintMeta[i];
+		s.stiffiness = vrms.stiffiness;
+		s.gravityPower = vrms.gravityPower;
+		s.gravityDir.Set(vrms.gravityDir[0], vrms.gravityDir[1], vrms.gravityDir[2]);
+		s.dragForce = vrms.dragForce;
+		s.hitRadius = vrms.hitRadius;
+
+		s.bones.SetNum(vrms.boneNum);
+		s.boneNames.SetNum(vrms.boneNum);
+		for (int b = 0; b < vrms.boneNum; ++b) {
+			s.bones[b] = vrms.bones[b];
+			s.boneNames[b] = UTF8_TO_TCHAR(vrms.bones_name[b].C_Str());
+		}
+	}
+
 	// license
 	{
 		struct TT {
