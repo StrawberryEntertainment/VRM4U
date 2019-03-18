@@ -1,4 +1,33 @@
-﻿// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+﻿// Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
+
+
+/*
+
+// VRMSpringBone.cs
+MIT License
+
+Copyright (c) 2018 DWANGO Co., Ltd. for UniVRM
+Copyright (c) 2018 ousttrue for UniGLTF, UniHumanoid
+Copyright (c) 2018 Masataka SUMI for MToon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 #include "AnimNode_VrmSpringBone.h"
 #include "AnimationRuntime.h"
@@ -45,7 +74,7 @@ namespace VRMSpring {
 		bool bInit = false;
 		USkeletalMesh *skeletalMesh = nullptr;
 
-		void init(const UVrmMetaObject *meta);
+		void init(const UVrmMetaObject *meta, FComponentSpacePoseContext& Output);
 		void update(float DeltaTime, FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 		void reset();
 
@@ -59,6 +88,8 @@ namespace VRMSpring {
 		FVector m_currentTail = FVector::ZeroVector;
 		FVector m_prevTail = FVector::ZeroVector;
 		FTransform m_transform = FTransform::Identity;
+		FVector m_boneAxis = FVector::ForwardVector;
+		float m_length = 1.f;
 
 		FQuat m_resultQuat = FQuat::Identity;
 	};
@@ -107,17 +138,17 @@ namespace VRMSpring {
 		const auto &RefSkeletonTransform = RefSkeleton.GetRefBonePose();
 
 		const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
-		center = ComponentTransform;
+		center = ComponentTransform.Inverse();
 
 
 		for (int springCount = 0; springCount < SpringDataChain.Num(); ++springCount) {
 
 			auto &ChainRoot = SpringDataChain[springCount];
+			FTransform currentTransform = FTransform::Identity;
 
 			for (int chainCount = 0; chainCount < ChainRoot.Num(); ++chainCount) {
 
 				auto &sData = ChainRoot[chainCount];
-				//RootSpringData[springCount].
 
 				FVector currentTail = center.TransformPosition(sData.m_currentTail);
 				FVector prevTail = center.TransformPosition(sData.m_prevTail);
@@ -125,41 +156,61 @@ namespace VRMSpring {
 				int myBoneIndex = RefSkeleton.FindBoneIndex(*sData.boneName);
 				int myParentBoneIndex = RefSkeleton.GetParentIndex(myBoneIndex);
 
+				//currentTransform = FTransform::Identity;
 				FQuat ParentRotation = FQuat::Identity;
 				if (chainCount == 0) {
-					FCompactPoseBoneIndex ParentIndex(myParentBoneIndex);
-					FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(ParentIndex);
+					FCompactPoseBoneIndex uu(myBoneIndex);
+					FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(uu);
 					ParentRotation = NewBoneTM.GetRotation();
+
+					currentTransform = NewBoneTM;
 				}else {
-					ParentRotation = ChainRoot[chainCount-1].m_resultQuat;
+					auto c = RefSkeletonTransform[sData.boneIndex];
+					auto t = c * currentTransform;
+
+					ParentRotation = t.GetRotation();
+					currentTransform = t;
 				}
 				FQuat m_localRotation = FQuat::Identity;
-				//FQuat m_localRotation = center.GetRotation().Inverse();
-				FVector m_boneAxis = RefSkeletonTransform[myBoneIndex].GetLocation();
-				float m_length = m_boneAxis.Size();
 
 
 				// verlet積分で次の位置を計算
 				FVector nextTail = currentTail
 					+ (currentTail - prevTail) * (1.0f - dragForce) // 前フレームの移動を継続する(減衰もあるよ)
-					+ ParentRotation * m_localRotation * m_boneAxis * stiffnessForce // 親の回転による子ボーンの移動目標
+					+ ParentRotation * m_localRotation * sData.m_boneAxis * stiffnessForce // 親の回転による子ボーンの移動目標
 					+ external // 外力による移動量
 					;
 
 				// 長さをboneLengthに強制
-				nextTail = sData.m_transform.GetLocation() + (nextTail - sData.m_transform.GetLocation()).GetSafeNormal() * m_length;
+				//nextTail = sData.m_transform.GetLocation() + (nextTail - sData.m_transform.GetLocation()).GetSafeNormal() * sData.m_length;
+				nextTail = currentTransform.GetLocation() + (nextTail - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
 
 				// Collisionで移動
 				//nextTail = Collision(colliders, nextTail);
+
+				{
+					FCompactPoseBoneIndex uu(myBoneIndex);
+					//sData.m_transform = Output.Pose.GetComponentSpaceTransform(uu);//RefSkeletonTransform[myBoneIndex];
+					//sData.m_transform = currentTransform;
+				}
+
+				//nextTail.Set(100, 0, 0);
 
 				sData.m_prevTail = center.InverseTransformPosition(currentTail);
 				sData.m_currentTail = center.InverseTransformPosition(nextTail);
 
 				FQuat rotation = ParentRotation * m_localRotation;
 
-				sData.m_resultQuat = FQuat::FindBetween(rotation * m_boneAxis,
-					nextTail - sData.m_transform.GetLocation()) * rotation;
-			
+				//sData.m_resultQuat = FQuat::FindBetween((rotation * sData.m_boneAxis).GetSafeNormal(),
+				//	(nextTail - sData.m_transform.GetLocation()).GetSafeNormal()) * rotation;
+
+				sData.m_resultQuat = FQuat::FindBetween((rotation * sData.m_boneAxis).GetSafeNormal(),
+					(nextTail - currentTransform.GetLocation()).GetSafeNormal()) * rotation;
+				//sData.m_resultQuat = FQuat::FindBetween(rotation * sData.m_boneAxis,
+				//	nextTail) * rotation;
+
+				currentTransform.SetRotation(sData.m_resultQuat);
+
 			}
 		}
 	}
@@ -167,11 +218,13 @@ namespace VRMSpring {
 	void VRMSpringManager::reset() {
 		spring.Empty();
 	}
-	void VRMSpringManager::init(const UVrmMetaObject *meta) {
-			if (meta == nullptr) return;
+	void VRMSpringManager::init(const UVrmMetaObject *meta, FComponentSpacePoseContext& Output) {
+		if (meta == nullptr) return;
 		if (bInit) return;
 
 		skeletalMesh = meta->SkeletalMesh;
+		const FReferenceSkeleton &RefSkeleton = skeletalMesh->RefSkeleton;
+		const auto &RefSkeletonTransform = RefSkeleton.GetRefBonePose();
 
 		spring.SetNum(meta->VRMSprintMeta.Num());
 
@@ -190,7 +243,7 @@ namespace VRMSpring {
 			s.RootSpringData.SetNum(metaS.bones.Num());
 			for (int scount = 0; scount < s.RootSpringData.Num(); ++scount) {
 				s.RootSpringData[scount].boneName = metaS.boneNames[scount];
-				s.RootSpringData[scount].boneIndex = s.skeletalMesh->RefSkeleton.FindBoneIndex(*metaS.boneNames[scount]);
+				s.RootSpringData[scount].boneIndex = RefSkeleton.FindBoneIndex(*metaS.boneNames[scount]);
 			}
 			// TODO add child
 
@@ -198,27 +251,72 @@ namespace VRMSpring {
 			for (int scount = 0; scount < s.RootSpringData.Num(); ++scount) {
 				auto &chain = s.SpringDataChain[scount];
 
+				//root
 				{
-					auto &c = chain.AddDefaulted_GetRef();
-					c.boneName = metaS.boneNames[scount];
-					c.boneIndex = skeletalMesh->RefSkeleton.FindBoneIndex(*metaS.boneNames[scount]);
-				}
+					auto &sData = chain.AddDefaulted_GetRef();
+					sData.boneName = metaS.boneNames[scount];
+					sData.boneIndex = skeletalMesh->RefSkeleton.FindBoneIndex(*metaS.boneNames[scount]);
 
-				for (int chainCount = 0; chainCount < 100; ++chainCount) {
 					TArray<int32> Children;
-					GetDirectChildBonesLocal(skeletalMesh->RefSkeleton, chain[chainCount].boneIndex, Children);
-
-					if (Children.Num() == 0) {
-						break;
+					GetDirectChildBonesLocal(skeletalMesh->RefSkeleton, sData.boneIndex, Children);
+					if (Children.Num() > 0) {
+						sData.m_boneAxis = RefSkeletonTransform[Children[0]].GetLocation();
+					} else {
+						sData.m_boneAxis = RefSkeletonTransform[sData.boneIndex].GetLocation() * 0.7f;
 					}
-					auto &c = chain.AddDefaulted_GetRef();
-					c.boneIndex = Children[0];
-					c.boneName = skeletalMesh->RefSkeleton.GetBoneName(Children[0]).ToString();
 				}
-				
+
+				// child
+				if (1) {
+					for (int chainCount = 0; chainCount < 100; ++chainCount) {
+						bool bLast = false;
+						TArray<int32> Children;
+
+						GetDirectChildBonesLocal(skeletalMesh->RefSkeleton, chain[chainCount].boneIndex, Children);
+						if (Children.Num() <= 0) {
+							break;
+						}
+
+						auto &sData = chain.AddDefaulted_GetRef();
+
+						sData.boneIndex = Children[0];
+						sData.boneName = RefSkeleton.GetBoneName(sData.boneIndex).ToString();
+
+						GetDirectChildBonesLocal(skeletalMesh->RefSkeleton, sData.boneIndex, Children);
+						if (Children.Num() > 0) {
+							sData.m_boneAxis = RefSkeletonTransform[Children[0]].GetLocation();
+						}
+						else {
+							sData.m_boneAxis = RefSkeletonTransform[sData.boneIndex].GetLocation() * 0.7f;
+						}
+					}
+				}
 			}
 			// TODO add child
 		}
+
+		// init default transform
+		const FTransform center = Output.AnimInstanceProxy->GetComponentTransform();
+		for (auto &s : spring) {
+			for (auto &root : s.SpringDataChain) {
+				for (auto &sData : root) {
+					sData.m_length = sData.m_boneAxis.Size();
+
+					
+					//FCompactPoseBoneIndex uu(RefSkeleton.GetParentIndex(sData.boneIndex));
+					//FTransform t = Output.Pose.GetComponentSpaceTransform(uu);
+					//sData.m_transform = RefSkeletonTransform[(sData.boneIndex)] * t * center;
+					//t = RefSkeletonTransform[(sData.boneIndex)] * t;
+
+					FCompactPoseBoneIndex uu(sData.boneIndex);
+					sData.m_transform = Output.Pose.GetComponentSpaceTransform(uu) * center;
+					FTransform t = Output.Pose.GetComponentSpaceTransform(uu);
+
+					sData.m_currentTail = sData.m_prevTail = t.TransformPosition(sData.m_boneAxis);
+				}
+			}
+		}
+
 
 		bInit = true;
 	}
@@ -245,6 +343,10 @@ void FAnimNode_VrmSpringBone::Initialize_AnyThread(const FAnimationInitializeCon
 	Super::Initialize_AnyThread(Context);
 	if (SpringManager.Get()) {
 		SpringManager.Get()->reset();
+	} else {
+		SpringManager = MakeShareable(new VRMSpring::VRMSpringManager());
+	}
+	if (VrmMetaObject) {
 	}
 }
 void FAnimNode_VrmSpringBone::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) {
@@ -258,7 +360,7 @@ void FAnimNode_VrmSpringBone::ResetDynamics(ETeleportType InTeleportType) {
 void FAnimNode_VrmSpringBone::UpdateInternal(const FAnimationUpdateContext& Context){
 	Super::UpdateInternal(Context);
 
-	CurrentDeltaTime = Context.GetDeltaTime();
+	CurrentDeltaTime = Context.GetDeltaTime() * 10;
 }
 
 
@@ -297,16 +399,17 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 
 		{
 			if (SpringManager.Get() == nullptr) {
-				SpringManager = MakeShareable(new VRMSpring::VRMSpringManager());
+				return;
 			}
-			SpringManager->init(VrmMetaObject);
+			SpringManager->init(VrmMetaObject, Output);
+
 			SpringManager->update(CurrentDeltaTime, Output, OutBoneTransforms);
 
 			for (auto &springRoot : SpringManager->spring) {
 				for (auto &sChain : springRoot.SpringDataChain) {
 					int BoneChain = 0;
 
-					FTransform CurrentTransForm;
+					FTransform CurrentTransForm = FTransform::Identity;
 					for (auto &sData : sChain) {
 
 
@@ -327,32 +430,14 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 							NewBoneTM = CurrentTransForm;
 							
 							auto c = RefSkeletonTransform[sData.boneIndex];
-							c.SetRotation(sData.m_resultQuat);
 							NewBoneTM = c * NewBoneTM;
+							NewBoneTM.SetRotation(sData.m_resultQuat);
+
+
+							//const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
+							//NewBoneTM.SetLocation(ComponentTransform.TransformPosition(sData.m_currentTail));
 
 							CurrentTransForm = NewBoneTM;
-
-							for (int i = 1; i < BoneChain; ++i) {
-
-								//FCompactPoseBoneIndex parentIndex(sc[BoneChain - 1].boneIndex);
-								//FTransform parentT = Output.Pose.GetComponentSpaceTransform(parentIndex);
-								//NewBoneTM = NewBoneTM * parentT;
-
-								//auto c = RefSkeletonTransform[sChain[i].boneIndex];
-								//c.SetRotation(sc[i].m_resultQuat);
-								//NewBoneTM *= c;
-
-								//FCompactPoseBoneIndex parentIndex(sc[i].boneIndex);
-								//FTransform t = Output.Pose.GetComponentSpaceTransform(CompactPoseBoneToModify);
-								//NewBoneTM.SetRotation(sd.m_resultQuat);
-							}
-
-
-
-
-							//FAnimationRuntime::ConvertBoneSpaceTransformToCS(ComponentTransform, Output.Pose, t, CompactPoseBoneToModify, BoneSpace);
-							//NewBoneTM.SetRotation(t.GetRotation());
-							//ConvertBoneSpaceTransformToCS(USkeletalMeshComponent* SkelComp, FCSPose<FCompactPose>& MeshBases, FTransform& InOutBoneSpaceTM, FCompactPoseBoneIndex BoneIndex, EBoneControlSpace Space);
 						}
 
 						FBoneTransform a(CompactPoseBoneToModify, NewBoneTM);
