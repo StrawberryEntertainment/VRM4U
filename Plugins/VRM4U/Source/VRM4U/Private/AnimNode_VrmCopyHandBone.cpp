@@ -7,15 +7,13 @@
 #include "Animation/AnimInstanceProxy.h"
 
 #include "VrmMetaObject.h"
+#include "VrmUtil.h"
 
 #include <algorithm>
 /////////////////////////////////////////////////////
 // FAnimNode_ModifyBone
 
 namespace {
-	bool operator<(const FBoneTransform &a, const FBoneTransform &b) {
-		return a.BoneIndex < b.BoneIndex;
-	}
 
 	const TArray<FString> HandBoneTableLeap = {
 //		"L_Wrist",

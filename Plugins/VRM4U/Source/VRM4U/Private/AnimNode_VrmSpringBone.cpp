@@ -34,17 +34,13 @@ SOFTWARE.
 #include "Animation/AnimInstanceProxy.h"
 
 #include "VrmMetaObject.h"
+#include "VrmUtil.h"
 
 #include <algorithm>
 /////////////////////////////////////////////////////
 // FAnimNode_ModifyBone
 
 namespace {
-
-	bool operator<(const FBoneTransform &a, const FBoneTransform &b) {
-		return a.BoneIndex < b.BoneIndex;
-	}
-
 	int32 GetDirectChildBonesLocal(FReferenceSkeleton &refs, int32 ParentBoneIndex, TArray<int32> & Children)
 	{
 		Children.Reset();
