@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
+
 #include "VRM4UImporterFactory.h"
 #include "VRM4UImporterLog.h"
 #include "AssetToolsModule.h"

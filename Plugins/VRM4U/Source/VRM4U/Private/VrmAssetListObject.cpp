@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
+
 
 #include "VrmAssetListObject.h"
 //#include "LoaderBPFunctionLibrary.h"

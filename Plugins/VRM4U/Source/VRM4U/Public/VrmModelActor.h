@@ -1,10 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "VrmModelActor.generated.h"
+
+class USkeletalMesh;
 
 UCLASS()
 class VRM4U_API AVrmModelActor : public AActor
