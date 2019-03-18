@@ -7,6 +7,7 @@
 #include "BoneContainer.h"
 #include "BonePose.h"
 #include "BoneControllers/AnimNode_ModifyBone.h"
+#include "EngineVersionComparison.h"
 
 #include "AnimNode_VrmSpringBone.generated.h"
 
@@ -53,7 +54,9 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 
 	virtual bool NeedsDynamicReset() const override { return true; }
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 	virtual void ResetDynamics(ETeleportType InTeleportType) override;
+#endif
 
 	virtual void UpdateInternal(const FAnimationUpdateContext& Context)override;
 	// End of FAnimNode_SkeletalControlBase interface
