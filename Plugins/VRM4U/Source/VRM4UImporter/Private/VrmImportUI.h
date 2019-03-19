@@ -58,7 +58,7 @@ public:
 
 	/** Material optimize */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Optimize material"))
-	bool bOptimizeMaterial = false;
+	bool bOptimizeMaterial = true;
 
 	/** for DEBUG. Import root bone only */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="[Debug]One bone only"))
