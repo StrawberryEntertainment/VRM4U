@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "VrmConvertModel.h"
 #include "VrmConvert.h"
