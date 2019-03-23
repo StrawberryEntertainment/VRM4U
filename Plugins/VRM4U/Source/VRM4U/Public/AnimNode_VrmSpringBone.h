@@ -27,12 +27,6 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Skeleton, meta=(PinShownByDefault))
-	USkeletalMeshComponent *SkeletalMeshComponentLeft;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Skeleton, meta=(PinShownByDefault))
-	USkeletalMeshComponent *SkeletalMeshComponentRight;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
 	UVrmMetaObject *VrmMetaObject;
 

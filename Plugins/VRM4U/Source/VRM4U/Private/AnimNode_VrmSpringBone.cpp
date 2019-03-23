@@ -213,7 +213,7 @@ namespace VRMSpring {
 
 						//FCompactPoseBoneIndex uu(cg.node);
 						FCompactPoseBoneIndex uu(ii);
-						FTransform collisionBoneTrans = Output.Pose.GetComponentSpaceTransform(uu) * center;
+						FTransform collisionBoneTrans = Output.Pose.GetComponentSpaceTransform(uu);
 
 						for (auto c : cg.colliders) {
 							float r = (hitRadius + c.radius) * 100.f;
