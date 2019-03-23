@@ -63,6 +63,7 @@ namespace {
 namespace VRMSpring {
 
 	class VRMSpring;
+	class VRMSpringColliderGroup;
 
 	class VRMSpringManager {
 	public:
@@ -75,6 +76,20 @@ namespace VRMSpring {
 		void reset();
 
 		TArray<VRMSpring> spring;
+		TArray<VRMSpringColliderGroup> colliderGroup;
+	};
+
+	class VRMSpringCollider {
+	public:
+		FVector offset = FVector::ZeroVector;
+		float radius = 0.f;
+	};
+	class VRMSpringColliderGroup {
+	public:
+		int node = 0;
+		FString node_name;
+
+		TArray<VRMSpringCollider> colliders;
 	};
 
 	class VRMSprintData {
@@ -104,6 +119,8 @@ namespace VRMSpring {
 
 		//int colliderGourpNum = 0;
 		//int* colliderGroups = nullptr;
+		TArray<int> ColliderGroupIndexArray;
+
 
 		TArray< TArray<VRMSprintData> > SpringDataChain;
 		TArray<VRMSprintData> RootSpringData;
@@ -116,10 +133,12 @@ namespace VRMSpring {
 		void Update(float DeltaTime, FTransform center,
 			//float stiffnessForce, float dragForce, FVector external,
 			//int colliders,
+			const TArray<VRMSpringColliderGroup> &colliderGroup,
 			FComponentSpacePoseContext& Output);
 	};
 
 	void VRMSpring::Update(float DeltaTime, FTransform center,
+		const TArray<VRMSpringColliderGroup> &colliderGroup,
 		FComponentSpacePoseContext& Output) {
 
 		float stiffnessForce = stiffiness * DeltaTime;
@@ -183,6 +202,44 @@ namespace VRMSpring {
 
 				// Collisionで移動
 				//nextTail = Collision(colliders, nextTail);
+				{
+					for (auto ind : ColliderGroupIndexArray) {
+						const auto &cg = colliderGroup[ind];
+
+						int ii = RefSkeleton.FindBoneIndex(*cg.node_name);
+						if (ii < 0) {
+							continue;
+						}
+
+						//FCompactPoseBoneIndex uu(cg.node);
+						FCompactPoseBoneIndex uu(ii);
+						FTransform collisionBoneTrans = Output.Pose.GetComponentSpaceTransform(uu) * center;
+
+						for (auto c : cg.colliders) {
+							float r = (hitRadius + c.radius) * 100.f;
+							//FVector v = collisionBoneTrans.TransformPosition(c.offset*100);
+							auto offs = c.offset;
+							offs.Set(-offs.X, offs.Z, offs.Y);
+							offs *= 100;
+							FVector v = collisionBoneTrans.TransformPosition(offs);
+
+							if ((v - nextTail).SizeSquared() > r * r) {
+								continue;
+							}
+							// ヒット。Colliderの半径方向に押し出す
+							//var normal = (nextTail - collider.Position).normalized;
+							//var posFromCollider = collider.Position + normal * (Radius + collider.Radius);
+							// 長さをboneLengthに強制
+							//nextTail = m_transform.position + (posFromCollider - m_transform.position).normalized * m_length;
+
+							// ヒット。Colliderの半径方向に押し出す
+							auto normal = (nextTail - v).GetSafeNormal();
+							auto posFromCollider = v + normal * (r);
+							// 長さをboneLengthに強制
+							nextTail = currentTransform.GetLocation() + (posFromCollider - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
+						}
+					}
+				}
 
 				{
 					FCompactPoseBoneIndex uu(myBoneIndex);
@@ -288,7 +345,13 @@ namespace VRMSpring {
 					}
 				}
 			}
-			// TODO add child
+	
+			
+			s.ColliderGroupIndexArray.SetNum(metaS.ColliderIndexArray.Num());
+			for (int c = 0; c < s.ColliderGroupIndexArray.Num(); ++c) {
+				s.ColliderGroupIndexArray[c] = metaS.ColliderIndexArray[c];
+			}
+
 		}
 
 		// init default transform
@@ -313,6 +376,24 @@ namespace VRMSpring {
 			}
 		}
 
+		// collider
+		colliderGroup.SetNum(meta->VRMColliderMeta.Num());
+		for (int i=0; i<colliderGroup.Num(); ++i){
+			auto &cg = colliderGroup[i];
+			const auto &cmeta = meta->VRMColliderMeta[i];
+
+			cg.node = cmeta.bone;
+			cg.node_name = cmeta.boneName;
+
+			cg.colliders.SetNum(cmeta.collider.Num());
+			for (int c = 0; c < cg.colliders.Num(); ++c) {
+				cg.colliders[c].offset = cmeta.collider[c].offset;
+				cg.colliders[c].radius = cmeta.collider[c].radius;
+			}
+
+			TArray<VRMSpringCollider> colliders;
+		}
+
 
 		bInit = true;
 	}
@@ -322,7 +403,7 @@ namespace VRMSpring {
 			//c = Output.AnimInstanceProxy->GetComponentTransform();
 			c = Output.AnimInstanceProxy->GetActorTransform();
 			
-			spring[i].Update(DeltaTime, c, Output);
+			spring[i].Update(DeltaTime, c, colliderGroup, Output);
 		}
 	}
 }

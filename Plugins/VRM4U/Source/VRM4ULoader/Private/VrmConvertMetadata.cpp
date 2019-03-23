@@ -85,6 +85,28 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 			s.bones[b] = vrms.bones[b];
 			s.boneNames[b] = UTF8_TO_TCHAR(vrms.bones_name[b].C_Str());
 		}
+
+		
+		s.ColliderIndexArray.SetNum(vrms.colliderGourpNum);
+		for (int c = 0; c < vrms.colliderGourpNum; ++c) {
+			s.ColliderIndexArray[c] = vrms.colliderGroups[c];
+		}
+	}
+
+	//collider
+	m->VRMColliderMeta.SetNum(meta->colliderGroupNum);
+	for (int i = 0; i < meta->colliderGroupNum; ++i) {
+		const auto &vrmc = meta->colliderGroups[i];
+
+		auto &c = m->VRMColliderMeta[i];
+		c.bone = vrmc.node;
+		c.boneName = UTF8_TO_TCHAR(vrmc.node_name.C_Str());
+
+		c.collider.SetNum(vrmc.colliderNum);
+		for (int b = 0; b < vrmc.colliderNum; ++b) {
+			c.collider[b].offset = FVector(vrmc.colliders[b].offset[0], vrmc.colliders[b].offset[1], vrmc.colliders[b].offset[2]);
+			c.collider[b].radius = vrmc.colliders[b].radius;
+		}
 	}
 
 	// license

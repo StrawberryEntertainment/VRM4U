@@ -35,19 +35,25 @@ struct VRM4U_API FVRMSpringMeta{
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	TArray<FString> boneNames;
 
-	//int colliderGourpNum = 0;
-	//int* colliderGroups = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	TArray<int> ColliderIndexArray;
+};
 
-	//FString boneName;
-	//FVector m_currentTail;
-	//FVector m_prevTail;
-	//FTransform m_transform;
-	//float m_length;
-	//USkeletalMesh *skeletalMesh;
-	//~VRMSpring() {
-	//	delete[] bones_name;
-	//	delete[] colliderGroups;
-	//}
+USTRUCT(Blueprintable, BlueprintType)
+struct VRM4U_API FVRMSpringColliderData {
+	GENERATED_BODY()
+		
+	FVector offset = FVector::ZeroVector;
+	float radius = 0.f;
+};
+
+USTRUCT(Blueprintable, BlueprintType)
+struct VRM4U_API FVRMColliderMeta {
+	GENERATED_BODY()
+
+	int bone;
+	FString boneName;
+	TArray<FVRMSpringColliderData> collider;
 };
 
 
@@ -106,6 +112,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	TArray<FVRMSpringMeta> VRMSprintMeta;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	TArray<FVRMColliderMeta> VRMColliderMeta;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	class USkeletalMesh *SkeletalMesh;
