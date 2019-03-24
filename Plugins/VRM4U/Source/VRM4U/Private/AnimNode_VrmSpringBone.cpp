@@ -73,7 +73,7 @@ namespace VRMSpring {
 		USkeletalMesh *skeletalMesh = nullptr;
 
 		void init(const UVrmMetaObject *meta, FComponentSpacePoseContext& Output);
-		void update(float DeltaTime, FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
+		void update(const FAnimNode_VrmSpringBone *animNode, float DeltaTime, FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 		void reset();
 
 		TArray<VRMSpring> spring;
@@ -88,7 +88,7 @@ namespace VRMSpring {
 	class VRMSpringColliderGroup {
 	public:
 		int node = 0;
-		FString node_name;
+		FName node_name;
 
 		TArray<VRMSpringCollider> colliders;
 	};
@@ -96,7 +96,7 @@ namespace VRMSpring {
 	class VRMSprintData {
 	public:
 		int boneIndex = -1;
-		FString boneName;
+		FName boneName;
 		FVector m_currentTail = FVector::ZeroVector;
 		FVector m_prevTail = FVector::ZeroVector;
 		FTransform m_transform = FTransform::Identity;
@@ -131,20 +131,22 @@ namespace VRMSpring {
 			skeletalMesh = nullptr;
 		}
 
-		void Update(float DeltaTime, FTransform center,
+		void Update(const FAnimNode_VrmSpringBone *animNode, float DeltaTime, FTransform center,
 			//float stiffnessForce, float dragForce, FVector external,
 			//int colliders,
 			const TArray<VRMSpringColliderGroup> &colliderGroup,
 			FComponentSpacePoseContext& Output);
 	};
 
-	void VRMSpring::Update(float DeltaTime, FTransform center,
+	void VRMSpring::Update(const FAnimNode_VrmSpringBone *animNode, float DeltaTime, FTransform center,
 		const TArray<VRMSpringColliderGroup> &colliderGroup,
 		FComponentSpacePoseContext& Output) {
 
-		float stiffnessForce = stiffiness * DeltaTime;
-		//FVector external(10, 0, 0);//m_gravityDir * (m_gravityPower * Time.deltaTime);
+		//
+		float stiffnessForce = stiffiness * DeltaTime * 10.f; // x10 adjust?
 		FVector external = gravityDir * (gravityPower * DeltaTime);
+		external.Set(-external.X, external.Z, external.Y);
+		external *= 100.f; // to unreal scale
 
 		if (skeletalMesh == nullptr) {
 			return;
@@ -156,6 +158,7 @@ namespace VRMSpring {
 		const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
 		center = ComponentTransform.Inverse();
 
+		const auto WorldContext = Output.AnimInstanceProxy->GetSkelMeshComponent();
 
 		for (int springCount = 0; springCount < SpringDataChain.Num(); ++springCount) {
 
@@ -169,7 +172,7 @@ namespace VRMSpring {
 				FVector currentTail = center.TransformPosition(sData.m_currentTail);
 				FVector prevTail = center.TransformPosition(sData.m_prevTail);
 
-				int myBoneIndex = RefSkeleton.FindBoneIndex(*sData.boneName);
+				int myBoneIndex = RefSkeleton.FindBoneIndex(sData.boneName);
 				int myParentBoneIndex = RefSkeleton.GetParentIndex(myBoneIndex);
 
 				//currentTransform = FTransform::Identity;
@@ -204,7 +207,7 @@ namespace VRMSpring {
 				// Collisionで移動
 
 				// vrm <-> physics collision
-				{
+				if (animNode->bIgnorePhysicsCollision == false){
 					FVector Start = center.InverseTransformPosition(nextTail);
 					FVector End = Start + FVector(0.001f);
 					//* WorldContextObject
@@ -220,12 +223,17 @@ namespace VRMSpring {
 					FLinearColor TraceHitColor;
 					float DrawTime = 0.f;
 
-					bool b = UKismetSystemLibrary::SphereTraceMulti(GWorld, Start, End, hitRadius * 100.f,
+					bool b = UKismetSystemLibrary::SphereTraceMulti(WorldContext, Start, End, hitRadius * 100.f,
 						TraceChannel, false, ActorsToIgnore, 
 						DrawDebugType,
 						OutHits, bIgnoreSelf, TraceColor, TraceHitColor, DrawTime);
 					if (b) {
 						for (auto hit : OutHits) {
+							{
+								//WorldContext->GetOwner
+								//hit.BoneName
+								
+							}
 							float r = hitRadius * 100.f + hit.Distance;
 							auto normal = hit.Normal;
 							auto posFromCollider = nextTail + normal * (r);
@@ -236,11 +244,11 @@ namespace VRMSpring {
 				}
 
 				// vrm <-> vrm collision
-				{
+				if (animNode->bIgnoreVRMCollision == false){
 					for (auto ind : ColliderGroupIndexArray) {
 						const auto &cg = colliderGroup[ind];
 
-						int ii = RefSkeleton.FindBoneIndex(*cg.node_name);
+						int ii = RefSkeleton.FindBoneIndex(cg.node_name);
 						if (ii < 0) {
 							continue;
 						}
@@ -331,7 +339,7 @@ namespace VRMSpring {
 
 			s.RootSpringData.SetNum(metaS.bones.Num());
 			for (int scount = 0; scount < s.RootSpringData.Num(); ++scount) {
-				s.RootSpringData[scount].boneName = metaS.boneNames[scount];
+				s.RootSpringData[scount].boneName = *metaS.boneNames[scount];
 				s.RootSpringData[scount].boneIndex = RefSkeleton.FindBoneIndex(*metaS.boneNames[scount]);
 			}
 			// TODO add child
@@ -343,7 +351,7 @@ namespace VRMSpring {
 				//root
 				{
 					auto &sData = chain.AddDefaulted_GetRef();
-					sData.boneName = metaS.boneNames[scount];
+					sData.boneName = *metaS.boneNames[scount];
 					sData.boneIndex = skeletalMesh->RefSkeleton.FindBoneIndex(*metaS.boneNames[scount]);
 
 					TArray<int32> Children;
@@ -369,7 +377,7 @@ namespace VRMSpring {
 						auto &sData = chain.AddDefaulted_GetRef();
 
 						sData.boneIndex = Children[0];
-						sData.boneName = RefSkeleton.GetBoneName(sData.boneIndex).ToString();
+						sData.boneName = *RefSkeleton.GetBoneName(sData.boneIndex).ToString();
 
 						GetDirectChildBonesLocal(skeletalMesh->RefSkeleton, sData.boneIndex, Children);
 						if (Children.Num() > 0) {
@@ -419,7 +427,7 @@ namespace VRMSpring {
 			const auto &cmeta = meta->VRMColliderMeta[i];
 
 			cg.node = cmeta.bone;
-			cg.node_name = cmeta.boneName;
+			cg.node_name = *cmeta.boneName;
 
 			cg.colliders.SetNum(cmeta.collider.Num());
 			for (int c = 0; c < cg.colliders.Num(); ++c) {
@@ -433,13 +441,13 @@ namespace VRMSpring {
 
 		bInit = true;
 	}
-	void VRMSpringManager::update(float DeltaTime, FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) {
+	void VRMSpringManager::update(const FAnimNode_VrmSpringBone *animNode, float DeltaTime, FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) {
 		for (int i = 0; i < spring.Num(); ++i) {
 			FTransform c;
 			//c = Output.AnimInstanceProxy->GetComponentTransform();
 			c = Output.AnimInstanceProxy->GetActorTransform();
 			
-			spring[i].Update(DeltaTime, c, colliderGroup, Output);
+			spring[i].Update(animNode, DeltaTime, c, colliderGroup, Output);
 		}
 	}
 }
@@ -475,7 +483,7 @@ void FAnimNode_VrmSpringBone::ResetDynamics(ETeleportType InTeleportType) {
 void FAnimNode_VrmSpringBone::UpdateInternal(const FAnimationUpdateContext& Context){
 	Super::UpdateInternal(Context);
 
-	CurrentDeltaTime = Context.GetDeltaTime() * 10;
+	CurrentDeltaTime = Context.GetDeltaTime();
 }
 
 
@@ -518,7 +526,7 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 			}
 			SpringManager->init(VrmMetaObject, Output);
 
-			SpringManager->update(CurrentDeltaTime, Output, OutBoneTransforms);
+			SpringManager->update(this, CurrentDeltaTime, Output, OutBoneTransforms);
 
 			for (auto &springRoot : SpringManager->spring) {
 				for (auto &sChain : springRoot.SpringDataChain) {

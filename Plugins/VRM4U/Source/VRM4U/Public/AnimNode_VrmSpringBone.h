@@ -30,6 +30,12 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
 	UVrmMetaObject *VrmMetaObject;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
+	bool bIgnorePhysicsCollision = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
+	bool bIgnoreVRMCollision = false;
+
 	TSharedPtr<VRMSpring::VRMSpringManager> SpringManager;
 
 	float CurrentDeltaTime = 0.f;
