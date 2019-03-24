@@ -43,7 +43,10 @@ USTRUCT(Blueprintable, BlueprintType)
 struct VRM4U_API FVRMSpringColliderData {
 	GENERATED_BODY()
 		
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	FVector offset = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	float radius = 0.f;
 };
 
@@ -51,8 +54,12 @@ USTRUCT(Blueprintable, BlueprintType)
 struct VRM4U_API FVRMColliderMeta {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	int bone;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	FString boneName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	TArray<FVRMSpringColliderData> collider;
 };
 

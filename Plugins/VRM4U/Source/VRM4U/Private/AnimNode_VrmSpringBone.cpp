@@ -32,6 +32,7 @@ SOFTWARE.
 #include "AnimNode_VrmSpringBone.h"
 #include "AnimationRuntime.h"
 #include "Animation/AnimInstanceProxy.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include "VrmMetaObject.h"
 #include "VrmUtil.h"
@@ -201,7 +202,40 @@ namespace VRMSpring {
 				nextTail = currentTransform.GetLocation() + (nextTail - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
 
 				// Collisionで移動
-				//nextTail = Collision(colliders, nextTail);
+
+				// vrm <-> physics collision
+				{
+					FVector Start = center.InverseTransformPosition(nextTail);
+					FVector End = Start + FVector(0.001f);
+					//* WorldContextObject
+					float Radius = hitRadius * 100.f;
+					ETraceTypeQuery TraceChannel = ETraceTypeQuery::TraceTypeQuery1;
+					bool bTraceComplex = false;
+
+					TArray<AActor*> ActorsToIgnore;
+					EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
+					TArray<FHitResult> OutHits;
+					bool bIgnoreSelf = true;
+					FLinearColor TraceColor;
+					FLinearColor TraceHitColor;
+					float DrawTime = 0.f;
+
+					bool b = UKismetSystemLibrary::SphereTraceMulti(GWorld, Start, End, hitRadius * 100.f,
+						TraceChannel, false, ActorsToIgnore, 
+						DrawDebugType,
+						OutHits, bIgnoreSelf, TraceColor, TraceHitColor, DrawTime);
+					if (b) {
+						for (auto hit : OutHits) {
+							float r = hitRadius * 100.f + hit.Distance;
+							auto normal = hit.Normal;
+							auto posFromCollider = nextTail + normal * (r);
+							// 長さをboneLengthに強制
+							nextTail = currentTransform.GetLocation() + (posFromCollider - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
+						}
+					}
+				}
+
+				// vrm <-> vrm collision
 				{
 					for (auto ind : ColliderGroupIndexArray) {
 						const auto &cg = colliderGroup[ind];
@@ -216,6 +250,8 @@ namespace VRMSpring {
 						FTransform collisionBoneTrans = Output.Pose.GetComponentSpaceTransform(uu);
 
 						for (auto c : cg.colliders) {
+
+
 							float r = (hitRadius + c.radius) * 100.f;
 							//FVector v = collisionBoneTrans.TransformPosition(c.offset*100);
 							auto offs = c.offset;
@@ -242,7 +278,7 @@ namespace VRMSpring {
 				}
 
 				{
-					FCompactPoseBoneIndex uu(myBoneIndex);
+					//FCompactPoseBoneIndex uu(myBoneIndex);
 					//sData.m_transform = Output.Pose.GetComponentSpaceTransform(uu);//RefSkeletonTransform[myBoneIndex];
 					//sData.m_transform = currentTransform;
 				}
