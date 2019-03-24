@@ -808,11 +808,18 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 					TMap<int32, TArray<int32>> OverlappingVertices;
 
-					if (Options::Get().IsMergeMaterial()) {
-						s.MaterialIndex = vrmAssetList->MaterialMergeTable[aiM->mMaterialIndex];
-					}else {
-						s.MaterialIndex = aiM->mMaterialIndex;
+					{
+						bool bUseMergeMaterial = Options::Get().IsMergeMaterial();
+						if ((int)aiM->mMaterialIndex >= vrmAssetList->MaterialMergeTable.Num()) {
+							bUseMergeMaterial = false;
+						}
+						if (bUseMergeMaterial) {
+							s.MaterialIndex = vrmAssetList->MaterialMergeTable[aiM->mMaterialIndex];
+						} else {
+							s.MaterialIndex = aiM->mMaterialIndex;
+						}
 					}
+
 					if (s.MaterialIndex >= vrmAssetList->Materials.Num()) s.MaterialIndex = 0;
 					s.BaseIndex = currentIndex;
 					s.NumTriangles = result.meshInfo[meshID].Triangles.Num() / 3;
