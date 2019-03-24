@@ -314,6 +314,7 @@ namespace VRMSpring {
 
 	void VRMSpringManager::reset() {
 		spring.Empty();
+		bInit = false;
 	}
 	void VRMSpringManager::init(const UVrmMetaObject *meta, FComponentSpacePoseContext& Output) {
 		if (meta == nullptr) return;
@@ -524,7 +525,10 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 			if (SpringManager.Get() == nullptr) {
 				return;
 			}
-			SpringManager->init(VrmMetaObject, Output);
+			if (SpringManager->bInit == false) {
+				SpringManager->init(VrmMetaObject, Output);
+				return;
+			}
 
 			SpringManager->update(this, CurrentDeltaTime, Output, OutBoneTransforms);
 
