@@ -949,6 +949,13 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				});
 			}
 		}
+		{
+			FVector MinB(-100, -100, -100);
+			FVector MaxB(100, 100, 100);
+
+			FBox BoundingBox(MinB, MaxB);
+			sk->SetImportedBounds(FBoxSphereBounds(BoundingBox));
+		}
 	}
 
 	UPhysicsAsset *pa = nullptr;
