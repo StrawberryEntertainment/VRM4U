@@ -8,13 +8,17 @@
 
 #include "VrmAnimInstanceCopy.generated.h"
 
-class UVrmMetaObject;
+class UVrmAssetListObject;
+struct FAnimNode_VrmSpringBone;
 
 USTRUCT()
 struct VRM4U_API FVrmAnimInstanceCopyProxy : public FAnimInstanceProxy {
 
 public:
 	GENERATED_BODY()
+
+	bool bIgnoreVRMSwingBone = false;
+	TSharedPtr<FAnimNode_VrmSpringBone> SpringBoneNode;
 
 	FVrmAnimInstanceCopyProxy()
 	{
@@ -43,10 +47,13 @@ public:
 	USkeletalMeshComponent *SrcSkeletalMeshComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	UVrmMetaObject *SrcVrmMetaObject;
+	UVrmAssetListObject *SrcVrmAssetList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	UVrmMetaObject *DstVrmMetaObject;
+	UVrmAssetListObject *DstVrmAssetList;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
+	bool bIgnoreVRMSwingBone;
 
 protected:
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override;
@@ -64,5 +71,5 @@ public:
 	virtual void NativeBeginPlay()override;
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void SetSkeletalMeshCopyData(UVrmMetaObject *dstMeta, USkeletalMeshComponent *srcSkeletalMesh, UVrmMetaObject *srcMeta);
+	void SetSkeletalMeshCopyData(UVrmAssetListObject *dstAssetList, USkeletalMeshComponent *srcSkeletalMesh, UVrmAssetListObject *srcAssetList);
 };

@@ -3,12 +3,15 @@
 
 #include "VrmAnimInstanceCopy.h"
 #include "VrmMetaObject.h"
+#include "VrmAssetListObject.h"
 #include "Animation/AnimNodeBase.h"
 #include "Animation/Morphtarget.h"
 #include "Animation/Rig.h"
-#include "BoneControllers/AnimNode_Fabrik.h"
-#include "BoneControllers/AnimNode_TwoBoneIK.h"
-#include "BoneControllers/AnimNode_SplineIK.h"
+//#include "BoneControllers/AnimNode_Fabrik.h"
+//#include "BoneControllers/AnimNode_TwoBoneIK.h"
+//#include "BoneControllers/AnimNode_SplineIK.h"
+#include "AnimNode_VrmSpringBone.h"
+
 
 namespace {
 	const FString table[] = {
@@ -158,9 +161,12 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 	if (animInstance == nullptr) {
 		return false;
 	}
+	if (animInstance->SrcVrmAssetList == nullptr || animInstance->DstVrmAssetList == nullptr) {
+		return false;
+	}
 
-	const UVrmMetaObject *srcMeta = animInstance->SrcVrmMetaObject;
-	const UVrmMetaObject *dstMeta = animInstance->DstVrmMetaObject;
+	const UVrmMetaObject *srcMeta = animInstance->SrcVrmAssetList->VrmMetaObject;
+	const UVrmMetaObject *dstMeta = animInstance->DstVrmAssetList->VrmMetaObject;
 	if (srcMeta == nullptr || dstMeta == nullptr){
 		return false;
 	}
@@ -244,6 +250,22 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		FCompactPose::BoneIndexType bi(dstIndex);
 		pose[bi] = dstTrans;
 	}
+	/*
+	if (bIgnoreVRMSwingBone == false){
+		if (SpringBoneNode.Get() == false) {
+
+		}
+		FAnimNode_VrmSpringBone f;
+		f.VrmMetaObject = dstMeta;
+
+		// Evaluate the child and convert
+		FComponentSpacePoseContext InputCSPose(Output.AnimInstanceProxy);
+		f.EvaluateComponentSpace_AnyThread(InputCSPose);
+
+		checkSlow( InputCSPose.Pose.GetPose().IsValid() );
+		InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
+		Output.Curve = InputCSPose.Curve;
+	}*/
 
 	return true;
 }
@@ -258,8 +280,9 @@ UVrmAnimInstanceCopy::UVrmAnimInstanceCopy(const FObjectInitializer& ObjectIniti
 }
 
 FAnimInstanceProxy* UVrmAnimInstanceCopy::CreateAnimInstanceProxy() {
-
-	return new FVrmAnimInstanceCopyProxy(this);
+	auto a = new FVrmAnimInstanceCopyProxy(this);
+	a->bIgnoreVRMSwingBone = bIgnoreVRMSwingBone;
+	return a;
 }
 
 
@@ -274,8 +297,8 @@ void UVrmAnimInstanceCopy::NativeUninitializeAnimation() {
 void UVrmAnimInstanceCopy::NativeBeginPlay() {
 }
 
-void UVrmAnimInstanceCopy::SetSkeletalMeshCopyData(UVrmMetaObject *dstMeta, USkeletalMeshComponent *srcSkeletalMesh, UVrmMetaObject *srcMeta) {
+void UVrmAnimInstanceCopy::SetSkeletalMeshCopyData(UVrmAssetListObject *dstAssetList, USkeletalMeshComponent *srcSkeletalMesh, UVrmAssetListObject *srcAssetList) {
 	SrcSkeletalMeshComponent = srcSkeletalMesh;
-	SrcVrmMetaObject = srcMeta;
-	DstVrmMetaObject = dstMeta;
+	SrcVrmAssetList = srcAssetList;
+	DstVrmAssetList = dstAssetList;
 }
