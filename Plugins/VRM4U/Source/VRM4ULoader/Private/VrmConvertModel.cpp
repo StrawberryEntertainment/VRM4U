@@ -590,6 +590,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	{
 		FSkeletalMeshLODRenderData &rd = sk->GetResourceForRendering()->LODRenderData[0];
 
+		FVector BoundMin(-100, -100, 0);
+		FVector BoundMax(100, 100, 200);
+
 		for (int i = 0; i < sk->Skeleton->GetReferenceSkeleton().GetRawBoneNum(); ++i) {
 			rd.RequiredBones.Add(i);
 			rd.ActiveBoneIndices.Add(i);
@@ -950,10 +953,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			}
 		}
 		{
-			FVector MinB(-100, -100, -100);
-			FVector MaxB(100, 100, 100);
 
-			FBox BoundingBox(MinB, MaxB);
+			FBox BoundingBox(BoundMin, BoundMax);
 			sk->SetImportedBounds(FBoxSphereBounds(BoundingBox));
 		}
 	}
