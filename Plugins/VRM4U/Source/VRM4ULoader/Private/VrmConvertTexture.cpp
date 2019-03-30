@@ -22,6 +22,61 @@
 #include "VrmAssetListObject.h"
 
 namespace {
+	void LocalMaterialSetParent(UMaterialInstanceConstant *material, UMaterialInterface *parent) {
+#if WITH_EDITOR
+		material->SetParentEditorOnly(parent);
+#else
+		material->Parent = parent;
+#endif
+	}
+
+	void LocalTextureSet(UMaterialInstanceConstant *dm, FName name, UTexture2D * tex) {
+#if WITH_EDITOR
+		dm->SetTextureParameterValueEditorOnly(name, tex);
+#else
+		FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
+		v->ParameterInfo.Index = INDEX_NONE;
+		v->ParameterInfo.Name = name;
+		v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+		v->ParameterValue = tex;
+#endif
+	}
+
+	void LocalScalarParameterSet(UMaterialInstanceConstant *dm, FName name, float f) {
+
+#if WITH_EDITOR
+		dm->SetScalarParameterValueEditorOnly(name, f);
+#else
+		FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
+		v->ParameterInfo.Index = INDEX_NONE;
+		v->ParameterInfo.Name = name;
+		v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+		v->ParameterValue = f;
+#endif
+	}
+
+	void LocalVectorParameterSet(UMaterialInstanceConstant *dm, FName name, FLinearColor c) {
+
+#if WITH_EDITOR
+		dm->SetVectorParameterValueEditorOnly(name, c);
+#else
+		FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+		v->ParameterInfo.Index = INDEX_NONE;
+		v->ParameterInfo.Name = name;
+		v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+		v->ParameterValue = c;
+#endif
+	}
+
+
+	void LocalMaterialFinishParam(UMaterialInstanceConstant *material) {
+#if WITH_EDITOR
+		material->PreEditChange(NULL);
+		material->PostEditChange();
+#else
+		material->PostLoad();
+#endif
+	}
 
 
 	static UTexture2D* createTex(int32 InSizeX, int32 InSizeY, FString name, UPackage *package) {
@@ -98,11 +153,13 @@ namespace {
 			};
 
 			for (auto &t : table) {
-				FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
-				v->ParameterInfo.Index = INDEX_NONE;
-				v->ParameterInfo.Name = *(TEXT("mtoon") + t.key);
-				v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
-				v->ParameterValue = FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]);
+				LocalVectorParameterSet(dm, *(TEXT("mtoon") + t.key), FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]));
+
+				//FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+				//v->ParameterInfo.Index = INDEX_NONE;
+				//v->ParameterInfo.Name = *(TEXT("mtoon") + t.key);
+				//v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+				//v->ParameterValue = FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]);
 			}
 		}
 		{
@@ -133,11 +190,13 @@ namespace {
 			};
 
 			for (auto &t : table) {
-				FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
-				v->ParameterInfo.Index = INDEX_NONE;
-				v->ParameterInfo.Name = *(TEXT("mtoon") + t.key);
-				v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
-				v->ParameterValue = t.value;
+				LocalScalarParameterSet(dm, *(TEXT("mtoon") + t.key), t.value);
+
+				//FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
+				//v->ParameterInfo.Index = INDEX_NONE;
+				//v->ParameterInfo.Name = *(TEXT("mtoon") + t.key);
+				//v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+				//v->ParameterValue = t.value;
 			}
 
 			if (vrmMat.floatProperties._CullMode == 0.f) {
@@ -179,11 +238,13 @@ namespace {
 				if (t.value < 0) {
 					continue;
 				}
-				FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
-				v->ParameterInfo.Index = INDEX_NONE;
-				v->ParameterInfo.Name = *t.key;
-				v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
-				v->ParameterValue = vrmAssetList->Textures[t.value];
+				LocalTextureSet(dm, *t.key, vrmAssetList->Textures[t.value]);
+
+				//FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
+				//v->ParameterInfo.Index = INDEX_NONE;
+				//v->ParameterInfo.Name = *t.key;
+				//v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+				//v->ParameterValue = vrmAssetList->Textures[t.value];
 			}
 
 		}
@@ -303,23 +364,7 @@ namespace {
 
 		return true;
 	}
-
-	void LocalMaterialSetParent(UMaterialInstanceConstant *material, UMaterialInterface *parent) {
-#if WITH_EDITOR
-		material->SetParentEditorOnly(parent);
-#else
-		material->Parent = parent;
-#endif
-	}
-	void LocalMaterialFinishParam(UMaterialInstanceConstant *material) {
-#if WITH_EDITOR
-		material->PreEditChange(NULL);
-		material->PostEditChange();
-#else
-		material->PostLoad();
-#endif
-	}
-}
+}// namespace
 
 bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 	if (vrmAssetList == nullptr || mScenePtr == nullptr) {
@@ -591,11 +636,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						}
 					}
 					{
-						FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
-						v->ParameterInfo.Index = INDEX_NONE;
-						v->ParameterInfo.Name = TEXT("gltf_tex_diffuse");
-						v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
-						v->ParameterValue = vrmAssetList->Textures[index];
+						LocalTextureSet(dm, TEXT("gltf_tex_diffuse"), vrmAssetList->Textures[index]);
 					}
 					{
 						aiString alphaMode;
