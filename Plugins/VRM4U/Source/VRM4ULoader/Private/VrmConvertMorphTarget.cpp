@@ -65,7 +65,9 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 
 bool VRMConverter::ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 #if WITH_EDITOR
-
+	if (Options::Get().IsSkipMorphTarget()) {
+		return true;
+	}
 
 	USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 
