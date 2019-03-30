@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -128,6 +128,8 @@ struct ASSIMP_API aiNode
       * format. Importers that don't document any metadata don't write any.
       */
     C_STRUCT aiMetadata* mMetaData;
+
+    void * mVRMMeta;
 
 #ifdef __cplusplus
     /** Constructor */

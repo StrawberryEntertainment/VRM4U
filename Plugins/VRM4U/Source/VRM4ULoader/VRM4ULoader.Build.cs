@@ -64,7 +64,10 @@ public class VRM4ULoader : ModuleRules
         if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
         {
             string PlatformString = (Target.Platform == UnrealTargetPlatform.Win64) ? "x64" : "x86";
-            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, "assimp-vc140-mt.lib"));
+            //string BuildString = (Target.Configuration != UnrealTargetConfiguration.Debug) ? "Release" : "Debug";
+            string BuildString = (Target.Configuration != UnrealTargetConfiguration.Debug) ? "Release" : "Release";
+            //PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, "assimp-vc140-mt.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, BuildString, "assimp-vc140-mt.lib"));
 
             RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(ThirdPartyPath, "assimp/bin", PlatformString, "assimp-vc140-mt.dll")));
         }
