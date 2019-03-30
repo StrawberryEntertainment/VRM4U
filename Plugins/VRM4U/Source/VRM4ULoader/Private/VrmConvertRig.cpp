@@ -203,6 +203,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 		}
 	}
 	//mc->AddMapping
+	mc->PostEditChange();
 	vrmAssetList->HumanoidRig = mc;
 
 #else

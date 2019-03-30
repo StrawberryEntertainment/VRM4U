@@ -247,6 +247,9 @@ static UPhysicsConstraintTemplate *createConstraint(USkeletalMesh *sk, UPhysicsA
 	const int32 BoneIndex2 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone2);
 
 	if (BoneIndex1 == INDEX_NONE || BoneIndex2 == INDEX_NONE) {
+#if WITH_EDITOR
+		ct->PostEditChange();
+#endif
 		return ct;
 	}
 
@@ -301,6 +304,7 @@ static UPhysicsConstraintTemplate *createConstraint(USkeletalMesh *sk, UPhysicsA
 
 #if WITH_EDITOR
 	ct->SetDefaultProfile(ct->DefaultInstance);
+	ct->PostEditChange();
 #endif
 	//ct->DefaultInstance.InitConstraint();
 
@@ -957,6 +961,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			FBox BoundingBox(BoundMin, BoundMax);
 			sk->SetImportedBounds(FBoxSphereBounds(BoundingBox));
 		}
+
+#if WITH_EDITOR
+		sk->PostEditChange();
+#endif
 	}
 
 	UPhysicsAsset *pa = nullptr;
@@ -1082,6 +1090,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			pa->RefreshPhysicsAssetChange();
 #endif
 			pa->UpdateBoundsBodiesArray();
+
+#if WITH_EDITOR
+			pa->PostEditChange();
+#endif
 
 		}
 		//FSkeletalMeshModel* ImportedResource = sk->GetImportedModel();

@@ -43,6 +43,10 @@ namespace {
 					RF_Public | RF_Standalone
 					);
 			}
+			NewTexture->Modify();
+#if WITH_EDITOR
+			NewTexture->PreEditChange(NULL);
+#endif
 
 			NewTexture->PlatformData = new FTexturePlatformData();
 			NewTexture->PlatformData->SizeX = InSizeX;
@@ -420,6 +424,9 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 			// Update the remote texture data
 			NewTexture2D->UpdateResource();
+#if WITH_EDITOR
+			NewTexture2D->PostEditChange();
+#endif
 
 			texArray.Push(NewTexture2D);
 		}
