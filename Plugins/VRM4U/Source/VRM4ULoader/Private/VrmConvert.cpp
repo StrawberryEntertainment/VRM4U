@@ -9,6 +9,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/pbrmaterial.h>
 #include <assimp/vrm/vrmmeta.h>
+#include "UObject/Package.h"
 
 #if WITH_EDITOR
 
@@ -23,6 +24,12 @@ bool VRMConverter::IsImportMode() {
 }
 void VRMConverter::SetImportMode(bool b) {
 	bImportMode = b;
+}
+
+UPackage *VRMConverter::CreatePackageFromImportMode(UPackage *p, const FString &name) {
+	FString n =	p->GetName();
+	n += TEXT("/") + name;
+	return CreatePackage(nullptr, *n);
 }
 
 

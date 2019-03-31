@@ -16,6 +16,7 @@
 #include "Engine/Blueprint.h"
 #include "Templates/SharedPointer.h"
 #include "Misc/FeedbackContext.h"
+#include "FileHelpers.h"
 
 #include "Interfaces/IMainFrameModule.h"
 #include "Widgets/SWindow.h"
@@ -35,6 +36,18 @@ class UFbxImportUI : public UObject, public IImportSettingsParser
 }
 
 */
+
+
+namespace {
+	void RenameAsset(UObject* Asset, const FString& NewName, FText& ErrorMessage)
+	{
+		FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
+		TArray<FAssetRenameData> AssetsAndNames;
+		const FString PackagePath = FPackageName::GetLongPackagePath(Asset->GetOutermost()->GetName());
+		new(AssetsAndNames) FAssetRenameData(Asset, PackagePath, NewName);
+		AssetToolsModule.Get().RenameAssetsWithDialog(AssetsAndNames);
+	}
+}
 
 UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -177,8 +190,14 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 	//UObject* objFinder = StaticLoadObject(UVrmAssetListObject::StaticClass(), nullptr, TEXT("/VRM4U/VrmObjectListBP.VrmObjectListBP_C"));
 	//UObject* objFinder = NewObject<UVrmAssetListObject>(InParent, NAME_None, RF_Transactional);
 
-	UVrmAssetListObject *m = nullptr;
-	UClass *c = nullptr;
+	TAssetPtr<UVrmAssetListObject> m;
+	TArray< TAssetPtr<UObject> > tt;
+
+	tt.Add(InParent);
+
+	//TRefCountPtr<UVrmAssetListObject> m;
+	//UVrmAssetListObject *m = nullptr;
+	TAssetPtr<UClass> c;
 	{
 		const UVrmRuntimeSettings* Settings = GetDefault<UVrmRuntimeSettings>();
 
@@ -204,7 +223,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 			c = UVrmAssetListObject::StaticClass();
 		}
 
-		m = NewObject<UVrmAssetListObject>((UObject*)GetTransientPackage(), c);
+		m = NewObject<UVrmAssetListObject>((UObject*)GetTransientPackage(), c.Get());
 	}
 
 	//UVrmAssetListObject *m = Cast<UVrmAssetListObject>(u);
@@ -225,12 +244,43 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		ULoaderBPFunctionLibrary::SetImportMode(true, Cast<UPackage>(InParent));
 		{
 			UVrmAssetListObject *mret = nullptr;
-			ret = ULoaderBPFunctionLibrary::LoadVRMFile(m, mret, fullFileName);
+			ret = ULoaderBPFunctionLibrary::LoadVRMFile(m.Get(), mret, fullFileName);
 		}
+		{
+			const bool bCheckDirty = false;
+			const bool bPromptToSave = false;
+			TArray<UPackage* > p;
+			p.Add(Cast<UPackage>(InParent));
+
+			p[0]->Modify();
+			p[0]->PostEditChange();
+			p[0]->FullyLoad();
+			p[0]->AddToRoot();
+			FEditorFileUtils::PromptForCheckoutAndSave(p, bCheckDirty, bPromptToSave);
+
+			p[0]->SetDirtyFlag(false);
+			//p[0]->AddToRoot();
+
+			//p[0]->Rename(*(p[0]->GetName() + TEXT("aatest")), nullptr);
+
+			//ContentBrowserUtils::RenameAsset(p[0], NewName, ErrorMessage);
+			FText ErrorMessage;
+			//RenameAsset(p[0], *(p[0]->GetName() + TEXT("aatest")), ErrorMessage);
+			RenameAsset(p[0], (TEXT("vrm_dummy_to_delete")), ErrorMessage);
+
+			p[0]->Rename(nullptr, GetTransientPackage(), 0);
+			p[0]->RemoveFromRoot();
+
+			//FEditorFileUtils::PromptForCheckoutAndSave(p, bCheckDirty, bPromptToSave);
+		}
+
 		ULoaderBPFunctionLibrary::SetImportMode(false, nullptr);
 		g.SetVrmOption(nullptr);
 
 		GWarn->EndSlowTask();
+
+		//bool bDeleteSucceeded = ObjectTools::DeleteSingleObject( ExistingObject );
+		CollectGarbage( GARBAGE_COLLECTION_KEEPFLAGS );
 
 		if (ret == false) {
 			return nullptr;

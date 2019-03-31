@@ -34,12 +34,14 @@
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 #include "Misc/FeedbackContext.h"
 #include "Misc/FileHelper.h"
+#include "UObject/Package.h"
 
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 
 #include "AssetRegistryModule.h"
 #include "UObject/Package.h"
+#include "Engine/Engine.h"
 
 //#include "Windows/WindowsSystemIncludes.h"
 
@@ -57,12 +59,12 @@ namespace {
 }
 
 
-static bool saveObject(UObject *u) {
+static bool saveObject(UObject *u, bool bSave) {
 #if WITH_EDITOR
 	if (u == nullptr) return false;
-	package->MarkPackageDirty();
-	FAssetRegistryModule::AssetCreated(u);
-	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+	//package->MarkPackageDirty();
+	//FAssetRegistryModule::AssetCreated(u);
+	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
 
 	u->PostEditChange();
 #endif
@@ -292,9 +294,9 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	if (package == GetTransientPackage()) {
 		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, NAME_None));
 	}else {
-		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, UVrmAssetListObject::StaticClass()));
-		out->Modify();
-		out->SetFlags(EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		out = NewObject<UVrmAssetListObject>(package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		//out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, UVrmAssetListObject::StaticClass()));
+		//out->Modify();
 		InVrmAsset->CopyMember(out);
 	}
 	OutVrmAsset = out;
@@ -330,22 +332,23 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	}
 	out->VrmMetaObject->SkeletalMesh = out->SkeletalMesh;
 
-	if (out->bAssetSave) {
+	{
+		bool b = out->bAssetSave;
 		for (auto &t : out->Textures) {
-			saveObject(t);
+			saveObject(t, b);
 		}
 		for (auto &t : out->Materials) {
-			saveObject(t);
+			saveObject(t, b);
 		}
 		for (auto &t : out->OutlineMaterials) {
-			saveObject(t);
+			saveObject(t, b);
 		}
-		saveObject(out->SkeletalMesh);
-		saveObject(out->SkeletalMesh->PhysicsAsset);
-		saveObject(out->VrmMetaObject);
-		saveObject(out->VrmLicenseObject);
-		saveObject(out->HumanoidSkeletalMesh);
-		saveObject(out->HumanoidRig);
+		saveObject(out->SkeletalMesh, b);
+		saveObject(out->SkeletalMesh->PhysicsAsset, b);
+		saveObject(out->VrmMetaObject, b);
+		saveObject(out->VrmLicenseObject, b);
+		saveObject(out->HumanoidSkeletalMesh, b);
+		saveObject(out->HumanoidRig, b);
 
 	}
 

@@ -465,6 +465,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			NewTexture2D->CompressionNone = true;
 			NewTexture2D->MipGenSettings = TMGS_NoMipmaps;
 			NewTexture2D->Source.Init(Width, Height, 1, 1, ETextureSourceFormat::TSF_BGRA8, RawData->GetData());
+			NewTexture2D->Source.Compress();
 #endif
 
 			// Update the remote texture data

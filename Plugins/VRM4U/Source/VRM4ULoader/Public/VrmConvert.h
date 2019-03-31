@@ -16,6 +16,7 @@ class UTexture2D;
 class UMaterialInterface;
 class USkeletalMesh;
 class UVrmAssetListObject;
+class UPackage;
 
 UENUM(BlueprintType)
 enum EVRMImportMaterialType
@@ -48,6 +49,8 @@ public:
 	static bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
+
+	static UPackage *CreatePackageFromImportMode(UPackage *p, const FString &name);
 
 	class VRM4ULOADER_API Options {
 	public:
