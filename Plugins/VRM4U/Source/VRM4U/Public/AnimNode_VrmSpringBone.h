@@ -30,6 +30,18 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
 	const UVrmMetaObject *VrmMetaObject;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
+	float gravityScale = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
+	float gravityAdd = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
+	float stiffinessScale = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
+	float stiffinessAdd = 0.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta=(PinShownByDefault))
 	bool bIgnorePhysicsCollision = false;
 

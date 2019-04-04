@@ -258,10 +258,10 @@ namespace {
 #if	UE_VERSION_NEWER_THAN(4,20,0)
 		UMaterial* UnrealMaterial = nullptr;
 		if (vrmAssetList->Package == GetTransientPackage()) {
-			UnrealMaterial = NewObject<UMaterial>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL, GWarn);
+			UnrealMaterial = NewObject<UMaterial>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, nullptr);
 		}
 		else {
-			UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public, NULL, GWarn);
+			UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public, nullptr);
 		}
 #else
 		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public);

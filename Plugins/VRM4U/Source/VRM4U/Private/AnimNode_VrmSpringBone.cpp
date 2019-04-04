@@ -143,8 +143,9 @@ namespace VRMSpring {
 		FComponentSpacePoseContext& Output) {
 
 		//
-		float stiffnessForce = stiffiness * DeltaTime * 10.f; // x10 adjust?
-		FVector external = gravityDir * (gravityPower * DeltaTime);
+		// x10 adjust?
+		float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd; 
+		FVector external = gravityDir * (gravityPower * DeltaTime) * animNode->gravityScale + animNode->gravityAdd;
 		external.Set(-external.X, external.Z, external.Y);
 		external *= 100.f; // to unreal scale
 
