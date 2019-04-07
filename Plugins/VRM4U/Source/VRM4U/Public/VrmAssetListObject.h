@@ -33,34 +33,44 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InOption")
 	bool bSkipMorphTarget=false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
-	UMaterialInterface* BaseMToonOpaqueMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
+	UMaterialInterface* BaseMToonLitOpaqueMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
-	UMaterialInterface* BaseMToonTransparentMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
+	UMaterialInterface* BaseMToonLitTranslucentMaterial;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
+	UMaterialInterface* OptMToonLitOpaqueMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
+	UMaterialInterface* OptMToonLitTranslucentMaterial;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_unlit")
 	UMaterialInterface* BaseMToonUnlitOpaqueMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_unlit")
+	UMaterialInterface* BaseMToonUnlitTranslucentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Unlit")
+	UMaterialInterface* OptMToonUnlitOpaqueMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Unlit")
+	UMaterialInterface* OptMToonUnlitTranslucentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon")
+	UMaterialInterface* OptMToonOutlineMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BaseUnlitOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
-	UMaterialInterface* BaseUnlitTransparentMaterial;
+	UMaterialInterface* BaseUnlitTranslucentMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
 	UMaterialInterface* BasePBROpaqueMaterial;
 
 	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
-	UMaterialInterface* OptimizedMToonOpaqueMaterial;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
-	UMaterialInterface* OptimizedMToonTransparentMaterial;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial")
-	UMaterialInterface* OptimizedMToonOUtlineMaterial;
-
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	//USkeleton* BaseSkeleton;

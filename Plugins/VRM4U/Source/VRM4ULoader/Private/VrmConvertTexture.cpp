@@ -494,18 +494,27 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 			UMaterialInterface *baseM = nullptr;;
 			bool bMToon = false;
+			bool bLit = false;
 			{
 				aiString alphaMode;
 				aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
 				FString ShaderName = aiMat.mShaderName.C_Str();
+
+				if (ShaderName.Find(TEXT("MToon")) >= 0) {
+					bMToon = true;
+				}
+
+				// select
 				switch (Options::Get().GetMaterialType()) {
 				case EVRMImportMaterialType::VRMIMT_MToon:
-					baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+					baseM = vrmAssetList->BaseMToonLitOpaqueMaterial;
 					bMToon = true;
+					bLit = true;
 					break;
 				case EVRMImportMaterialType::VRMIMT_MToonUnlit:
 					baseM = vrmAssetList->BaseMToonUnlitOpaqueMaterial;
 					bMToon = true;
+					bLit = false;
 					break;
 				case EVRMImportMaterialType::VRMIMT_Unlit:
 					baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
@@ -514,29 +523,37 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					baseM = vrmAssetList->BasePBROpaqueMaterial;
 					break;
 				}
-				if (baseM == nullptr) {
+
+				// auto
+				if (Options::Get().GetMaterialType() == EVRMImportMaterialType::VRMIMT_Auto) {
+					if (bMToon) {
+						baseM = vrmAssetList->BaseMToonUnlitOpaqueMaterial;
+					} else {
+						baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
+					}
+				}
+
+				// mtoon optimize
+				if (bMToon && bOptimizeMaterial) {
+					if (bLit) {
+						baseM = vrmAssetList->OptMToonLitOpaqueMaterial;
+					}else{
+						baseM = vrmAssetList->OptMToonUnlitOpaqueMaterial;
+					}
+				}
+
+				//unlit or gltf
+				if (bMToon == false) {
 					if (ShaderName.Find(TEXT("UnlitTexture")) >= 0) {
 						baseM = vrmAssetList->BaseUnlitOpaqueMaterial;
 					}
 					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
-						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
-					}
-					if (ShaderName.Find(TEXT("MToon")) >= 0) {
-						if (bOptimizeMaterial) {
-							baseM = vrmAssetList->OptimizedMToonOpaqueMaterial;
-						}
-						if (baseM == nullptr) {
-							baseM = vrmAssetList->BaseMToonOpaqueMaterial;
-						}
-						bMToon = true;
-					}
-					if (ShaderName.Find(TEXT("UnlitTransparent")) >= 0) {
-						baseM = vrmAssetList->BaseUnlitTransparentMaterial;
+						baseM = vrmAssetList->BaseUnlitTranslucentMaterial;
 					}
 				}
 
 				if (baseM == nullptr) {
-					baseM = vrmAssetList->BaseMToonOpaqueMaterial;
+					baseM = vrmAssetList->BaseMToonUnlitOpaqueMaterial;
 				}
 			}
 			//if (FString(m.mShaderName.C_Str()).Find(TEXT("UnlitTexture"))) {
@@ -698,7 +715,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 		// ouline Material
 		{
-			if (bOptimizeMaterial && vrmAssetList->OptimizedMToonOUtlineMaterial){
+			if (bOptimizeMaterial && vrmAssetList->OptMToonOutlineMaterial){
 				for (const auto aa : vrmAssetList->Materials) {
 					const UMaterialInstanceConstant *a = Cast<UMaterialInstanceConstant>(aa);
 
@@ -707,7 +724,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					UMaterialInstanceConstant *m = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *s, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
 					if (m) {
-						LocalMaterialSetParent(m, vrmAssetList->OptimizedMToonOUtlineMaterial);
+						LocalMaterialSetParent(m, vrmAssetList->OptMToonOutlineMaterial);
 
 						m->VectorParameterValues = a->VectorParameterValues;
 						m->ScalarParameterValues = a->ScalarParameterValues;

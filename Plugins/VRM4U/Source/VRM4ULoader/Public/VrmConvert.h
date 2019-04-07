@@ -21,8 +21,8 @@ class UPackage;
 UENUM(BlueprintType)
 enum EVRMImportMaterialType
 {
-	VRMIMT_Auto			UMETA(DisplayName="Auto"),
-	VRMIMT_MToon		UMETA(DisplayName="MToon Material"),
+	VRMIMT_Auto			UMETA(DisplayName="Auto(MToon Unlit)"),
+	VRMIMT_MToon		UMETA(DisplayName="MToon Lit"),
 	VRMIMT_MToonUnlit	UMETA(DisplayName="MToon Unlit"),
 	VRMIMT_Unlit		UMETA(DisplayName="Unlit"),
 	VRMIMT_glTF			UMETA(DisplayName="PBR(glTF2)"),

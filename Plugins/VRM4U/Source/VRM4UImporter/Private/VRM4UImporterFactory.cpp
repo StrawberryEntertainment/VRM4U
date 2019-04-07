@@ -246,6 +246,8 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 			UVrmAssetListObject *mret = nullptr;
 			ret = ULoaderBPFunctionLibrary::LoadVRMFile(m.Get(), mret, fullFileName);
 		}
+
+		/*
 		{
 			const bool bCheckDirty = false;
 			const bool bPromptToSave = false;
@@ -273,6 +275,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 
 			//FEditorFileUtils::PromptForCheckoutAndSave(p, bCheckDirty, bPromptToSave);
 		}
+		*/
 
 		ULoaderBPFunctionLibrary::SetImportMode(false, nullptr);
 		g.SetVrmOption(nullptr);

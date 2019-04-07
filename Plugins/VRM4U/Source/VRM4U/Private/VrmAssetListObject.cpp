@@ -19,17 +19,22 @@ void UVrmAssetListObject::CopyMember(UVrmAssetListObject *dst) const {
 	dst->bAssetSave = bAssetSave;
 	dst->bSkipMorphTarget = bSkipMorphTarget;
 
-	dst->BaseMToonOpaqueMaterial = BaseMToonOpaqueMaterial;
+	dst->BaseMToonLitOpaqueMaterial = BaseMToonLitOpaqueMaterial;
+	dst->BaseMToonLitTranslucentMaterial = BaseMToonLitTranslucentMaterial;
+	dst->OptMToonLitOpaqueMaterial = OptMToonLitOpaqueMaterial;
+	dst->OptMToonLitTranslucentMaterial = OptMToonLitTranslucentMaterial;
 
-	dst->BaseMToonTransparentMaterial = BaseMToonTransparentMaterial;
 	dst->BaseMToonUnlitOpaqueMaterial = BaseMToonUnlitOpaqueMaterial;
-	dst->BaseUnlitOpaqueMaterial = BaseUnlitOpaqueMaterial;
-	dst->BaseUnlitTransparentMaterial = BaseUnlitTransparentMaterial;
+	dst->BaseMToonUnlitTranslucentMaterial = BaseMToonUnlitTranslucentMaterial;
+	dst->OptMToonUnlitOpaqueMaterial = OptMToonUnlitOpaqueMaterial;
+	dst->OptMToonUnlitTranslucentMaterial = OptMToonUnlitTranslucentMaterial;
+
+	dst->OptMToonOutlineMaterial = OptMToonOutlineMaterial;
+
+	dst->BaseUnlitOpaqueMaterial			= BaseUnlitOpaqueMaterial;
+	dst->BaseUnlitTranslucentMaterial = BaseUnlitTranslucentMaterial;
 	dst->BasePBROpaqueMaterial = BasePBROpaqueMaterial;
 
-	dst->OptimizedMToonOpaqueMaterial = OptimizedMToonOpaqueMaterial;
-	dst->OptimizedMToonTransparentMaterial = OptimizedMToonTransparentMaterial;
-	dst->OptimizedMToonOUtlineMaterial = OptimizedMToonOUtlineMaterial;
 
 	dst->BaseSkeletalMesh = BaseSkeletalMesh;
 	dst->VrmMetaObject = VrmMetaObject;
