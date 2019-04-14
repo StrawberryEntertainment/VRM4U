@@ -17,6 +17,7 @@ struct VRM4U_API FVrmAnimInstanceCopyProxy : public FAnimInstanceProxy {
 public:
 	GENERATED_BODY()
 
+	float CurrentDeltaTime = 0.f;
 	bool bIgnoreVRMSwingBone = false;
 	TSharedPtr<FAnimNode_VrmSpringBone> SpringBoneNode;
 

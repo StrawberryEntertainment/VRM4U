@@ -6,7 +6,7 @@
 #include "UObject/ObjectMacros.h"
 
 namespace {
-	bool operator<(const FBoneTransform &a, const FBoneTransform &b) {
-		return a.BoneIndex < b.BoneIndex;
-	}
+	//bool operator<(const FBoneTransform &a, const FBoneTransform &b) {
+	//	return a.BoneIndex < b.BoneIndex;
+	//}
 }

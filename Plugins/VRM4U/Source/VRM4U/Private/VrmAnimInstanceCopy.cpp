@@ -250,26 +250,44 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		FCompactPose::BoneIndexType bi(dstIndex);
 		pose[bi] = dstTrans;
 	}
-	/*
+
 	if (bIgnoreVRMSwingBone == false){
-		if (SpringBoneNode.Get() == false) {
-
+		if (SpringBoneNode.Get() == nullptr) {
+			SpringBoneNode = MakeShareable(new FAnimNode_VrmSpringBone());
 		}
-		FAnimNode_VrmSpringBone f;
-		f.VrmMetaObject = dstMeta;
 
-		// Evaluate the child and convert
-		FComponentSpacePoseContext InputCSPose(Output.AnimInstanceProxy);
-		f.EvaluateComponentSpace_AnyThread(InputCSPose);
+		if (SpringBoneNode.Get()) {
+			auto &springBone = *SpringBoneNode.Get();
 
-		checkSlow( InputCSPose.Pose.GetPose().IsValid() );
-		InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
-		Output.Curve = InputCSPose.Curve;
-	}*/
+			springBone.VrmMetaObject = dstMeta;
+			springBone.bCallByAnimInstance = true;
+
+			// Evaluate the child and convert
+			//FComponentSpacePoseContext InputCSPose(Output.AnimInstanceProxy);
+			FComponentSpacePoseContext InputCSPose(this);
+			FAnimationInitializeContext InitContext(this);
+			//f.EvaluateSkeletalControl_AnyThread(
+			
+			if (springBone.IsSprintInit() == false) {
+				springBone.Initialize_AnyThread(InitContext);
+				springBone.ComponentPose.SetLinkNode(&springBone);
+			}
+
+			springBone.CurrentDeltaTime = CurrentDeltaTime;
+
+			InputCSPose.Pose.InitPose(Output.Pose);
+			springBone.EvaluateComponentSpace_AnyThread(InputCSPose);
+
+			//checkSlow( InputCSPose.Pose.GetPose().IsValid() );
+			//InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
+			//Output.Curve = InputCSPose.Curve;
+		}
+	}
 
 	return true;
 }
 void FVrmAnimInstanceCopyProxy::UpdateAnimationNode(float DeltaSeconds) {
+	CurrentDeltaTime = DeltaSeconds;
 }
 
 /////

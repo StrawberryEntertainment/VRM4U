@@ -462,6 +462,13 @@ FAnimNode_VrmSpringBone::FAnimNode_VrmSpringBone()
 //	Super::Update_AnyThread(Context);
 //	//Context.GetDeltaTime();
 //}
+
+bool FAnimNode_VrmSpringBone::IsSprintInit() const {
+	if (SpringManager.Get()) {
+		return SpringManager->bInit;
+	}
+	return false;
+}
 void FAnimNode_VrmSpringBone::Initialize_AnyThread(const FAnimationInitializeContext& Context) {
 	Super::Initialize_AnyThread(Context);
 	if (SpringManager.Get()) {
@@ -502,6 +509,28 @@ void FAnimNode_VrmSpringBone::GatherDebugData(FNodeDebugData& DebugData)
 	ComponentPose.GatherDebugData(DebugData);
 }
 
+void FAnimNode_VrmSpringBone::EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output) {
+	if (bCallByAnimInstance) {
+		ActualAlpha = 1.f;
+	/*
+		EvaluateComponentSpaceInternal(Output);
+
+		BoneTransformsSpring.Reset(BoneTransformsSpring.Num());
+		EvaluateSkeletalControl_AnyThread(Output, BoneTransformsSpring);
+
+		if (BoneTransformsSpring.Num() > 0)
+		{
+			ActualAlpha = 1.f;
+			const float BlendWeight = FMath::Clamp<float>(ActualAlpha, 0.f, 1.f);
+			Output.Pose.LocalBlendCSBoneTransforms(BoneTransformsSpring, BlendWeight);
+		}
+	*/
+	}
+	else {
+		Super::EvaluateComponentPose_AnyThread(Output);
+	}
+}
+
 void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms)
 {
 	check(OutBoneTransforms.Num() == 0);
@@ -517,6 +546,9 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 	{
 
 		if (VrmMetaObject == nullptr) {
+			return;
+		}
+		if (Output.Pose.GetPose().GetNumBones() <= 0) {
 			return;
 		}
 
@@ -586,7 +618,7 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 				}
 
 			}
-			OutBoneTransforms.Sort();
+			OutBoneTransforms.Sort(FCompareBoneTransformIndex());
 
 		}
 		/*

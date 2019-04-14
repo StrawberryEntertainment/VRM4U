@@ -52,6 +52,10 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 
 	float CurrentDeltaTime = 0.f;
 
+	bool bCallByAnimInstance = false;
+	TArray<FBoneTransform> BoneTransformsSpring;
+	bool IsSprintInit() const;
+
 	FAnimNode_VrmSpringBone();
 
 	// FAnimNode_Base interface
@@ -63,6 +67,7 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override;
 //	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override;
 	virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;
+	virtual void EvaluateComponentPose_AnyThread(FComponentSpacePoseContext& Output) override;
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 
 	virtual bool NeedsDynamicReset() const override { return true; }

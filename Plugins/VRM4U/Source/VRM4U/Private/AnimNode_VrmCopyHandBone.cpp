@@ -5,6 +5,7 @@
 #include "AnimNode_VrmCopyHandBone.h"
 #include "AnimationRuntime.h"
 #include "Animation/AnimInstanceProxy.h"
+#include "BonePose.h"
 
 #include "VrmMetaObject.h"
 #include "VrmUtil.h"
@@ -317,7 +318,9 @@ q9 = FQuat(FVector(1, 0, 0), -3.14f / 2.f) * FQuat(FVector(0, 1, 0), -3.14f / 2.
 		}
 	}
 	{
-		tmpOutTransform.Sort();
+		tmpOutTransform.Sort(FCompareBoneTransformIndex());
+		//tmpOutTransform.Sort([](const FBoneTransform& x, const FBoneTransform& y) { return x.BoneIndex.GetInt() < y.BoneIndex.GetInt(); });
+
 		boneIndexTable.Sort();
 		for (int i=0; i<tmpOutTransform.Num(); ++i){
 			if (boneIndexTable[i] < 0) {
