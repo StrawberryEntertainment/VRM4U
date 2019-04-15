@@ -28,8 +28,8 @@
 #include <assimp/vrm/vrmmeta.h>
 
 #include "RenderingThread.h"
-#include "SkeletalMeshModel.h"
-#include "SkeletalMeshLODModel.h"
+#include "Rendering/SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshLODModel.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 #include "Misc/FeedbackContext.h"
@@ -46,9 +46,9 @@
 //#include "Windows/WindowsSystemIncludes.h"
 
 #if PLATFORM_WINDOWS
-#include "AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
 #include <windows.h>
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 #endif
 
 // tem

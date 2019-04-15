@@ -7,9 +7,9 @@
 
 #if PLATFORM_WINDOWS
 
-#include "AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
 #include "shellapi.h"
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 
 #include "Windows/WindowsApplication.h"
 #include "GenericPlatform/GenericApplication.h"

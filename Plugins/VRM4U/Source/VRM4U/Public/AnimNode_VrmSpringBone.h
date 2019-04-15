@@ -7,7 +7,7 @@
 #include "BoneContainer.h"
 #include "BonePose.h"
 #include "BoneControllers/AnimNode_ModifyBone.h"
-#include "EngineVersionComparison.h"
+#include "Misc/EngineVersionComparison.h"
 
 #include "AnimNode_VrmSpringBone.generated.h"
 

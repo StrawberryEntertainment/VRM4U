@@ -9,7 +9,7 @@
 #include "BoneControllers/AnimNode_Fabrik.h"
 #include "BoneControllers/AnimNode_TwoBoneIK.h"
 #include "BoneControllers/AnimNode_SplineIK.h"
-#include "EngineVersionComparison.h"
+#include "Misc/EngineVersionComparison.h"
 
 
 void FVrmAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance) {

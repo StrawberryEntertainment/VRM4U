@@ -15,8 +15,8 @@
 
 #include "Engine/SkeletalMesh.h"
 #include "RenderingThread.h"
-#include "SkeletalMeshModel.h"
-#include "SkeletalMeshLODModel.h"
+#include "Rendering/SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshLODModel.h"
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Animation/MorphTarget.h"

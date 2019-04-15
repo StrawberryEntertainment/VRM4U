@@ -497,7 +497,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			bool bLit = false;
 			{
 				aiString alphaMode;
-				aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+				aiReturn result00 = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
 				FString ShaderName = aiMat.mShaderName.C_Str();
 
 				if (ShaderName.Find(TEXT("MToon")) >= 0) {

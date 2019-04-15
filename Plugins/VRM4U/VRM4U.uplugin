@@ -18,7 +18,10 @@
     {
       "Name": "VRM4U",
       "Type": "Runtime",
-      "LoadingPhase": "PreDefault"
+      "LoadingPhase": "Default",
+      "WhitelistPlatforms": [
+        "Win64"
+      ]
     },
     {
       "Name": "VRM4ULoader",
