@@ -32,6 +32,7 @@ if not %errorlevel% == 0 (
 
 call %CLEAN% %PROJECTNAMEEDITOR% %PLATFORM% Development %UPROJECT% -waitmutex
 call %BUILD% %PROJECTNAMEEDITOR% %PLATFORM% Development %UPROJECT% -waitmutex
+call %BUILD% %PROJECTNAMEEDITOR%Editor %PLATFORM% Development %UPROJECT% -waitmutex
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
