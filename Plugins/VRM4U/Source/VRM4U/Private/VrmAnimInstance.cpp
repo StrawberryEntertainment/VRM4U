@@ -22,6 +22,7 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		return false;
 	}
 
+	/*
 	enum BoneTarget{
 		E_Hand_L,
 		E_UpperArm_L,
@@ -245,6 +246,7 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		t.SetRotation( t.GetRotation() * (tmp.GetRotation()) );
 		Output.Pose[bi] = t;
 	}
+	*/
 
 
 

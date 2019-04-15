@@ -254,13 +254,13 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	//}
 
 	{
-		TArray<uint8> Result;
-		if (FFileHelper::LoadFileToArray(Result, *filepath)) {
+		TArray<uint8> Res;
+		if (FFileHelper::LoadFileToArray(Res, *filepath)) {
 		}
 		const FString ext = FPaths::GetExtension(filepath);
 		std::string e = utf_16_to_shift_jis(*ext);
 
-		mScenePtr = mImporter.ReadFileFromMemory(Result.GetData(), Result.Num(),
+		mScenePtr = mImporter.ReadFileFromMemory(Res.GetData(), Res.Num(),
 			aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes,
 			e.c_str());
 
