@@ -651,6 +651,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						FVector n_tmp(-n.X, n.Z, n.Y);
 						FVector t_tmp(-mInfo.Tangents[i].X, mInfo.Tangents[i].Y, mInfo.Tangents[i].Z);
 
+						t_tmp.Normalize();
+						n_tmp.Normalize();
+
 						meshS->TangentX = t_tmp;
 						meshS->TangentY = n_tmp ^ t_tmp;
 						meshS->TangentZ = n_tmp;
@@ -716,7 +719,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 								tabledIndex = f;
 							}
 							else {
-								tabledIndex = bonemap.Add(b);
+								if (Options::Get().IsDebugOneBone() == false) {
+									tabledIndex = bonemap.Add(b);
+								}
 							}
 							if (tabledIndex > 255) {
 								UE_LOG(LogTemp, Warning, TEXT("bonemap over!"));
