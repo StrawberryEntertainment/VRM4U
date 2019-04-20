@@ -66,6 +66,21 @@ namespace {
 }
 #endif
 
+namespace {
+	struct BoneMapOpt {
+		int boneIndex;
+		float weight;
+
+		bool operator<(const BoneMapOpt &b) const{
+			return weight < b.weight;
+		}
+
+	};
+
+
+
+}
+
 static const aiNode* GetBoneNodeFromMeshID(const int &meshID, const aiNode *node) {
 
 	if (node == nullptr) {
@@ -692,11 +707,16 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				auto &aiM = mScenePtr->mMeshes[meshID];
 				TArray<int> bonemap;
 				bonemap.Add(0);
+				TArray<BoneMapOpt> boneAll;
+				{
+					BoneMapOpt o = { 0, 0 };
+					boneAll.Add(o);
+				}
 				//mScenePtr->mRootNode->mMeshes
 				for (uint32 boneIndex = 0; boneIndex < aiM->mNumBones; ++boneIndex) {
 					auto &aiB = aiM->mBones[boneIndex];
 
-					int b = sk->RefSkeleton.FindBoneIndex(UTF8_TO_TCHAR(aiB->mName.C_Str()));
+					const int b = sk->RefSkeleton.FindBoneIndex(UTF8_TO_TCHAR(aiB->mName.C_Str()));
 
 					if (b < 0) {
 						continue;
@@ -720,15 +740,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 							}
 							else {
 								if (Options::Get().IsDebugOneBone() == false) {
-									bool bBoneAdd = true;
-									if (Options::Get().IsMobileBone()) {
-										if (bonemap.Num() >= 75){
-											bBoneAdd = false;
-										}
-									}
-									if (bBoneAdd) {
-										tabledIndex = bonemap.Add(b);
-									}
+									tabledIndex = bonemap.Add(b);
 								}
 							}
 							if (tabledIndex > 255) {
@@ -744,10 +756,100 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 							meshWeight[aiW.mVertexId].InfluenceBones[jj] = s.InfluenceBones[jj];
 							meshWeight[aiW.mVertexId].InfluenceWeights[jj] = s.InfluenceWeights[jj];
+
+							if (Options::Get().IsMobileBone()){
+								auto p = boneAll.FindByPredicate([&](BoneMapOpt &o) {return o.boneIndex == b; });
+								if (p) {
+									p->weight += aiW.mWeight;
+								} else {
+									BoneMapOpt o = { b, aiW.mWeight };
+									boneAll.Add(o);
+								}
+							}
+
 							break;
 						}
 					}
-				}
+				}// bone loop
+
+				// mobile remap
+				if (Options::Get().IsMobileBone() && boneAll.Num() >= 75) {
+					TMap<int, int> mobileMap;
+
+					auto bonemapNew = bonemap;
+
+					while (boneAll.Num() >= 75) {
+						boneAll.Sort();
+
+						// bone 0 == weight 0
+						// search from 1
+						auto &removed = boneAll[1];
+
+						int findParent = removed.boneIndex;
+						while (findParent >= 0) {
+							findParent = sk->RefSkeleton.GetParentIndex(findParent);
+							auto p = boneAll.FindByPredicate([&](BoneMapOpt &o) {return o.boneIndex == findParent;});
+
+							if (p == nullptr) {
+								continue;
+							}
+
+							p->weight += removed.weight;
+							{
+								auto a = mobileMap.FindKey(removed.boneIndex);
+								if (a) {
+									mobileMap[*a] = p->boneIndex;
+								}
+							}
+							mobileMap.FindOrAdd(removed.boneIndex) = p->boneIndex;
+							break;
+						}
+
+						bonemapNew.Remove(removed.boneIndex);
+						boneAll.RemoveAt(1);
+					}
+					if (mobileMap.Num()) {
+						for (auto &a : meshWeight) {
+							for (int i = 0; i < 8; ++i) {
+								auto &infBone = a.InfluenceBones[i];
+								auto &infWeight = a.InfluenceWeights[i];
+								if(bonemap.IsValidIndex(infBone) == false){
+									infWeight = 0.f;
+									infBone = 0;
+									continue;
+								}
+								auto srcBoneIndex = bonemap[infBone];
+								auto f = mobileMap.Find(srcBoneIndex);
+								if (f) {
+									auto dstBoneIndex = *f;
+									infBone = bonemapNew.IndexOfByKey(dstBoneIndex);
+								} else {
+									infBone = bonemapNew.IndexOfByKey(srcBoneIndex);
+								}
+							}
+						}
+						for (auto &a : Weight) {
+							for (int i = 0; i < 8; ++i) {
+								auto &infBone = a.InfluenceBones[i];
+								auto &infWeight = a.InfluenceWeights[i];
+								if (bonemap.IsValidIndex(infBone) == false) {
+									infWeight = 0.f;
+									infBone = 0;
+									continue;
+								}
+								auto srcBoneIndex = bonemap[infBone];
+								auto f = mobileMap.Find(srcBoneIndex);
+								if (f) {
+									auto dstBoneIndex = *f;
+									infBone = bonemapNew.IndexOfByKey(dstBoneIndex);
+								} else {
+									infBone = bonemapNew.IndexOfByKey(srcBoneIndex);
+								}
+							}
+						}
+					}
+					bonemap = bonemapNew;
+				}// mobile remap
 
 				if (VRMConverter::IsImportMode() == false) {
 					rd.RenderSections.SetNum(result.meshInfo.Num());
