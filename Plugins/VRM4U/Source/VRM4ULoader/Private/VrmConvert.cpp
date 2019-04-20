@@ -230,6 +230,16 @@ bool VRMConverter::Options::IsCreateHumanoidRenamedMesh() const {
 #endif
 }
 
+bool VRMConverter::Options::IsMobileBone() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bMobileBone;
+#else
+	return false;
+#endif
+}
+
 bool VRMConverter::Options::IsDebugOneBone() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return false;

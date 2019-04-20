@@ -74,6 +74,8 @@ public:
 
 		bool IsDebugOneBone() const;
 
+		bool IsMobileBone() const;
+
 		bool IsMergeMaterial() const;
 
 		bool IsOptimizeMaterial() const;

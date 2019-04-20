@@ -720,7 +720,15 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 							}
 							else {
 								if (Options::Get().IsDebugOneBone() == false) {
-									tabledIndex = bonemap.Add(b);
+									bool bBoneAdd = true;
+									if (Options::Get().IsMobileBone()) {
+										if (bonemap.Num() >= 75){
+											bBoneAdd = false;
+										}
+									}
+									if (bBoneAdd) {
+										tabledIndex = bonemap.Add(b);
+									}
 								}
 							}
 							if (tabledIndex > 255) {
@@ -792,6 +800,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 														//rd.RenderSections[0] = NewRenderSection;
 				}
 
+
+				// normalize weight
 				for (auto &w : meshWeight) {
 					int f = 0;
 					int maxIndex = 0;
