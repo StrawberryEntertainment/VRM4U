@@ -632,8 +632,21 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			TArray<uint32> Triangles;
 			TArray<FSoftSkinVertexLocal> Weight;
 			Weight.SetNum(allVertex);
-			for (auto &w : Weight) {
-				memset(w.InfluenceWeights, 0, sizeof(w.InfluenceWeights));
+
+			FSoftSkinVertexLocal softSkinVertexLocalZero;
+			{
+				softSkinVertexLocalZero.Position = softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = FVector::ZeroVector;
+				
+				softSkinVertexLocalZero.TangentZ.Set(0, 0, 0, 1);
+				softSkinVertexLocalZero.Color = FColor::White;
+
+				memset(softSkinVertexLocalZero.UVs, 0, sizeof(softSkinVertexLocalZero.UVs));
+				memset(softSkinVertexLocalZero.InfluenceBones, 0, sizeof(softSkinVertexLocalZero.InfluenceBones));
+				memset(softSkinVertexLocalZero.InfluenceWeights, 0, sizeof(softSkinVertexLocalZero.InfluenceWeights));
+
+				for (auto &w : Weight) {
+					w = softSkinVertexLocalZero;
+				}
 			}
 			//Weight.AddZeroed(allVertex);
 			int currentIndex = 0;
@@ -650,6 +663,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 				for (int i = 0; i < mInfo.Vertices.Num(); ++i) {
 					FSoftSkinVertexLocal *meshS = new(meshWeight) FSoftSkinVertexLocal();
+					*meshS = softSkinVertexLocalZero;
 					auto a = result.meshInfo[meshID].Vertices[i] * 100.f;
 
 					v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
@@ -795,11 +809,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 							}
 
 							p->weight += removed.weight;
-							{
-								auto a = mobileMap.FindKey(removed.boneIndex);
-								if (a) {
-									mobileMap[*a] = p->boneIndex;
-								}
+							
+							while(auto a = mobileMap.FindKey(removed.boneIndex) ){
+								mobileMap[*a] = p->boneIndex;
 							}
 							mobileMap.FindOrAdd(removed.boneIndex) = p->boneIndex;
 							break;
@@ -809,11 +821,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						boneAll.RemoveAt(1);
 					}
 					if (mobileMap.Num()) {
-						for (auto &a : meshWeight) {
+						for (auto &a : Weight) {
 							for (int i = 0; i < 8; ++i) {
 								auto &infBone = a.InfluenceBones[i];
 								auto &infWeight = a.InfluenceWeights[i];
-								if(bonemap.IsValidIndex(infBone) == false){
+								if (bonemap.IsValidIndex(infBone) == false) {
 									infWeight = 0.f;
 									infBone = 0;
 									continue;
@@ -828,7 +840,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 								}
 							}
 						}
-						for (auto &a : Weight) {
+						for (auto &a : meshWeight) {
 							for (int i = 0; i < 8; ++i) {
 								auto &infBone = a.InfluenceBones[i];
 								auto &infWeight = a.InfluenceWeights[i];
