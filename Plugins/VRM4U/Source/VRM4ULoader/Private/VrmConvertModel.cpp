@@ -71,6 +71,8 @@ namespace {
 		int boneIndex;
 		float weight;
 
+		BoneMapOpt() : boneIndex(0), weight(0.f) {}
+
 		bool operator<(const BoneMapOpt &b) const{
 			return weight < b.weight;
 		}
@@ -629,25 +631,25 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			v.PositionVertexBuffer.Init(allVertex);
 			//rd.SkinWeightVertexBuffer.Init(allVertex);
 
-			TArray<uint32> Triangles;
-			TArray<FSoftSkinVertexLocal> Weight;
-			Weight.SetNum(allVertex);
-
 			FSoftSkinVertexLocal softSkinVertexLocalZero;
 			{
 				softSkinVertexLocalZero.Position = softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = FVector::ZeroVector;
-				
+
 				softSkinVertexLocalZero.TangentZ.Set(0, 0, 0, 1);
 				softSkinVertexLocalZero.Color = FColor::White;
 
 				memset(softSkinVertexLocalZero.UVs, 0, sizeof(softSkinVertexLocalZero.UVs));
 				memset(softSkinVertexLocalZero.InfluenceBones, 0, sizeof(softSkinVertexLocalZero.InfluenceBones));
 				memset(softSkinVertexLocalZero.InfluenceWeights, 0, sizeof(softSkinVertexLocalZero.InfluenceWeights));
-
-				for (auto &w : Weight) {
-					w = softSkinVertexLocalZero;
-				}
 			}
+
+			TArray<uint32> Triangles;
+			TArray<FSoftSkinVertexLocal> Weight;
+			Weight.SetNum(allVertex);
+			for (auto &w : Weight) {
+				w = softSkinVertexLocalZero;
+			}
+
 			//Weight.AddZeroed(allVertex);
 			int currentIndex = 0;
 			int currentVertex = 0;
@@ -701,11 +703,6 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					s.Position = v.PositionVertexBuffer.VertexPosition(currentVertex + i);
 					meshS->Position = v.PositionVertexBuffer.VertexPosition(currentVertex + i);
 
-					for (int32 InfluenceIndex = 0; InfluenceIndex < MAX_TOTAL_INFLUENCES; InfluenceIndex++)
-					{
-						//s.InfluenceBones[InfluenceIndex] = 0;
-						//s.InfluenceWeights[InfluenceIndex] = 0;
-					}
 					//s.InfluenceBones[0] = 0;// aiS->InfluenceBones[0];// +boneOffset;
 					//meshS->InfluenceBones[0] = 0;
 					//s.InfluenceWeights[0] = 255;
@@ -723,7 +720,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				bonemap.Add(0);
 				TArray<BoneMapOpt> boneAll;
 				{
-					BoneMapOpt o = { 0, 0 };
+					BoneMapOpt o;
+					o.boneIndex = 0;
+					o.weight = -1.f;
 					boneAll.Add(o);
 				}
 				//mScenePtr->mRootNode->mMeshes
@@ -743,7 +742,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						}
 						for (int jj = 0; jj < 8; ++jj) {
 							auto &s = Weight[aiW.mVertexId + currentVertex];
-							if (s.InfluenceWeights[jj] > 0.f) {
+							if (s.InfluenceWeights[jj] > 0) {
 								continue;
 							}
 
@@ -765,8 +764,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 								tabledIndex = 0;
 							}
 
+							const float ww = FMath::Clamp(aiW.mWeight, 0.f, 1.f);
 							s.InfluenceBones[jj] = tabledIndex;
-							s.InfluenceWeights[jj] = (uint8)(aiW.mWeight * 255.f);
+							//s.InfluenceWeights[jj] = (uint8)FMath::TruncToInt(ww * 255.f + (0.5f - KINDA_SMALL_NUMBER));
+							s.InfluenceWeights[jj] = (uint8)FMath::TruncToInt(ww * 255.f);
 
 							meshWeight[aiW.mVertexId].InfluenceBones[jj] = s.InfluenceBones[jj];
 							meshWeight[aiW.mVertexId].InfluenceWeights[jj] = s.InfluenceWeights[jj];
@@ -776,7 +777,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 								if (p) {
 									p->weight += aiW.mWeight;
 								} else {
-									BoneMapOpt o = { b, aiW.mWeight };
+									BoneMapOpt o;
+									o.boneIndex = b;
+									o.weight = aiW.mWeight;
 									boneAll.Add(o);
 								}
 							}
@@ -802,7 +805,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						int findParent = removed.boneIndex;
 						while (findParent >= 0) {
 							findParent = sk->RefSkeleton.GetParentIndex(findParent);
-							auto p = boneAll.FindByPredicate([&](BoneMapOpt &o) {return o.boneIndex == findParent;});
+							auto p = boneAll.FindByPredicate([&](const BoneMapOpt &o) {return o.boneIndex == findParent;});
 
 							if (p == nullptr) {
 								continue;
@@ -933,9 +936,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						w.InfluenceWeights[0] -= (uint8)(f - 255);
 					}
 					if (f <= 254) {
+						if (f <= (255-8)) {
+							UE_LOG(LogTemp, Warning, TEXT("less"));
+						}
 						w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 					}
-
 				}
 
 #if WITH_EDITORONLY_DATA
@@ -994,7 +999,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			} // mesh loop
 
 
-			if (0) {
+			if (1) {
 				for (auto &w : Weight) {
 					int f = 0;
 					int maxIndex = 0;
@@ -1011,17 +1016,13 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						UE_LOG(LogTemp, Warning, TEXT("overr"));
 						w.InfluenceWeights[0] -= (uint8)(f - 255);
 					}
-					if (f <= 250) {
-						UE_LOG(LogTemp, Warning, TEXT("bad!"));
-					}
 					if (f <= 254) {
-						UE_LOG(LogTemp, Warning, TEXT("under"));
+						if (f <= (255 - 8)) {
+							UE_LOG(LogTemp, Warning, TEXT("less"));
+						}
 						w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 					}
-
 				}
-
-
 			}
 
 #if WITH_EDITOR

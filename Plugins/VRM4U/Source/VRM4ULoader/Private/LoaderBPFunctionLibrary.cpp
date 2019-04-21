@@ -334,6 +334,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 
 	{
 		bool b = out->bAssetSave;
+		saveObject(out, b);
 		for (auto &t : out->Textures) {
 			saveObject(t, b);
 		}
@@ -374,36 +375,6 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	UpdateProgress(100);
 	return true;
 }
-
-
-
-void ULoaderBPFunctionLibrary::VRMTransMatrix(const FTransform &transform, TArray<FLinearColor> &matrix, TArray<FLinearColor> &matrix_inv){
-
-	FMatrix m = transform.ToMatrixWithScale();
-	FMatrix mi = transform.ToMatrixWithScale().Inverse();
-
-	matrix.SetNum(4);
-	matrix_inv.SetNum(4);
-
-	for (int i = 0; i < 4; ++i) {
-		matrix[i] = FLinearColor(m.M[i][0], m.M[i][1], m.M[i][2], m.M[i][3]);
-		matrix_inv[i] = FLinearColor(mi.M[i][0], mi.M[i][1], mi.M[i][2], mi.M[i][3]);
-	}
-
-	return;
-}
-
-void ULoaderBPFunctionLibrary::VRMGetMaterialPropertyOverrides(const UMaterialInterface *Material, TEnumAsByte<EBlendMode> &BlendMode, TEnumAsByte<EMaterialShadingModel> &ShadingModel, bool &IsTwoSided, bool &IsMasked){
-	if (Material == nullptr) {
-		return;
-	}
-	BlendMode		= Material->GetBlendMode();
-	ShadingModel	= Material->GetShadingModel();
-	IsTwoSided		= Material->IsTwoSided();
-	IsMasked		= Material->IsMasked();
-}
-
-
 
 
 bool ULoaderBPFunctionLibrary::CopyPhysicsAsset(USkeletalMesh *dstMesh, const USkeletalMesh *srcMesh){
