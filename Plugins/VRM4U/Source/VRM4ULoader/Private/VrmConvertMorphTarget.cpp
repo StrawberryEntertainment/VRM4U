@@ -49,10 +49,18 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 				v.SourceIdx = i + currentVertex;
 				v.PositionDelta.Set(
 					-aiA.mVertices[i][0] * 100.f,
-					-aiA.mVertices[i][2] * 100.f,  // ? minus? 
+					aiA.mVertices[i][2] * 100.f,
 					aiA.mVertices[i][1] * 100.f
 				);
 				v.TangentZDelta.Set(0, 0, 0);
+
+				FVector n(
+					-aiA.mNormals[i][0],
+					aiA.mNormals[i][2],
+					aiA.mNormals[i][1]);
+				if (n.Size() > 1.f) {
+					v.TangentZDelta = n.GetUnsafeNormal();
+				}
 				MorphDeltas.Add(v);
 			}
 			//break;
