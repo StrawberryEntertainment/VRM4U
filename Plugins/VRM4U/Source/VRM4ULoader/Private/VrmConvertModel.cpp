@@ -660,9 +660,16 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 			FSoftSkinVertexLocal softSkinVertexLocalZero;
 			{
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 				softSkinVertexLocalZero.Position = softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = FVector::ZeroVector;
-
 				softSkinVertexLocalZero.TangentZ.Set(0, 0, 0, 1);
+#else
+				{
+					FPackedNormal n(0);
+					softSkinVertexLocalZero.Position = FVector::ZeroVector;
+					softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = softSkinVertexLocalZero.TangentZ = n;
+				}
+#endif
 				softSkinVertexLocalZero.Color = FColor::White;
 
 				memset(softSkinVertexLocalZero.UVs, 0, sizeof(softSkinVertexLocalZero.UVs));
