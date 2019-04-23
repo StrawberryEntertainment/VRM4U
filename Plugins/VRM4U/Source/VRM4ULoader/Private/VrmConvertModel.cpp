@@ -80,7 +80,7 @@ namespace {
 	};
 
 
-
+	TArray<FString> addedList;
 }
 
 static const aiNode* GetBoneNodeFromMeshID(const int &meshID, const aiNode *node) {
@@ -343,6 +343,13 @@ static void CreateSwingTail(UVrmAssetListObject *vrmAssetList, VRM::VRMSpring &s
 		if (sboneIndex >= 0) {
 			c = sboneIndex;
 		}
+
+		if (addedList.Find(k->GetReferenceSkeleton().GetBoneName(c).ToString().ToLower()) >= 0) {
+			continue;
+		}
+		addedList.Add(k->GetReferenceSkeleton().GetBoneName(c).ToString().ToLower());
+
+
 		USkeletalBodySetup *bs2 = Cast<USkeletalBodySetup>(StaticDuplicateObject(bs, pa, NAME_None));
 
 		bs2->BoneName = k->GetReferenceSkeleton().GetBoneName(c);
@@ -377,42 +384,62 @@ static void CreateSwingHead(UVrmAssetListObject *vrmAssetList, VRM::VRMSpring &s
 	}
 	//sk->RefSkeleton->GetParentIndex();
 
-	USkeletalBodySetup *bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
+	USkeletalBodySetup *bs = nullptr;
+	int BodyIndex1 = -1;
 
-	//int nodeID = mScenePtr->mRootNode->FindNode(sbone.c_str());
-	//sk->RefSkeleton.GetRawRefBoneInfo[0].
-	//sk->bonetree
-	//bs->constrai
-	FKAggregateGeom agg;
-	FKSphereElem SphereElem;
-	SphereElem.Center = FVector(0);
-	SphereElem.Radius = spring.hitRadius * 100.f;
-	agg.SphereElems.Add(SphereElem);
+	if (addedList.Find(boneName.ToString().ToLower()) < 0) {
+		addedList.Add(boneName.ToString().ToLower());
+
+		bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
+
+		//int nodeID = mScenePtr->mRootNode->FindNode(sbone.c_str());
+		//sk->RefSkeleton.GetRawRefBoneInfo[0].
+		//sk->bonetree
+		//bs->constrai
+		FKAggregateGeom agg;
+		FKSphereElem SphereElem;
+		SphereElem.Center = FVector(0);
+		SphereElem.Radius = spring.hitRadius * 100.f;
+		agg.SphereElems.Add(SphereElem);
 
 
-	bs->Modify();
-	bs->BoneName = boneName;
-	bs->AddCollisionFrom(agg);
-	bs->CollisionTraceFlag = CTF_UseSimpleAsComplex;
-	// newly created bodies default to simulating
-	bs->PhysicsType = PhysType_Kinematic;	// fix
-											//bs->get
-	bs->CollisionReponse = EBodyCollisionResponse::BodyCollision_Disabled;
-	bs->DefaultInstance.InertiaTensorScale.Set(2, 2, 2);
-	bs->DefaultInstance.LinearDamping = 10.0f * spring.dragForce;
-	bs->DefaultInstance.AngularDamping = 10.0f * spring.dragForce;
+		bs->Modify();
+		bs->BoneName = boneName;
+		bs->AddCollisionFrom(agg);
+		bs->CollisionTraceFlag = CTF_UseSimpleAsComplex;
+		// newly created bodies default to simulating
+		bs->PhysicsType = PhysType_Kinematic;	// fix
+												//bs->get
+		bs->CollisionReponse = EBodyCollisionResponse::BodyCollision_Disabled;
+		bs->DefaultInstance.InertiaTensorScale.Set(2, 2, 2);
+		bs->DefaultInstance.LinearDamping = 10.0f * spring.dragForce;
+		bs->DefaultInstance.AngularDamping = 10.0f * spring.dragForce;
 
-	bs->InvalidatePhysicsData();
-	bs->CreatePhysicsMeshes();
-	int BodyIndex1 = pa->SkeletalBodySetups.Add(bs);
+		bs->InvalidatePhysicsData();
+		bs->CreatePhysicsMeshes();
+		BodyIndex1 = pa->SkeletalBodySetups.Add(bs);
 
-	pa->UpdateBodySetupIndexMap();
+		//pa->UpdateBodySetupIndexMap();
 #if WITH_EDITOR
 	//pa->InvalidateAllPhysicsMeshes();
 #endif
+	} else {
+		for (int i = 0; i < pa->SkeletalBodySetups.Num(); ++i) {
+			auto &a = pa->SkeletalBodySetups[i];
+			if (a->BoneName != boneName) {
+				continue;
+			}
+
+			BodyIndex1 = i;
+			bs = a;
+			break;
+		}
+	}
 
 	//aaaaaa2(vrmAssetList, spring, boneName, bs, BodyIndex1, swingBoneIndexArray, sboneIndex);
-	CreateSwingTail(vrmAssetList, spring, boneName, bs, BodyIndex1, swingBoneIndexArray);
+	if (BodyIndex1 >= 0) {
+		CreateSwingTail(vrmAssetList, spring, boneName, bs, BodyIndex1, swingBoneIndexArray);
+	}
 
 	/*
 	{
@@ -1112,7 +1139,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 #endif
 			sk->PhysicsAsset = pa;
 
-			TArray<FString> addedList;
+			addedList.Empty();
 			{
 				TArray<int> swingBoneIndexArray;
 
@@ -1121,20 +1148,14 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					for (int j = 0; j < spring.boneNum; ++j) {
 						auto &sbone = spring.bones_name[j];
 
-						{
-							FString s = UTF8_TO_TCHAR(sbone.C_Str());
-							s = s.ToLower();
-							if (addedList.Find(s) >= 0) {
-								continue;
-							}
-							addedList.Add(s);
-						}
+						FString s = UTF8_TO_TCHAR(sbone.C_Str());
 
-						int sboneIndex = sk->RefSkeleton.FindRawBoneIndex(sbone.C_Str());
+						int sboneIndex = sk->RefSkeleton.FindRawBoneIndex(*s);
 						if (sboneIndex == INDEX_NONE) {
 							continue;
 						}
-						FName parentName = sbone.C_Str();
+
+						FName parentName = *s;
 
 						//int parentIndex = sk->RefSkeleton.GetParentIndex(sboneIndex);
 						//FName parentName = sk->RefSkeleton.GetBoneName(parentIndex);
@@ -1161,7 +1182,14 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					USkeletalBodySetup *bs = nullptr;
 					{
 						FString s = UTF8_TO_TCHAR(c.node_name.C_Str());
+						{
+							int sboneIndex = sk->RefSkeleton.FindRawBoneIndex(*s);
+							if (sboneIndex == INDEX_NONE) {
+								continue;
+							}
+						}
 						s = s.ToLower();
+
 						// addlist changed recur...
 						if (1){//addedList.Find(s) >= 0) {
 							for (auto &a : pa->SkeletalBodySetups) {
