@@ -536,7 +536,6 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 	check(OutBoneTransforms.Num() == 0);
 
 	const auto RefSkeleton = Output.AnimInstanceProxy->GetSkeleton()->GetReferenceSkeleton();
-
 	const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
 
 	//dstRefSkeleton.GetParentIndex
@@ -546,6 +545,9 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 	{
 
 		if (VrmMetaObject == nullptr) {
+			return;
+		}
+		if (VrmMetaObject->SkeletalMesh->Skeleton != Output.AnimInstanceProxy->GetSkeleton()) {
 			return;
 		}
 		if (Output.Pose.GetPose().GetNumBones() <= 0) {
