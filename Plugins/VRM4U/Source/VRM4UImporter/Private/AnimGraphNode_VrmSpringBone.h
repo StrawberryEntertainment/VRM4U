@@ -29,7 +29,8 @@ public:
 protected:
 	// UAnimGraphNode_Base interface
 	virtual void ValidateAnimNodeDuringCompilation(USkeleton* ForSkeleton, FCompilerResultsLog& MessageLog) override;
-//	virtual FEditorModeID GetEditorMode() const override;
+	virtual void ValidateAnimNodePostCompile(FCompilerResultsLog& MessageLog, UAnimBlueprintGeneratedClass* CompiledClass, int32 CompiledNodeIndex) override;
+	//	virtual FEditorModeID GetEditorMode() const override;
 	virtual void CopyNodeDataToPreviewNode(FAnimNode_Base* InPreviewNode) override;
 	virtual void CopyPinDefaultsToNodeData(UEdGraphPin* InPin) override;
 	// End of UAnimGraphNode_Base interface

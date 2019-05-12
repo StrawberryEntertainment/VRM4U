@@ -4,6 +4,7 @@
 #include "UnrealWidget.h"
 #include "AnimNodeEditModes.h"
 #include "Kismet2/CompilerResultsLog.h"
+#include "VrmMetaObject.h"
 
 /////////////////////////////////////////////////////
 // UAnimGraphNode_ModifyBone
@@ -16,11 +17,43 @@ UAnimGraphNode_VrmSpringBone::UAnimGraphNode_VrmSpringBone(const FObjectInitiali
 	CurWidgetMode = (int32)FWidget::WM_Rotate;
 }
 
+void UAnimGraphNode_VrmSpringBone::ValidateAnimNodePostCompile(FCompilerResultsLog& MessageLog, UAnimBlueprintGeneratedClass* CompiledClass, int32 CompiledNodeIndex) {
+
+	if (Node.VrmMetaObject == nullptr) {
+		MessageLog.Warning(*LOCTEXT("VrmNoMetaObject", "@@ - You must set VrmMetaObject").ToString(), this);
+	} else {
+		if (Node.VrmMetaObject->SkeletalMesh) {
+			if (Node.VrmMetaObject->SkeletalMesh->Skeleton != CompiledClass->GetTargetSkeleton()) {
+				MessageLog.Warning(*LOCTEXT("VrmDifferentSkeleton", "@@ - You must set VrmMetaObject has same skeleton").ToString(), this);
+			}
+		}
+		if (CompiledClass->GetTargetSkeleton()->GetBoneTree().Num() <= 0) {
+			MessageLog.Warning(*LOCTEXT("VrmNoBone", "@@ - Skeleton bad data").ToString(), this);
+		}
+	}
+
+	Super::ValidateAnimNodePostCompile(MessageLog, CompiledClass, CompiledNodeIndex);
+}
+
 void UAnimGraphNode_VrmSpringBone::ValidateAnimNodeDuringCompilation(USkeleton* ForSkeleton, FCompilerResultsLog& MessageLog)
 {
 	// Temporary fix where skeleton is not fully loaded during AnimBP compilation and thus virtual bone name check is invalid UE-39499 (NEED FIX) 
 	if (ForSkeleton && !ForSkeleton->HasAnyFlags(RF_NeedPostLoad))
 	{
+		if (Node.VrmMetaObject == nullptr) {
+			//MessageLog.Warning(*LOCTEXT("VrmNoMetaObject", "@@ - You must set VrmMetaObject").ToString(), this);
+		} else {
+			if (Node.VrmMetaObject->SkeletalMesh){
+				if (Node.VrmMetaObject->SkeletalMesh->Skeleton != ForSkeleton) {
+			//		MessageLog.Warning(*LOCTEXT("VrmDifferentSkeleton", "@@ - You must set VrmMetaObject has same skeleton").ToString(), this);
+				}
+			}
+			if (ForSkeleton->GetBoneTree().Num() <= 0) {
+			//	MessageLog.Warning(*LOCTEXT("VrmNoBone", "@@ - Skeleton bad data").ToString(), this);
+			}
+		}
+
+
 		/*
 		//if (ForSkeleton->GetReferenceSkeleton().FindBoneIndex(Node.BoneToModify.BoneName) == INDEX_NONE)
 		if (ForSkeleton->GetReferenceSkeleton().FindBoneIndex(Node.BoneNameToModify) == INDEX_NONE)

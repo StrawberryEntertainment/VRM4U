@@ -142,13 +142,6 @@ namespace VRMSpring {
 		const TArray<VRMSpringColliderGroup> &colliderGroup,
 		FComponentSpacePoseContext& Output) {
 
-		//
-		// x10 adjust?
-		float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd; 
-		FVector external = gravityDir * (gravityPower * DeltaTime) * animNode->gravityScale + animNode->gravityAdd;
-		external.Set(-external.X, external.Z, external.Y);
-		external *= 100.f; // to unreal scale
-
 		if (skeletalMesh == nullptr) {
 			return;
 		}
@@ -158,6 +151,15 @@ namespace VRMSpring {
 
 		const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
 		center = ComponentTransform.Inverse();
+
+		//
+		// x10 adjust?
+		float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd; 
+		FVector external = center.TransformVector(gravityDir) * (gravityPower * DeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * DeltaTime;
+		external.Set(-external.X, external.Z, external.Y);
+		external *= 100.f; // to unreal scale
+
+
 
 		const auto WorldContext = Output.AnimInstanceProxy->GetSkelMeshComponent();
 
