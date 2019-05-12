@@ -25,6 +25,8 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 
+#include "Async/ParallelFor.h"
+
 
 static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetName,const aiScene *mScenePtr) {
 
@@ -33,8 +35,14 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 	MorphDeltas.Reset(0);
 	uint32_t currentVertex = 0;
 
+	FMorphTargetDelta morphinit;
+	morphinit.PositionDelta = FVector::ZeroVector;
+	morphinit.SourceIdx = 0;
+	morphinit.TangentZDelta = FVector::ZeroVector;
+
 	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
 		const aiMesh &aiM = *(mScenePtr->mMeshes[m]);
+
 		for (uint32_t a = 0; a < aiM.mNumAnimMeshes; ++a) {
 			const aiAnimMesh &aiA = *(aiM.mAnimMeshes[a]);
 			if (targetName != aiA.mName) {
@@ -44,26 +52,28 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 			if (aiM.mNumVertices != aiA.mNumVertices) {
 				UE_LOG(LogTemp, Warning, TEXT("test18.\n"));
 			}
-			for (uint32_t i = 0; i < aiA.mNumVertices; ++i) {
-				FMorphTargetDelta v;
+
+			TArray<FMorphTargetDelta> tmpData;
+			tmpData.SetNumZeroed(aiA.mNumVertices);
+
+			ParallelFor(aiA.mNumVertices, [&](int32 i) {
+				FMorphTargetDelta &v = tmpData[i];
 				v.SourceIdx = i + currentVertex;
 				v.PositionDelta.Set(
 					-aiA.mVertices[i][0] * 100.f,
 					aiA.mVertices[i][2] * 100.f,
 					aiA.mVertices[i][1] * 100.f
 				);
-				v.TangentZDelta.Set(0, 0, 0);
 
-				FVector n(
+				const FVector n(
 					-aiA.mNormals[i][0],
 					aiA.mNormals[i][2],
 					aiA.mNormals[i][1]);
 				if (n.Size() > 1.f) {
 					v.TangentZDelta = n.GetUnsafeNormal();
 				}
-				MorphDeltas.Add(v);
-			}
-			//break;
+			});
+			MorphDeltas.Append(tmpData);
 		}
 		currentVertex += aiM.mNumVertices;
 	}
@@ -94,6 +104,8 @@ bool VRMConverter::ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const a
 
 	TArray<FString> MorphNameList;
 
+	TArray<UMorphTarget*> MorphTargetList;
+
 	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
 		const aiMesh &aiM = *(mScenePtr->mMeshes[m]);
 		for (uint32_t a = 0; a < aiM.mNumAnimMeshes; ++a) {
@@ -122,9 +134,16 @@ bool VRMConverter::ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const a
 			mt->PopulateDeltas(MorphDeltas, 0, sk->GetImportedModel()->LODModels[0].Sections);
 
 			if (mt->HasValidData()) {
-				sk->RegisterMorphTarget(mt);
+				MorphTargetList.Add(mt);
 			}
-			
+		}
+	}
+	for (int i=0; i<MorphTargetList.Num(); ++i){
+		auto *mt = MorphTargetList[i];
+		if (i == MorphTargetList.Num() - 1) {
+			sk->RegisterMorphTarget(mt);
+		} else {
+			sk->MorphTargets.Add(mt);
 		}
 	}
 

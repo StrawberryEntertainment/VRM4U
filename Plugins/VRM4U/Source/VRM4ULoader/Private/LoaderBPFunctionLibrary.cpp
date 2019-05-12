@@ -253,6 +253,12 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	//	break;
 	//}
 
+	double StartTime = FPlatformTime::Seconds();
+	auto LogAndUpdate = [&](FString logname) {
+		UE_LOG(LogTemp, Log, TEXT("VRM:(%3.3lf secs) %s"), FPlatformTime::Seconds() - StartTime, *logname);
+		StartTime = FPlatformTime::Seconds();
+	};
+
 	{
 		TArray<uint8> Res;
 		if (FFileHelper::LoadFileToArray(Res, *filepath)) {
@@ -264,6 +270,8 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 			aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes,
 			e.c_str());
 
+		UE_LOG(LogTemp, Log, TEXT("VRM:(%3.3lf secs) ReadFileFromMemory"), FPlatformTime::Seconds() - StartTime);
+		StartTime = FPlatformTime::Seconds();
 	}
 //	mScenePtr = mImporter.ReadFile(file, aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes);
 
@@ -312,18 +320,27 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 
 	{
 		bool ret = true;
+
+		LogAndUpdate(TEXT("Begin convert"));
 		ret &= VRMConverter::NormalizeBoneName(mScenePtr);
+		LogAndUpdate(TEXT("NormalizeBoneName"));
 		ret &= VRMConverter::ConvertTextureAndMaterial(out, mScenePtr);
+		LogAndUpdate(TEXT("ConvertTextureAndMaterial"));
 		UpdateProgress(40);
 		ret &= VRMConverter::ConvertVrmMeta(out, mScenePtr);	// use texture.
+		LogAndUpdate(TEXT("ConvertVrmMeta"));
 		UpdateProgress(60);
 		ret &= VRMConverter::ConvertModel(out, mScenePtr);
+		LogAndUpdate(TEXT("ConvertModel"));
 		ret &= VRMConverter::ConvertRig(out, mScenePtr);
+		LogAndUpdate(TEXT("ConvertRig"));
 #if WITH_EDITOR
 		if (out->bSkipMorphTarget == false) {
 			ret &= VRMConverter::ConvertMorphTarget(out, mScenePtr);
+			LogAndUpdate(TEXT("ConvertMorphTarget"));
 		}
 		ret &= VRMConverter::ConvertHumanoid(out, mScenePtr);
+		LogAndUpdate(TEXT("ConvertHumanoid"));
 #endif
 		UpdateProgress(80);
 		if (ret == false) {
@@ -333,6 +350,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	out->VrmMetaObject->SkeletalMesh = out->SkeletalMesh;
 
 	{
+		LogAndUpdate(TEXT("BeginSave"));
 		bool b = out->bAssetSave;
 		saveObject(out, b);
 		for (auto &t : out->Textures) {
@@ -351,6 +369,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		saveObject(out->HumanoidSkeletalMesh, b);
 		saveObject(out->HumanoidRig, b);
 
+		LogAndUpdate(TEXT("Save"));
 	}
 
 	if (VRMConverter::IsImportMode() == false){

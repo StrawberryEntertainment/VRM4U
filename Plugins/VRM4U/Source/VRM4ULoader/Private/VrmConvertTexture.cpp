@@ -20,6 +20,7 @@
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "VrmAssetListObject.h"
+#include "Async/ParallelFor.h"
 
 namespace {
 	void LocalMaterialSetParent(UMaterialInstanceConstant *material, UMaterialInterface *parent) {
@@ -392,19 +393,20 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 
 	TArray<UTexture2D*> texArray;
+	texArray.Reserve(mScenePtr->mNumTextures);
 	if (mScenePtr->HasTextures()) {
+		IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+		TSharedPtr<IImageWrapper> ImageWrapper;
+		// Note: PNG format.  Other formats are supported
+		ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+
 		for (uint32_t i = 0; i < mScenePtr->mNumTextures; ++i) {
 			auto &t = *mScenePtr->mTextures[i];
 			int Width = t.mWidth;
 			int Height = t.mHeight;
 			const TArray<uint8>* RawData = nullptr;
 
-			TSharedPtr<IImageWrapper> ImageWrapper;
 			if (Height == 0) {
-				IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-				// Note: PNG format.  Other formats are supported
-				ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
-
 				if (ImageWrapper->SetCompressed(t.pcData, t.mWidth)) {
 
 				}
@@ -462,10 +464,11 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			NewTexture2D->AddressY = TA_Wrap;
 
 #if WITH_EDITORONLY_DATA
-			NewTexture2D->CompressionNone = true;
+			NewTexture2D->CompressionNone = false;
+			NewTexture2D->DeferCompression = true;
 			NewTexture2D->MipGenSettings = TMGS_NoMipmaps;
 			NewTexture2D->Source.Init(Width, Height, 1, 1, ETextureSourceFormat::TSF_BGRA8, RawData->GetData());
-			NewTexture2D->Source.Compress();
+			//NewTexture2D->Source.Compress();
 #endif
 
 			// Update the remote texture data
@@ -573,7 +576,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					uint32_t n = aiMat.GetTextureCount((aiTextureType)t);
 					for (uint32_t y = 0; y < n; ++y) {
 						aiMat.GetTexture((aiTextureType)t, y, &texName);
-						UE_LOG(LogTemp, Warning, TEXT("R--%s\n"), texName.C_Str());
+						//UE_LOG(LogTemp, Warning, TEXT("R--%s\n"), texName.C_Str());
 					}
 				}
 

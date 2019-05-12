@@ -130,7 +130,6 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 	for (uint32 i = 0; i < node->mNumMeshes; i++)
 	{
 		FString Fs = UTF8_TO_TCHAR(node->mName.C_Str());
-		UE_LOG(LogTemp, Warning, TEXT("FindMeshInfo. %s\n"), *Fs);
 		int meshidx = node->mMeshes[i];
 		aiMesh *mesh = scene->mMeshes[meshidx];
 		FMeshInfo &mi = result.meshInfo[meshidx];
