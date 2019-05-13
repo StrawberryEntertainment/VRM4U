@@ -150,6 +150,41 @@ namespace {
 	*/
 }
 
+namespace {
+	// for UE4.19-4.22
+	template<class BaseType, class PoseType>
+	static void ConvertToLocalPoses(const BaseType &basePose, PoseType& OutPose)
+	{
+		checkSlow(basePose.Pose.IsValid());
+		OutPose = basePose.GetPose();
+
+		// now we need to convert back to local bases
+		// only convert back that has been converted to mesh base
+		// if it was local base, and if it hasn't been modified
+		// that is still okay even if parent is changed, 
+		// that doesn't mean this local has to change
+		// go from child to parent since I need parent inverse to go back to local
+		// root is same, so no need to do Index == 0
+		const BaseType::BoneIndexType RootBoneIndex(0);
+		if (basePose.GetComponentSpaceFlags()[RootBoneIndex])
+		{
+			OutPose[RootBoneIndex] = basePose.GetPose()[RootBoneIndex];
+		}
+
+		const int32 NumBones = basePose.GetPose().GetNumBones();
+		for (int32 Index = NumBones - 1; Index > 0; Index--)
+		{
+			const BaseType::BoneIndexType BoneIndex(Index);
+			if (basePose.GetComponentSpaceFlags()[BoneIndex])
+			{
+				const BaseType::BoneIndexType ParentIndex = basePose.GetPose().GetParentBoneIndex(BoneIndex);
+				OutPose[BoneIndex].SetToRelativeTransform(OutPose[ParentIndex]);
+				OutPose[BoneIndex].NormalizeRotation();
+			}
+		}
+	}
+}
+
 FVrmAnimInstanceCopyProxy::FVrmAnimInstanceCopyProxy()
 {
 	if (SpringBoneNode.Get() == nullptr) {
@@ -292,8 +327,8 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 			InputCSPose.Pose.InitPose(Output.Pose);
 			springBone.EvaluateComponentSpace_AnyThread(InputCSPose);
 			//Output.Pose.InitFrom(InputCSPose.Pose);
-			InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
-
+			//InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
+			ConvertToLocalPoses(InputCSPose.Pose, Output.Pose);
 			//checkSlow( InputCSPose.Pose.GetPose().IsValid() );
 			//InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
 			//Output.Curve = InputCSPose.Curve;
