@@ -5,6 +5,7 @@ set ZIPNAME=%4
 ::set PROJECTNAMEEDITOR="MyProjectBuildScriptEtidor"
 set PROJECTNAMEEDITOR=%3
 
+powershell -ExecutionPolicy RemoteSigned .\delIntermediate.ps1
 
 cd ../Plugins
 
