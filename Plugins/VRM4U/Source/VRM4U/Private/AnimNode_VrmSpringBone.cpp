@@ -542,10 +542,6 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 	const auto RefSkeleton = Output.AnimInstanceProxy->GetSkeleton()->GetReferenceSkeleton();
 	const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
 
-	{
-		UE_LOG(LogAnimation, Warning, TEXT("%3.3f, %3.3f %3.3f"), ComponentTransform.GetLocation().X, ComponentTransform.GetLocation().Y, ComponentTransform.GetLocation().Z);
-	}
-
 	//dstRefSkeleton.GetParentIndex
 
 	//auto BoneSpace = EBoneControlSpace::BCS_ParentBoneSpace;
