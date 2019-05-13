@@ -154,10 +154,12 @@ namespace VRMSpring {
 
 		//
 		// x10 adjust?
-		float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd; 
-		FVector external = center.TransformVector(gravityDir) * (gravityPower * DeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * DeltaTime;
-		external.Set(-external.X, external.Z, external.Y);
+		FVector ue4grav(-gravityDir.X, gravityDir.Z, gravityDir.Y);
+
+		float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd;
+		FVector external = center.TransformVector(ue4grav) * (gravityPower * DeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * DeltaTime;
 		external *= 100.f; // to unreal scale
+		//external.Set(-external.X, external.Z, external.Y); // grav skip
 
 
 
@@ -539,6 +541,10 @@ void FAnimNode_VrmSpringBone::EvaluateSkeletalControl_AnyThread(FComponentSpaceP
 
 	const auto RefSkeleton = Output.AnimInstanceProxy->GetSkeleton()->GetReferenceSkeleton();
 	const FTransform ComponentTransform = Output.AnimInstanceProxy->GetComponentTransform();
+
+	{
+		UE_LOG(LogAnimation, Warning, TEXT("%3.3f, %3.3f %3.3f"), ComponentTransform.GetLocation().X, ComponentTransform.GetLocation().Y, ComponentTransform.GetLocation().Z);
+	}
 
 	//dstRefSkeleton.GetParentIndex
 
