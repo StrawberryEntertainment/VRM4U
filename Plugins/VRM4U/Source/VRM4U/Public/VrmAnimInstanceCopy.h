@@ -21,14 +21,9 @@ public:
 	bool bIgnoreVRMSwingBone = false;
 	TSharedPtr<FAnimNode_VrmSpringBone> SpringBoneNode;
 
-	FVrmAnimInstanceCopyProxy()
-	{
-	}
+	FVrmAnimInstanceCopyProxy();
 
-	FVrmAnimInstanceCopyProxy(UAnimInstance* InAnimInstance)
-		: FAnimInstanceProxy(InAnimInstance)
-	{
-	}
+	FVrmAnimInstanceCopyProxy(UAnimInstance* InAnimInstance);
 
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;
 	virtual bool Evaluate(FPoseContext& Output) override;
@@ -53,11 +48,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	UVrmAssetListObject *DstVrmAssetList;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	bool bIgnoreVRMSwingBone;
-
 protected:
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override;
+
+	FVrmAnimInstanceCopyProxy *myProxy = nullptr;
+	bool bIgnoreVRMSwingBone = false;
 public:
 	virtual void NativeInitializeAnimation()override;
 	// Native update override point. It is usually a good idea to simply gather data in this step and 
@@ -73,4 +68,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void SetSkeletalMeshCopyData(UVrmAssetListObject *dstAssetList, USkeletalMeshComponent *srcSkeletalMesh, UVrmAssetListObject *srcAssetList);
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void SetVrmSpringBoneParam(float gravityScale = 1.f, FVector gravityAdd = FVector::ZeroVector, float stiffinessScale = 1.f, float stiffinessAdd = 0.f);
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void SetVrmSpringBoneBool(bool bIgnoreVrmSpringBone = false, bool bIgnorePhysicsCollision = false, bool bIgnoreVRMCollision = false);
 };

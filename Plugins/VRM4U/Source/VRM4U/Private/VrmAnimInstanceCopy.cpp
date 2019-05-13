@@ -150,6 +150,21 @@ namespace {
 	*/
 }
 
+FVrmAnimInstanceCopyProxy::FVrmAnimInstanceCopyProxy()
+{
+	if (SpringBoneNode.Get() == nullptr) {
+		SpringBoneNode = MakeShareable(new FAnimNode_VrmSpringBone());
+	}
+}
+
+FVrmAnimInstanceCopyProxy::FVrmAnimInstanceCopyProxy(UAnimInstance* InAnimInstance)
+	: FAnimInstanceProxy(InAnimInstance)
+{
+	if (SpringBoneNode.Get() == nullptr) {
+		SpringBoneNode = MakeShareable(new FAnimNode_VrmSpringBone());
+	}
+}
+
 
 void FVrmAnimInstanceCopyProxy::Initialize(UAnimInstance* InAnimInstance) {
 }
@@ -226,7 +241,6 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 		const auto srcRefTrans = srcRefSkeletonTransform[srcIndex];
 		const auto dstRefTrans = dstRefSkeletonTransform[dstIndex];
 
-
 		FTransform dstTrans = dstRefTrans;
 
 		{
@@ -277,11 +291,15 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 
 			InputCSPose.Pose.InitPose(Output.Pose);
 			springBone.EvaluateComponentSpace_AnyThread(InputCSPose);
+			//Output.Pose.InitFrom(InputCSPose.Pose);
+			InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
 
 			//checkSlow( InputCSPose.Pose.GetPose().IsValid() );
 			//InputCSPose.Pose.ConvertToLocalPoses(Output.Pose);
 			//Output.Curve = InputCSPose.Curve;
 		}
+	} else {
+		SpringBoneNode = nullptr;
 	}
 
 	return true;
@@ -298,9 +316,9 @@ UVrmAnimInstanceCopy::UVrmAnimInstanceCopy(const FObjectInitializer& ObjectIniti
 }
 
 FAnimInstanceProxy* UVrmAnimInstanceCopy::CreateAnimInstanceProxy() {
-	auto a = new FVrmAnimInstanceCopyProxy(this);
-	a->bIgnoreVRMSwingBone = bIgnoreVRMSwingBone;
-	return a;
+	myProxy = new FVrmAnimInstanceCopyProxy(this);
+	myProxy->bIgnoreVRMSwingBone = bIgnoreVRMSwingBone;
+	return myProxy;
 }
 
 
@@ -320,3 +338,26 @@ void UVrmAnimInstanceCopy::SetSkeletalMeshCopyData(UVrmAssetListObject *dstAsset
 	SrcVrmAssetList = srcAssetList;
 	DstVrmAssetList = dstAssetList;
 }
+
+
+void UVrmAnimInstanceCopy::SetVrmSpringBoneParam(float gravityScale, FVector gravityAdd, float stiffinessScale, float stiffinessAdd) {
+	if (myProxy == nullptr) return;
+	auto a = myProxy->SpringBoneNode.Get();
+
+	a->gravityScale = gravityScale;
+	a->gravityAdd = gravityAdd;
+	a->stiffinessScale = stiffinessScale;
+	a->stiffinessAdd = stiffinessAdd;
+}
+
+void UVrmAnimInstanceCopy::SetVrmSpringBoneBool(bool bIgnoreVrmSpringBone, bool bIgnorePhysicsCollision, bool bIgnoreVRMCollision) {
+	if (myProxy == nullptr) return;
+	auto a = myProxy->SpringBoneNode.Get();
+
+	this->bIgnoreVRMSwingBone = bIgnoreVrmSpringBone;
+	myProxy->bIgnoreVRMSwingBone = bIgnoreVrmSpringBone;
+	a->bIgnorePhysicsCollision = bIgnorePhysicsCollision;
+	a->bIgnoreVRMCollision = bIgnoreVRMCollision;
+}
+
+
