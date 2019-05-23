@@ -61,7 +61,7 @@ public:
 	bool bOptimizeMaterial = true;
 
 	/** for Mobile. Import root bone only */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Cut mesh for mobile bone"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Reduce bonemap<=75 for mobile"))
 	bool bMobileBone = false;
 
 	/** for DEBUG. Import root bone only */

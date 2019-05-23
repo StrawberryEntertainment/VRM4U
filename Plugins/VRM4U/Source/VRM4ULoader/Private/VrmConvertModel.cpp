@@ -823,12 +823,12 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				}// bone loop
 
 				// mobile remap
-				if (Options::Get().IsMobileBone() && boneAll.Num() >= 75) {
+				if (Options::Get().IsMobileBone() && boneAll.Num() > 75) {
 					TMap<int, int> mobileMap;
 
 					auto bonemapNew = bonemap;
 
-					while (boneAll.Num() >= 75) {
+					while (boneAll.Num() > 75) {
 						boneAll.Sort();
 
 						// bone 0 == weight 0
