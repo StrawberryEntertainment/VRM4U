@@ -165,7 +165,7 @@ namespace {
 		// that doesn't mean this local has to change
 		// go from child to parent since I need parent inverse to go back to local
 		// root is same, so no need to do Index == 0
-		const BaseType::BoneIndexType RootBoneIndex(0);
+		const FCSPose<FCompactPose>::BoneIndexType RootBoneIndex(0);
 		if (basePose.GetComponentSpaceFlags()[RootBoneIndex])
 		{
 			OutPose[RootBoneIndex] = basePose.GetPose()[RootBoneIndex];
@@ -174,10 +174,10 @@ namespace {
 		const int32 NumBones = basePose.GetPose().GetNumBones();
 		for (int32 Index = NumBones - 1; Index > 0; Index--)
 		{
-			const BaseType::BoneIndexType BoneIndex(Index);
+			const FCSPose<FCompactPose>::BoneIndexType BoneIndex(Index);
 			if (basePose.GetComponentSpaceFlags()[BoneIndex])
 			{
-				const BaseType::BoneIndexType ParentIndex = basePose.GetPose().GetParentBoneIndex(BoneIndex);
+				const FCSPose<FCompactPose>::BoneIndexType ParentIndex = basePose.GetPose().GetParentBoneIndex(BoneIndex);
 				OutPose[BoneIndex].SetToRelativeTransform(OutPose[ParentIndex]);
 				OutPose[BoneIndex].NormalizeRotation();
 			}
