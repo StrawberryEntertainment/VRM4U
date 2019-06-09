@@ -5,6 +5,7 @@
 #include "Engine/EngineTypes.h"
 #include "VrmBPFunctionLibrary.generated.h"
 
+class UTextureRenderTarget2D;
 /**
  * 
  */
@@ -23,4 +24,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "VRM4U")
 	static void VRMGetMobileMode(bool &IsMobile, bool &IsAndroid, bool &IsIOS);
+
+	UFUNCTION(BlueprintCallable, Category = "Rendering", meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
+	static void VRMDrawMaterialToRenderTarget(UObject* WorldContextObject, UTextureRenderTarget2D* TextureRenderTarget, UMaterialInterface* Material);
 };
