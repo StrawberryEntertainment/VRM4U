@@ -57,6 +57,7 @@ void UVrmBPFunctionLibrary::VRMGetMobileMode(bool &IsMobile, bool &IsAndroid, bo
 
 void UVrmBPFunctionLibrary::VRMDrawMaterialToRenderTarget(UObject* WorldContextObject, UTextureRenderTarget2D* TextureRenderTarget, UMaterialInterface* Material)
 {
+#if	UE_VERSION_NEWER_THAN(4,20,0)
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
 
 	if (!World)
@@ -120,4 +121,5 @@ void UVrmBPFunctionLibrary::VRMDrawMaterialToRenderTarget(UObject* WorldContextO
 		}
 		);
 	}
+#endif
 }
