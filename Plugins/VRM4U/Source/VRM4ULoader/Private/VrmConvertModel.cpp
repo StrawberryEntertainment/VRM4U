@@ -953,6 +953,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 				// normalize weight
 				for (auto &w : meshWeight) {
+					static int warnCount = 0;
+					if (&w == &meshWeight[0]) {
+						warnCount = 0;
+					}
 					int f = 0;
 					int maxIndex = 0;
 					int maxWeight = 0;
@@ -970,7 +974,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}
 					if (f <= 254) {
 						if (f <= (255-8)) {
-							UE_LOG(LogTemp, Warning, TEXT("less"));
+							if (warnCount < 50) {
+								UE_LOG(LogTemp, Warning, TEXT("less"));
+								warnCount++;
+							}
 						}
 						w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 					}
@@ -1033,6 +1040,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 
 			if (1) {
+				int warnCount = 0;
 				for (auto &w : Weight) {
 					int f = 0;
 					int maxIndex = 0;
@@ -1051,7 +1059,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}
 					if (f <= 254) {
 						if (f <= (255 - 8)) {
-							UE_LOG(LogTemp, Warning, TEXT("less"));
+							if (warnCount < 50) {
+								UE_LOG(LogTemp, Warning, TEXT("less"));
+								warnCount++;
+							}
 						}
 						w.InfluenceWeights[maxIndex] += (uint8)(255 - f);
 					}
