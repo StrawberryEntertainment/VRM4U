@@ -7,6 +7,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Logging/MessageLog.h"
 #include "Engine/Canvas.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Misc/EngineVersionComparison.h"
 
 //#include "VRM4U.h"
 
@@ -122,4 +124,26 @@ void UVrmBPFunctionLibrary::VRMDrawMaterialToRenderTarget(UObject* WorldContextO
 		);
 	}
 #endif
+}
+
+void UVrmBPFunctionLibrary::VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent) {
+	if (dst == nullptr) {
+		return;
+	}
+
+	if (dst->Parent == NewParent) {
+		return;
+	}
+	dst->MarkPackageDirty();
+
+#if WITH_EDITOR
+	dst->PreEditChange(NULL);
+	dst->SetParentEditorOnly(NewParent);
+	dst->PostEditChange();
+#else
+	dst->Parent = NewParent;
+	dst->PostLoad();
+#endif
+
+
 }

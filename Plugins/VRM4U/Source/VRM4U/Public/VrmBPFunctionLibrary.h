@@ -6,6 +6,7 @@
 #include "VrmBPFunctionLibrary.generated.h"
 
 class UTextureRenderTarget2D;
+class UMaterialInstanceConstant;
 /**
  * 
  */
@@ -27,4 +28,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Rendering", meta = (WorldContext = "WorldContextObject", UnsafeDuringActorConstruction = "true"))
 	static void VRMDrawMaterialToRenderTarget(UObject* WorldContextObject, UTextureRenderTarget2D* TextureRenderTarget, UMaterialInterface* Material);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	static void VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent);
 };
