@@ -713,7 +713,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
 						auto &n = mInfo.Normals[i];
 						FVector n_tmp(-n.X, n.Z, n.Y);
-						FVector t_tmp(-mInfo.Tangents[i].X, mInfo.Tangents[i].Y, mInfo.Tangents[i].Z);
+						FVector t_tmp(-mInfo.Tangents[i].X, mInfo.Tangents[i].Z, mInfo.Tangents[i].Y);
 
 						t_tmp.Normalize();
 						n_tmp.Normalize();
