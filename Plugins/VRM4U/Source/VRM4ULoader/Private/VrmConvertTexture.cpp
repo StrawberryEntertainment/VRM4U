@@ -187,7 +187,6 @@ namespace {
 				{TEXT("_SrcBlend"),			vrmMat.floatProperties._SrcBlend},
 				{TEXT("_DstBlend"),			vrmMat.floatProperties._DstBlend},
 				{TEXT("_ZWrite"),				vrmMat.floatProperties._ZWrite},
-				{TEXT("_IsFirstSetup"),		vrmMat.floatProperties._IsFirstSetup},
 			};
 
 			for (auto &t : table) {

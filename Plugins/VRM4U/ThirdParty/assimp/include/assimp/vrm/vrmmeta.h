@@ -87,9 +87,17 @@ extern "C" {
             float _ShadeShift;
             float _ShadeToony;
             float _LightColorAttenuation;
+            float _IndirectLightIntensity;
+            float _RimLightingMix;
+            float _RimFresnelPower;
+            float _RimLift;
             float _OutlineWidth;
             float _OutlineScaledMaxDistance;
             float _OutlineLightingMix;
+            float _UvAnimScrollX;
+            float _UvAnimScrollY;
+            float _UvAnimRotation;
+            float _MToonVersion;
             float _DebugMode;
             float _BlendMode;
             float _OutlineWidthMode;
@@ -99,7 +107,6 @@ extern "C" {
             float _SrcBlend;
             float _DstBlend;
             float _ZWrite;
-            float _IsFirstSetup;
         };
         struct ASSIMP_API VRMMaterialVectorProperties {
             vec4 _Color;
@@ -108,19 +115,27 @@ extern "C" {
             vec4 _ShadeTexture;
             vec4 _BumpMap;
             vec4 _ReceiveShadowTexture;
+            vec4 _ShadingGradeTexture;
+            vec4 _RimColor;
+            vec4 _RimTexture;
             vec4 _SphereAdd;
             vec4 _EmissionColor;
             vec4 _EmissionMap;
             vec4 _OutlineWidthTexture;
             vec4 _OutlineColor;
+            vec4 _UvAnimMaskTexture;
         };
         struct ASSIMP_API VRMMaterialTextureProperties {
             int _MainTex;
             int _ShadeTexture;
             int _BumpMap;
+            int _ReceiveShadowTexture;
+            int _ShadingGradeTexture;
+            int _RimTexture;
             int _SphereAdd;
             int _EmissionMap;
             int _OutlineWidthTexture;
+            int _UvAnimMaskTexture;
         };
         struct ASSIMP_API VRMMaterial {
             aiString name;
