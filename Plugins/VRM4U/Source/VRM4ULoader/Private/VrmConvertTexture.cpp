@@ -146,11 +146,15 @@ namespace {
 				{TEXT("_ShadeTexture"),	vrmMat.vectorProperties._ShadeTexture},
 				{TEXT("_BumpMap"),				vrmMat.vectorProperties._BumpMap},
 				{TEXT("_ReceiveShadowTexture"),	vrmMat.vectorProperties._ReceiveShadowTexture},
+				{TEXT("_ShadingGradeTexture"),		vrmMat.vectorProperties._ShadingGradeTexture},
+				{TEXT("_RimColor"),					vrmMat.vectorProperties._RimColor},
+				{TEXT("_RimTexture"),				vrmMat.vectorProperties._RimTexture},
 				{TEXT("_SphereAdd"),				vrmMat.vectorProperties._SphereAdd},
 				{TEXT("_EmissionColor"),			vrmMat.vectorProperties._EmissionColor},
 				{TEXT("_EmissionMap"),			vrmMat.vectorProperties._EmissionMap},
 				{TEXT("_OutlineWidthTexture"),	vrmMat.vectorProperties._OutlineWidthTexture},
 				{TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor},
+				{TEXT("_UvAnimMaskTexture"),	vrmMat.vectorProperties._UvAnimMaskTexture},
 			};
 
 			for (auto &t : table) {
@@ -175,9 +179,17 @@ namespace {
 				{TEXT("_ShadeShift"),			vrmMat.floatProperties._ShadeShift},
 				{TEXT("_ShadeToony"),			vrmMat.floatProperties._ShadeToony},
 				{TEXT("_LightColorAttenuation"),	vrmMat.floatProperties._LightColorAttenuation},
+				{TEXT("_IndirectLightIntensity"),	vrmMat.floatProperties._IndirectLightIntensity},
+				{TEXT("_RimLightingMix"),			vrmMat.floatProperties._RimLightingMix},
+				{TEXT("_RimFresnelPower"),			vrmMat.floatProperties._RimFresnelPower},
+				{TEXT("_RimLift"),					vrmMat.floatProperties._RimLift},
 				{TEXT("_OutlineWidth"),			vrmMat.floatProperties._OutlineWidth},
 				{TEXT("_OutlineScaledMaxDistance"),	vrmMat.floatProperties._OutlineScaledMaxDistance},
 				{TEXT("_OutlineLightingMix"),			vrmMat.floatProperties._OutlineLightingMix},
+				{TEXT("_UvAnimScrollX"),			vrmMat.floatProperties._UvAnimScrollX},
+				{TEXT("_UvAnimScrollY"),			vrmMat.floatProperties._UvAnimScrollY},
+				{TEXT("_UvAnimRotation"),			vrmMat.floatProperties._UvAnimRotation},
+				{TEXT("_MToonVersion"),				vrmMat.floatProperties._MToonVersion},
 				{TEXT("_DebugMode"),				vrmMat.floatProperties._DebugMode},
 				{TEXT("_BlendMode"),				vrmMat.floatProperties._BlendMode},
 				{TEXT("_OutlineWidthMode"),		vrmMat.floatProperties._OutlineWidthMode},
@@ -186,7 +198,7 @@ namespace {
 				{TEXT("_OutlineCullMode"),		vrmMat.floatProperties._OutlineCullMode},
 				{TEXT("_SrcBlend"),			vrmMat.floatProperties._SrcBlend},
 				{TEXT("_DstBlend"),			vrmMat.floatProperties._DstBlend},
-				{TEXT("_ZWrite"),				vrmMat.floatProperties._ZWrite},
+				{TEXT("_ZWrite"),			vrmMat.floatProperties._ZWrite},
 			};
 
 			for (auto &t : table) {
@@ -230,9 +242,13 @@ namespace {
 				{TEXT("mtoon_tex_MainTex"),		vrmMat.textureProperties._MainTex},
 				{TEXT("mtoon_tex_ShadeTexture"),	vrmMat.textureProperties._ShadeTexture},
 				{TEXT("mtoon_tex_BumpMap"),		vrmMat.textureProperties._BumpMap},
+				{TEXT("_ReceiveShadowTexture"),	vrmMat.textureProperties._ReceiveShadowTexture},
+				{TEXT("_ShadingGradeTexture"),	vrmMat.textureProperties._ShadingGradeTexture},
+				{TEXT("_RimTexture"),			vrmMat.textureProperties._RimTexture},
 				{TEXT("mtoon_tex_SphereAdd"),	vrmMat.textureProperties._SphereAdd},
 				{TEXT("mtoon_tex_EmissionMap"),	vrmMat.textureProperties._EmissionMap},
 				{TEXT("mtoon_tex_OutlineWidthTexture"),	vrmMat.textureProperties._OutlineWidthTexture},
+				{TEXT("_UvAnimMaskTexture"),	vrmMat.textureProperties._UvAnimMaskTexture},
 			};
 			for (auto &t : table) {
 				if (t.value < 0) {
