@@ -205,7 +205,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 		}
 
 		if (VRMConverter::Options::Get().IsVRMModel() == false) {
-			k->SetBoneTranslationRetargetingMode(0, EBoneTranslationRetargetingMode::Animation, true);
+			k->SetBoneTranslationRetargetingMode(0, EBoneTranslationRetargetingMode::Animation, false);
 		}
 
 	}
