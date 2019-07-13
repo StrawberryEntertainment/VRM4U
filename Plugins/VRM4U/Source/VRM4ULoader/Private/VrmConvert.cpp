@@ -291,6 +291,25 @@ bool VRMConverter::Options::IsOptimizeMaterial() const {
 #endif
 }
 
+static bool bbVRM = false;
+void VRMConverter::Options::SetVRMModel(bool bVRM) {
+	bbVRM = bVRM;
+}
+
+bool VRMConverter::Options::IsVRMModel() const {
+	return bbVRM;
+}
+
+float VRMConverter::Options::GetModelScale() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return 1.f;
+
+	return Window->ModelScale;
+#else
+	return 1.f;
+#endif
+}
+
 
 EVRMImportMaterialType VRMConverter::Options::GetMaterialType() const {
 #if WITH_EDITOR

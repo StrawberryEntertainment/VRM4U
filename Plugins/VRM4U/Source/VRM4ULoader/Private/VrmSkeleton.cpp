@@ -422,6 +422,17 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 				m.M[0][2] = t.c1; m.M[1][2] = t.c2; m.M[2][2] = t.c3; m.M[3][2] = t.b4*100.f;//t.c4*100.f;
 				m.M[0][3] = t.d1; m.M[1][3] = t.d2; m.M[2][3] = t.d3; m.M[3][3] = t.d4;
 
+				if (VRMConverter::Options::Get().IsVRMModel() == false) {
+					//m.M[3][1] = t.b4*100.f;
+					//m.M[3][2] = t.c4*100.f;
+				}
+				{
+					m.M[3][0] *= VRMConverter::Options::Get().GetModelScale();
+					m.M[3][1] *= VRMConverter::Options::Get().GetModelScale();
+					m.M[3][2] *= VRMConverter::Options::Get().GetModelScale();
+					//m.M[3][3] *= VRMConverter::Options::Get().GetModelScale();
+				}
+
 				if (a == scene->mRootNode) {
 					//pose.SetScale3D(FVector(100));
 				}

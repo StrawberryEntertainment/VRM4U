@@ -146,36 +146,38 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	{
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
-		for (auto &t : table) {
-			FString target = t.BoneVRM;
-			const FString &ue4 = t.BoneUE4;
+		if (meta) {
+			for (auto &t : table) {
+				FString target = t.BoneVRM;
+				const FString &ue4 = t.BoneUE4;
 
-			if (ue4.Compare(TEXT("Root"), ESearchCase::IgnoreCase) == 0) {
-				auto &a = vrmAssetList->SkeletalMesh->Skeleton->GetReferenceSkeleton().GetRefBoneInfo();
-				target = a[0].Name.ToString();
-			}
-			
-			if (target.Len() == 0) {
-				continue;
-			}
+				if (ue4.Compare(TEXT("Root"), ESearchCase::IgnoreCase) == 0) {
+					auto &a = vrmAssetList->SkeletalMesh->Skeleton->GetReferenceSkeleton().GetRefBoneInfo();
+					target = a[0].Name.ToString();
+				}
 
-
-			for (auto b : meta->humanoidBone) {
-
-				if (target.Compare(b.humanBoneName.C_Str()) != 0) {
+				if (target.Len() == 0) {
 					continue;
 				}
-				target = b.nodeName.C_Str();
-				break;
-			}
 
-			if (PelvisBoneName.Len() == 0) {
-				if (ue4.Compare(TEXT("Pelvis"), ESearchCase::IgnoreCase) == 0) {
-					PelvisBoneName = target;
+
+				for (auto b : meta->humanoidBone) {
+
+					if (target.Compare(b.humanBoneName.C_Str()) != 0) {
+						continue;
+					}
+					target = b.nodeName.C_Str();
+					break;
 				}
+
+				if (PelvisBoneName.Len() == 0) {
+					if (ue4.Compare(TEXT("Pelvis"), ESearchCase::IgnoreCase) == 0) {
+						PelvisBoneName = target;
+					}
+				}
+				mc->AddMapping(*ue4, *target);
+				vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*ue4, *target);
 			}
-			mc->AddMapping(*ue4, *target);
-			vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*ue4, *target);
 		}
 	}
 
@@ -201,6 +203,11 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 
 			bone = k->GetReferenceSkeleton().GetParentIndex(bone);
 		}
+
+		if (VRMConverter::Options::Get().IsVRMModel() == false) {
+			k->SetBoneTranslationRetargetingMode(0, EBoneTranslationRetargetingMode::Animation, true);
+		}
+
 	}
 	//mc->AddMapping
 	mc->PostEditChange();

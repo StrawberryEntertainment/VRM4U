@@ -80,6 +80,11 @@ public:
 
 		bool IsOptimizeMaterial() const;
 
+		bool IsVRMModel() const;
+		void SetVRMModel(bool bVRM);
+
+		float GetModelScale() const;
+
 		EVRMImportMaterialType GetMaterialType() const;
 	};
 };

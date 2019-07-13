@@ -53,7 +53,8 @@ UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectIni
 	: Super(ObjectInitializer)
 {
 	Formats.Add( TEXT( "vrm;Model" ) );
-	Formats.Add( TEXT( "glb;Model" ) );
+	Formats.Add(TEXT("glb;Model"));
+	Formats.Add(TEXT("bvh;Model"));
 
 	bCreateNew = false;
 	bEditorImport = true;
@@ -67,7 +68,7 @@ bool UVRM4UImporterFactory::FactoryCanImport(const FString& Filename)
 	const FString Extension = FPaths::GetExtension(Filename);
 
 	//if( Extension == TEXT("vrm") || Extension == TEXT("gltf") || Extension == TEXT("glb"))
-	if( Extension == TEXT("vrm") || Extension == TEXT("glb"))
+	if( Extension == TEXT("vrm") || Extension == TEXT("glb") || Extension == TEXT("bvh"))
 	{
 		fullFileName = Filename;
 		return true;

@@ -259,12 +259,19 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		StartTime = FPlatformTime::Seconds();
 	};
 
+	VRMConverter::Options::Get().SetVRMModel(true);
 	{
 		TArray<uint8> Res;
 		if (FFileHelper::LoadFileToArray(Res, *filepath)) {
 		}
 		const FString ext = FPaths::GetExtension(filepath);
 		std::string e = utf_16_to_shift_jis(*ext);
+
+		if (e.compare("vrm") == 0) {
+			VRMConverter::Options::Get().SetVRMModel(true);
+		} else {
+			VRMConverter::Options::Get().SetVRMModel(false);
+		}
 
 		mScenePtr = mImporter.ReadFileFromMemory(Res.GetData(), Res.Num(),
 			aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes,
@@ -327,7 +334,12 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		ret &= VRMConverter::ConvertTextureAndMaterial(out, mScenePtr);
 		LogAndUpdate(TEXT("ConvertTextureAndMaterial"));
 		UpdateProgress(40);
-		ret &= VRMConverter::ConvertVrmMeta(out, mScenePtr);	// use texture.
+		{
+			bool r = VRMConverter::ConvertVrmMeta(out, mScenePtr);	// use texture.
+			if (VRMConverter::Options::Get().IsVRMModel() == true) {
+				ret &= r;
+			}
+		}
 		LogAndUpdate(TEXT("ConvertVrmMeta"));
 		UpdateProgress(60);
 		ret &= VRMConverter::ConvertModel(out, mScenePtr);

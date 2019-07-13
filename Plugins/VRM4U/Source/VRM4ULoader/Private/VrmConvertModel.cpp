@@ -25,6 +25,10 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 
+
+#include "Animation/AnimSequence.h"
+
+
 #if WITH_EDITOR
 typedef FSoftSkinVertex FSoftSkinVertexLocal;
 
@@ -580,6 +584,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			}
 		}
 
+
 		// sk end
 
 		vrmAssetList->SkeletalMesh = sk;
@@ -702,13 +707,21 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					auto a = result.meshInfo[meshID].Vertices[i] * 100.f;
 
 					v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
-
-					FVector2D uv;
-					uv = mInfo.UV0[i];
-					v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, 0, uv);
-					meshS->UVs[0] = uv;
+					if (VRMConverter::Options::Get().IsVRMModel() == false) {
+						//v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(a.X, a.Y, a.Z);
+					}
+					v.PositionVertexBuffer.VertexPosition(currentVertex + i) *= VRMConverter::Options::Get().GetModelScale();
 
 					{
+						FVector2D uv(0, 0);
+						if (i < mInfo.UV0.Num()) {
+							uv = mInfo.UV0[i];
+						}
+						v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, 0, uv);
+						meshS->UVs[0] = uv;
+					}
+
+					if (i < mInfo.Tangents.Num()){
 						v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
 						//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
 						auto &n = mInfo.Normals[i];
@@ -1276,6 +1289,142 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	}
 
 	//NewAsset->FindSocket
+
+
+	{
+		UAnimSequence *ase;
+		ase = NewObject<UAnimSequence>(vrmAssetList->Package, *(TEXT("A_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+
+		ase->CleanAnimSequenceForImport();
+
+		ase->SetSkeleton(k);
+
+		float totalTime = 0.f;
+		if (1){
+
+			//TArray<AnimationTransformDebug::FAnimationTransformDebugData> TransformDebugData;
+
+			for (uint32_t animNo = 0; animNo < mScenePtr->mNumAnimations; animNo++) {
+				aiAnimation* aiA = mScenePtr->mAnimations[animNo];
+				
+				for (uint32_t chanNo = 0; chanNo < aiA->mNumChannels; chanNo++) {
+					aiNodeAnim* aiNA = aiA->mChannels[chanNo];
+					
+					FRawAnimSequenceTrack RawTrack;
+
+					if (chanNo == 0) {
+						for (uint32_t i = 0; i < aiNA->mNumPositionKeys; ++i) {
+							const auto &v = aiNA->mPositionKeys[i].mValue;
+							//FVector pos(v.x, v.y, v.z);
+							FVector pos(-v.x, v.z, v.y);
+							if (VRMConverter::Options::Get().IsVRMModel()) {
+								pos *= VRMConverter::Options::Get().GetModelScale();
+							}
+							RawTrack.PosKeys.Add(pos);
+
+							totalTime = FMath::Max((float)aiNA->mPositionKeys[i].mTime, totalTime);
+						}
+						if (chanNo == 0) {
+							if (RawTrack.PosKeys.Num()) {
+								//ase->bEnableRootMotion = true;
+							}
+						}
+					}
+
+					if (chanNo > 0 || 1) {
+						for (uint32_t i = 0; i < aiNA->mNumRotationKeys; ++i) {
+							const auto &v = aiNA->mRotationKeys[i].mValue;
+							//FQuat q(-v.x, v.y, v.z, -v.w);
+							FQuat q(v.x, v.y, v.z, v.w);
+							//FVector a = q.GetRotationAxis();
+							//q = FQuat(FVector(-a.X, a.Z, a.Y), q.GetAngle());
+							//FMatrix m = q.GetRotationAxis
+							//q = FRotator(0, 90, 0).Quaternion() * q;
+							RawTrack.RotKeys.Add(q);
+
+							totalTime = FMath::Max((float)aiNA->mRotationKeys[i].mTime, totalTime);
+						}
+
+						for (uint32_t i = 0; i < aiNA->mNumScalingKeys; ++i) {
+							const auto &v = aiNA->mScalingKeys[i].mValue;
+							FVector s(v.x, v.y, v.z);
+							RawTrack.ScaleKeys.Add(s);
+
+							totalTime = FMath::Max((float)aiNA->mScalingKeys[i].mTime, totalTime);
+						}
+					}
+
+					if (RawTrack.RotKeys.Num() || RawTrack.PosKeys.Num() || RawTrack.ScaleKeys.Num()) {
+
+						if (RawTrack.PosKeys.Num() == 0) {
+							RawTrack.PosKeys.Add(FVector::ZeroVector);
+						}
+						if (RawTrack.RotKeys.Num() == 0) {
+							RawTrack.RotKeys.Add(FQuat::Identity);
+						}
+						if (RawTrack.ScaleKeys.Num() == 0) {
+							RawTrack.ScaleKeys.Add(FVector::OneVector);
+						}
+
+						int32 NewTrackIdx = ase->AddNewRawTrack(UTF8_TO_TCHAR(aiNA->mNodeName.C_Str()), &RawTrack);
+					}
+					ase->NumFrames = FMath::Max(ase->NumFrames, RawTrack.RotKeys.Num());
+					ase->NumFrames = FMath::Max(ase->NumFrames, RawTrack.PosKeys.Num());
+
+				}
+			}
+		}
+
+		{
+			//TArray<struct FRawAnimSequenceTrack>& RawAnimationData = ase->RawAnimationData;
+
+			FRawAnimSequenceTrack RawTrack;
+			RawTrack.PosKeys.Empty();
+			RawTrack.RotKeys.Empty();
+			RawTrack.ScaleKeys.Empty();
+
+			RawTrack.PosKeys.Add(FVector(10, 10, 10));
+			RawTrack.PosKeys.Add(FVector(20, 200, 200));
+
+			RawTrack.RotKeys.Add(FQuat::Identity);
+			RawTrack.RotKeys.Add(FQuat::Identity);
+
+			RawTrack.ScaleKeys.Add(FVector(1, 1, 1));
+			RawTrack.ScaleKeys.Add(FVector(1, 1, 1));
+
+
+			//int32 NewTrackIdx = ase->AddNewRawTrack(TEXT("hip"), &RawTrack);
+			//int32 NewTrackIdx = ase->AddNewRawTrack(RawTrack);
+			//RawAnimationData.Add(RawTrack);
+			//ase->AnimationTrackNames.Add(TEXT("chest"));
+
+
+			//const int32 RefBoneIndex = k->GetReferenceSkeleton().FindBoneIndex(TEXT("chest"));
+			//check(RefBoneIndex != INDEX_NONE);
+			//ase->TrackToSkeletonMapTable.Add(FTrackToSkeletonMap(RefBoneIndex));
+
+			//ase->NumFrames = 2;
+			//ase->SequenceLength = 1;
+			ase->SequenceLength = totalTime / 60.f;
+
+
+			//AnimationAsset->AnimationTrackNames.Add(TEXT("chest"));
+
+
+			ase->MarkRawDataAsModified();
+		}
+
+		const bool bSourceDataExists = ase->HasSourceRawData();
+		if (bSourceDataExists)
+		{
+			ase->BakeTrackCurvesToRawAnimation();
+		} else {
+			ase->PostProcessSequence();
+		}
+		//AnimationTransformDebug::OutputAnimationTransformDebugData(TransformDebugData, TotalNumKeys, RefSkeleton);
+
+
+	}
 	return true;
 }
 

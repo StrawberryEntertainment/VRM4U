@@ -72,6 +72,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Mesh, meta=(ImportType="SkeletalMesh"))
 	class USkeleton* Skeleton;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Model scale"))
+	float ModelScale = 1.0f;
+
 	/** Materal Type */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	TEnumAsByte<enum EVRMImportMaterialType> MaterialType;

@@ -395,13 +395,14 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 	NormalBoolTable.SetNum(mScenePtr->mNumTextures);
 	{
 		const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+		if (meta) {
+			for (int i = 0; i < meta->materialNum; ++i) {
+				int t = meta->material[i].textureProperties._BumpMap;
+				if (t < 0) continue;
 
-		for (int i = 0; i < meta->materialNum; ++i) {
-			int t = meta->material[i].textureProperties._BumpMap;
-			if (t < 0) continue;
-
-			if (t < NormalBoolTable.Num()) {
-				NormalBoolTable[t] = true;
+				if (t < NormalBoolTable.Num()) {
+					NormalBoolTable[t] = true;
+				}
 			}
 		}
 	}
