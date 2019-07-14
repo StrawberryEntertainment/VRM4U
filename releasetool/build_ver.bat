@@ -5,6 +5,11 @@ set ZIPNAME=%4
 ::set PROJECTNAMEEDITOR="MyProjectBuildScriptEtidor"
 set PROJECTNAMEEDITOR=%3
 
+set UE4BASE=E:\Program Files\Epic Games
+set UPROJECT="E:\Users\user\Documents\Unreal Projects\MyProjectBuildScript\MyProjectBuildScript\MyProjectBuildScript.uproject"
+set UNREALVERSIONSELECTOR="D:\Program Files (x86)\Epic Games\Launcher\Engine\Binaries\Win64\UnrealVersionSelector.exe"
+
+
 powershell -ExecutionPolicy RemoteSigned .\delIntermediate.ps1
 
 cd ../Plugins
@@ -15,13 +20,12 @@ cd ../releasetool
 
 powershell -ExecutionPolicy RemoteSigned .\version.ps1 \"%UE4VER%\"
 
-set UE4PATH=UE_%UE4VER%
-set UNREALVERSIONSELECTOR="D:\Program Files (x86)\Epic Games\Launcher\Engine\Binaries\Win64\UnrealVersionSelector.exe"
-set UPROJECT="D:\Users\user\Documents\Unreal Projects\MyProjectBuildScript\MyProjectBuildScript\MyProjectBuildScript.uproject"
 
-set CLEAN="D:\Program Files\Epic Games\%UE4PATH%\Engine\Build\BatchFiles\Clean.bat"
-set BUILD="D:\Program Files\Epic Games\%UE4PATH%\Engine\Build\BatchFiles\Build.bat"
-set REBUILD="D:\Program Files\Epic Games\%UE4PATH%\Engine\Build\BatchFiles\Rebuild.bat"
+set UE4PATH=UE_%UE4VER%
+
+set CLEAN="%UE4BASE%\%UE4PATH%\Engine\Build\BatchFiles\Clean.bat"
+set BUILD="%UE4BASE%\%UE4PATH%\Engine\Build\BatchFiles\Build.bat"
+set REBUILD="%UE4BASE%\%UE4PATH%\Engine\Build\BatchFiles\Rebuild.bat"
 set PROJECTNAME="../MyProjectBuildScript.uproject"
 
 
