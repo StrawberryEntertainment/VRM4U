@@ -708,7 +708,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 					v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(-a.X, a.Z, a.Y);
 					if (VRMConverter::Options::Get().IsVRMModel() == false) {
-						//v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(a.X, a.Y, a.Z);
+						v.PositionVertexBuffer.VertexPosition(currentVertex + i).Set(a.X, -a.Z, a.Y);
 					}
 					v.PositionVertexBuffer.VertexPosition(currentVertex + i) *= VRMConverter::Options::Get().GetModelScale();
 
@@ -1291,7 +1291,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	//NewAsset->FindSocket
 
 
-	{
+	if (mScenePtr->mNumAnimations > 0){
 		UAnimSequence *ase;
 		ase = NewObject<UAnimSequence>(vrmAssetList->Package, *(TEXT("A_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 
@@ -1300,6 +1300,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		ase->SetSkeleton(k);
 
 		float totalTime = 0.f;
+		int totalFrameNum = 0;
 		if (1){
 
 			//TArray<AnimationTransformDebug::FAnimationTransformDebugData> TransformDebugData;
@@ -1309,7 +1310,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				
 				for (uint32_t chanNo = 0; chanNo < aiA->mNumChannels; chanNo++) {
 					aiNodeAnim* aiNA = aiA->mChannels[chanNo];
-					
+
 					FRawAnimSequenceTrack RawTrack;
 
 					if (chanNo == 0) {
@@ -1317,8 +1318,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 							const auto &v = aiNA->mPositionKeys[i].mValue;
 							//FVector pos(v.x, v.y, v.z);
 							FVector pos(-v.x, v.z, v.y);
-							if (VRMConverter::Options::Get().IsVRMModel()) {
-								pos *= VRMConverter::Options::Get().GetModelScale();
+							//pos *= VRMConverter::Options::Get().GetModelScale();
+							if (VRMConverter::Options::Get().IsVRMModel() == false) {
+								pos.X *= -1.f;
+								pos.Y *= -1.f;
 							}
 							RawTrack.PosKeys.Add(pos);
 
@@ -1334,10 +1337,23 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					if (chanNo > 0 || 1) {
 						for (uint32_t i = 0; i < aiNA->mNumRotationKeys; ++i) {
 							const auto &v = aiNA->mRotationKeys[i].mValue;
-							//FQuat q(-v.x, v.y, v.z, -v.w);
+
 							FQuat q(v.x, v.y, v.z, v.w);
+
+							
+
+							if (1) {
+								q = FQuat(-v.x, v.y, v.z, -v.w);
+
+								{
+									FQuat d = FQuat(FVector(1, 0, 0), -PI / 2.f);
+									q = d * q * d.Inverse();
+								}
+							}
+
+							//FQuat q(v.x, v.y, v.z, v.w);
 							//FVector a = q.GetRotationAxis();
-							//q = FQuat(FVector(-a.X, a.Z, a.Y), q.GetAngle());
+							//q = FQuat(FVector(0, 0, 1), PI) * q;
 							//FMatrix m = q.GetRotationAxis
 							//q = FRotator(0, 90, 0).Quaternion() * q;
 							RawTrack.RotKeys.Add(q);
@@ -1368,9 +1384,17 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 						int32 NewTrackIdx = ase->AddNewRawTrack(UTF8_TO_TCHAR(aiNA->mNodeName.C_Str()), &RawTrack);
 					}
-					ase->NumFrames = FMath::Max(ase->NumFrames, RawTrack.RotKeys.Num());
-					ase->NumFrames = FMath::Max(ase->NumFrames, RawTrack.PosKeys.Num());
 
+					totalFrameNum = FMath::Max(totalFrameNum, RawTrack.RotKeys.Num());
+					totalFrameNum = FMath::Max(totalFrameNum, RawTrack.PosKeys.Num());
+
+					totalTime = totalFrameNum / aiA->mTicksPerSecond;
+
+#if	UE_VERSION_NEWER_THAN(4,22,0)
+					ase->SetRawNumberOfFrame(totalFrameNum);
+#else
+					ase->NumFrames = totalFrameNum;
+#endif
 				}
 			}
 		}
@@ -1405,7 +1429,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 			//ase->NumFrames = 2;
 			//ase->SequenceLength = 1;
-			ase->SequenceLength = totalTime / 60.f;
+			//ase->SequenceLength = totalTime / 60.f;
+			ase->SequenceLength = totalTime;
 
 
 			//AnimationAsset->AnimationTrackNames.Add(TEXT("chest"));

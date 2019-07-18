@@ -114,6 +114,22 @@ namespace {
 	{"Custom_5",""},
 	};
 #endif
+
+	static int GetChildBoneLocal(const FReferenceSkeleton &skeleton, const int32 ParentBoneIndex, TArray<int32> & Children) {
+		Children.Reset();
+		//auto &r = skeleton->GetReferenceSkeleton();
+		auto &r = skeleton;
+
+		const int32 NumBones = r.GetRawBoneNum();
+		for (int32 ChildIndex = ParentBoneIndex + 1; ChildIndex < NumBones; ChildIndex++)
+		{
+			if (ParentBoneIndex == r.GetParentIndex(ChildIndex))
+			{
+				Children.Add(ChildIndex);
+			}
+		}
+		return Children.Num();
+	}
 }
 
 
@@ -129,14 +145,12 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	//USkeletalMeshComponent* PreviewMeshComp = PreviewScenePtr.Pin()->GetPreviewMeshComponent();
 	//USkeletalMesh* PreviewMesh = PreviewMeshComp->SkeletalMesh;
 
-	{
-		URig *EngineHumanoidRig = LoadObject<URig>(nullptr, TEXT("/Engine/EngineMeshes/Humanoid.Humanoid"), nullptr, LOAD_None, nullptr);
-		//FSoftObjectPath r(TEXT("/Engine/EngineMeshes/Humanoid.Humanoid"));
-		//UObject *u = r.TryLoad();
-		mc->SetSourceAsset(EngineHumanoidRig);
+	URig *EngineHumanoidRig = LoadObject<URig>(nullptr, TEXT("/Engine/EngineMeshes/Humanoid.Humanoid"), nullptr, LOAD_None, nullptr);
+	//FSoftObjectPath r(TEXT("/Engine/EngineMeshes/Humanoid.Humanoid"));
+	//UObject *u = r.TryLoad();
+	mc->SetSourceAsset(EngineHumanoidRig);
 
-		vrmAssetList->SkeletalMesh->Skeleton->SetRigConfig(EngineHumanoidRig);
-	}
+	vrmAssetList->SkeletalMesh->Skeleton->SetRigConfig(EngineHumanoidRig);
 
 
 	mc->SetTargetAsset(vrmAssetList->SkeletalMesh);
@@ -145,6 +159,14 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	FString PelvisBoneName;
 	{
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+
+		auto func = [&](const FString &a, const FString b) {
+			mc->AddMapping(*a, *b);
+			vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*a, *b);
+		};
+		auto func2 = [&](const FString &a, FName b) {
+			func(a, b.ToString());
+		};
 
 		if (meta) {
 			for (auto &t : table) {
@@ -175,8 +197,147 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 						PelvisBoneName = target;
 					}
 				}
-				mc->AddMapping(*ue4, *target);
-				vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*ue4, *target);
+				func(ue4, target);
+				//mc->AddMapping(*ue4, *target);
+				//vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*ue4, *target);
+			}
+		} else {
+			// auto mapping
+			
+			const auto &rSk = k->GetReferenceSkeleton(); //EngineHumanoidRig->GetSourceReferenceSkeleton();
+			
+			TArray<FString> rBoneList;
+			{
+				for (auto &a : rSk.GetRawRefBoneInfo()) {
+					rBoneList.Add(a.Name.ToString());
+				}
+			}
+			TArray<FString> existTable;
+			int boneIndex = -1;
+			for (auto &b : rBoneList) {
+				++boneIndex;
+
+				if (b.Find(TEXT("neck")) >= 0) {
+					const FString t = TEXT("neck_01");
+					if (existTable.Find(t) >= 0) {
+						continue;
+					}
+					existTable.Add(t);
+					func(t, b);
+
+					int p = boneIndex;
+
+					const TArray<FString> cc = {
+						TEXT("spine_03"),
+						TEXT("spine_02"),
+						TEXT("spine_01"),
+						TEXT("Pelvis"),
+						TEXT("Root"),
+					};
+
+					for (auto &a : cc) {
+						int p2 = rSk.GetParentIndex(p);
+						if (p2 >= 0) {
+							p = p2;
+						}
+						func2(a, rSk.GetBoneName(p));
+					}
+				}
+				if (b.Find(TEXT("head")) >= 0) {
+					const FString t = TEXT("head");
+					if (existTable.Find(t) >= 0) {
+						continue;
+					}
+					existTable.Add(t);
+					func(t, b);
+				}
+
+				if (b.Find(TEXT("hand")) >= 0) {
+					if (b.Find("r") >= 0) {
+						const FString t = TEXT("Hand_R");
+						if (existTable.Find(t) >= 0){
+							continue;
+						}
+						existTable.Add(t);
+
+						func(t, b);
+
+						int p = rSk.GetParentIndex(boneIndex);
+						func2(TEXT("lowerarm_r"), rSk.GetBoneName(p));
+
+						p = rSk.GetParentIndex(p);
+						func2(TEXT("UpperArm_R"), rSk.GetBoneName(p));
+
+						p = rSk.GetParentIndex(p);
+						func2(TEXT("clavicle_r"), rSk.GetBoneName(p));
+					}
+					if (b.Find("l") >= 0) {
+						const FString t = TEXT("Hand_L");
+						if (existTable.Find(t) >= 0) {
+							continue;
+						}
+						existTable.Add(t);
+
+						func(t, b);
+
+						int p = rSk.GetParentIndex(boneIndex);
+						func2(TEXT("lowerarm_l"), rSk.GetBoneName(p));
+
+						p = rSk.GetParentIndex(p);
+						func2(TEXT("UpperArm_L"), rSk.GetBoneName(p));
+
+						p = rSk.GetParentIndex(p);
+						func2(TEXT("clavicle_l"), rSk.GetBoneName(p));
+					}
+				}
+				if (b.Find(TEXT("foot")) >= 0) {
+					if (b.Find("r") >= 0) {
+						const FString t = TEXT("Foot_R");
+						if (existTable.Find(t) >= 0) {
+							continue;
+						}
+						existTable.Add(t);
+
+						func(t, b);
+
+						{
+							TArray<int32> c;
+							GetChildBoneLocal(rSk, boneIndex, c);
+							if (c.Num()) {
+								func2(TEXT("ball_r"), rSk.GetBoneName(c[0]));
+							}
+						}
+
+						int p = rSk.GetParentIndex(boneIndex);
+						func2(TEXT("calf_r"), rSk.GetBoneName(p));
+
+						p = rSk.GetParentIndex(p);
+						func2(TEXT("Thigh_R"), rSk.GetBoneName(p));
+					}
+					if (b.Find("l") >= 0) {
+						const FString t = TEXT("Foot_L");
+						if (existTable.Find(t) >= 0) {
+							continue;
+						}
+						existTable.Add(t);
+
+						func(t, b);
+
+						{
+							TArray<int32> c;
+							GetChildBoneLocal(rSk, boneIndex, c);
+							if (c.Num()) {
+								func2(TEXT("ball_l"), rSk.GetBoneName(c[0]));
+							}
+						}
+
+						int p = rSk.GetParentIndex(boneIndex);
+						func2(TEXT("calf_l"), rSk.GetBoneName(p));
+
+						p = rSk.GetParentIndex(p);
+						func2(TEXT("Thigh_L"), rSk.GetBoneName(p));
+					}
+				}
 			}
 		}
 	}
