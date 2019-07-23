@@ -201,6 +201,46 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				//mc->AddMapping(*ue4, *target);
 				//vrmAssetList->SkeletalMesh->Skeleton->SetRigBoneMapping(*ue4, *target);
 			}
+			{
+				const TArray<FString> cc = {
+					TEXT("Root"),
+					TEXT("Pelvis"),
+					TEXT("spine_01"),
+					TEXT("spine_02"),
+					TEXT("spine_03"),
+				};
+
+				for (int i = 1; i < cc.Num(); ++i) {
+					const auto &m = mc->GetNodeMappingTable();
+
+					const auto p0 = m.Find(*cc[i]);
+					if (p0) {
+						// map exist
+						continue;
+					}
+					const auto pp = m.Find(*cc[i-1]);
+					if (pp == nullptr) {
+						// parent none
+						continue;
+					}
+
+					// map=nullptr, parent=exist
+					FString newTarget = pp->ToString();
+
+					{
+						int32 index = k->GetReferenceSkeleton().FindBoneIndex(*pp);
+						TArray<int32> child;
+						GetChildBoneLocal(k->GetReferenceSkeleton(), index, child);
+						if (child.Num() == 1) {
+							// use one child
+							// need neck check...
+							//newTarget = k->GetReferenceSkeleton().GetBoneName(child[0]).ToString();
+						}
+					}
+
+					func(cc[i], newTarget);
+				}
+			}
 		} else {
 			// auto mapping
 			
