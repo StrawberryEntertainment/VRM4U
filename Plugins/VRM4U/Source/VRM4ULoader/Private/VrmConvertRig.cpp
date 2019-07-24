@@ -130,6 +130,26 @@ namespace {
 		}
 		return Children.Num();
 	}
+
+	static bool isSameOrChild(const FReferenceSkeleton &skeleton, const int32 TargetBoneIndex, const int32 SameOrChildBoneIndex) {
+		auto &r = skeleton;
+
+		int32 c = SameOrChildBoneIndex;
+		for (int i = 0; i < skeleton.GetRawBoneNum(); ++i) {
+
+			if (TargetBoneIndex < 0 || SameOrChildBoneIndex < 0) {
+				return false;
+			}
+
+			if (c == TargetBoneIndex) {
+				return true;
+			}
+
+
+			c = skeleton.GetParentIndex(c);
+		}
+		return false;
+	}
 }
 
 
@@ -208,15 +228,62 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 					TEXT("spine_01"),
 					TEXT("spine_02"),
 					TEXT("spine_03"),
+					TEXT("neck_01"),
 				};
 
+				// find bone from child bone
+				for (int i = cc.Num() - 1; i > 0; --i) {
+					const auto &m = mc->GetNodeMappingTable();
+
+					{
+						const auto p0 = m.Find(*cc[i]);
+						if (p0) {
+							// map exist
+							continue;
+						}
+					}
+					const auto p = m.Find(*cc[i + 1]);
+					if (p == nullptr) {
+						// child none
+						continue;
+					}
+
+					const FName *parentRoot = nullptr;
+					for (int toParent = i - 1; toParent > 0; --toParent) {
+						parentRoot = m.Find(*cc[toParent]);
+						if (parentRoot) {
+							break;
+						}
+					}
+					if (parentRoot == nullptr) {
+						continue;
+					}
+
+					// find (child) p -> (parent)parentRoot
+					FString newTarget = parentRoot->ToString();
+					{
+
+						const int32 index = k->GetReferenceSkeleton().FindBoneIndex(*p);
+						const int32 indexParent = k->GetReferenceSkeleton().GetParentIndex(index);
+						const int32 indexRoot = k->GetReferenceSkeleton().FindBoneIndex(*parentRoot);
+
+						if (isSameOrChild(k->GetReferenceSkeleton(), indexRoot, indexParent)) {
+							newTarget = k->GetReferenceSkeleton().GetBoneName(indexParent).ToString();
+						}
+					}
+					func(cc[i], newTarget);
+				}
+
+				// set null -> parent bone
 				for (int i = 1; i < cc.Num(); ++i) {
 					const auto &m = mc->GetNodeMappingTable();
 
-					const auto p0 = m.Find(*cc[i]);
-					if (p0) {
-						// map exist
-						continue;
+					{
+						const auto p0 = m.Find(*cc[i]);
+						if (p0) {
+							// map exist
+							continue;
+						}
 					}
 					const auto pp = m.Find(*cc[i-1]);
 					if (pp == nullptr) {
