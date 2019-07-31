@@ -33,7 +33,11 @@ void UVrmBPFunctionLibrary::VRMGetMaterialPropertyOverrides(const UMaterialInter
 		return;
 	}
 	BlendMode		= Material->GetBlendMode();
+#if	UE_VERSION_NEWER_THAN(4,22,0)
+	ShadingModel = Material->GetShadingModels().GetFirstShadingModel();
+#else
 	ShadingModel	= Material->GetShadingModel();
+#endif
 	IsTwoSided		= Material->IsTwoSided();
 	IsMasked		= Material->IsMasked();
 }
