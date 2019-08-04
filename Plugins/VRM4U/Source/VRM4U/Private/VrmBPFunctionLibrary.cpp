@@ -33,10 +33,10 @@ void UVrmBPFunctionLibrary::VRMGetMaterialPropertyOverrides(const UMaterialInter
 		return;
 	}
 	BlendMode		= Material->GetBlendMode();
-#if	UE_VERSION_NEWER_THAN(4,23,0)
-	ShadingModel = Material->GetShadingModels().GetFirstShadingModel();
+#if	UE_VERSION_OLDER_THAN(4,23,0)
+	ShadingModel = Material->GetShadingModel();
 #else
-	ShadingModel	= Material->GetShadingModel();
+	ShadingModel = Material->GetShadingModels().GetFirstShadingModel();
 #endif
 	IsTwoSided		= Material->IsTwoSided();
 	IsMasked		= Material->IsMasked();
@@ -63,7 +63,8 @@ void UVrmBPFunctionLibrary::VRMGetMobileMode(bool &IsMobile, bool &IsAndroid, bo
 
 void UVrmBPFunctionLibrary::VRMDrawMaterialToRenderTarget(UObject* WorldContextObject, UTextureRenderTarget2D* TextureRenderTarget, UMaterialInterface* Material)
 {
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
 
 	if (!World)

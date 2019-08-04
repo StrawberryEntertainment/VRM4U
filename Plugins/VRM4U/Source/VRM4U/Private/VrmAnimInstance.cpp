@@ -225,8 +225,7 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 		}
 	}
 	//
-#if	UE_VERSION_NEWER_THAN(4,21,0)
-#else
+#if	UE_VERSION_OLDER_THAN(4,21,0)
 	ComponentSpacePoseContext.Pose.ConvertToLocalPoses(Output.Pose);
 #endif
 

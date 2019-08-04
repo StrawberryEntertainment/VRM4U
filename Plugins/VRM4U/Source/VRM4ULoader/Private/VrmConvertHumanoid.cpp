@@ -69,7 +69,8 @@ bool VRMConverter::ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiSc
 	ss->CalculateExtendedBounds();
 #if WITH_EDITORONLY_DATA
 	ss->ConvertLegacyLODScreenSize();
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 	ss->UpdateGenerateUpToData();
 #endif
 #endif

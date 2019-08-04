@@ -487,7 +487,8 @@ void FAnimNode_VrmSpringBone::CacheBones_AnyThread(const FAnimationCacheBonesCon
 	Super::CacheBones_AnyThread(Context);
 }
 
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 void FAnimNode_VrmSpringBone::ResetDynamics(ETeleportType InTeleportType) {
 	Super::ResetDynamics(InTeleportType);
 }

@@ -17,11 +17,11 @@ class VRM4ULOADER_API UVrmSkeleton : public USkeleton
 	
 public:
 	/** IInterface_PreviewMeshProvider interface */
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 	virtual USkeletalMesh* GetPreviewMesh(bool bFindIfNotSet = false) override;
 	virtual USkeletalMesh* GetPreviewMesh() const override;
 	virtual void SetPreviewMesh(USkeletalMesh* PreviewMesh, bool bMarkAsDirty = true);
-#else
 #endif
 
 	virtual bool IsPostLoadThreadSafe() const override;

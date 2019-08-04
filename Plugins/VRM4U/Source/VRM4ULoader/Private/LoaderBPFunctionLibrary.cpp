@@ -166,7 +166,8 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 
 #if WITH_EDITORONLY_DATA
 	sk->ConvertLegacyLODScreenSize();
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 	sk->UpdateGenerateUpToData();
 #endif
 #endif

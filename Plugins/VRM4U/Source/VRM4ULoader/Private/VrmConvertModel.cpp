@@ -561,7 +561,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		sk->CalculateInvRefMatrices();
 		sk->CalculateExtendedBounds();
 #if WITH_EDITOR
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 		sk->UpdateGenerateUpToData();
 #endif
 		sk->ConvertLegacyLODScreenSize();
@@ -589,16 +590,16 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 		vrmAssetList->SkeletalMesh = sk;
 
-#if	UE_VERSION_NEWER_THAN(4,20,0)
-		{
-			FSkeletalMeshLODInfo &info = sk->AddLODInfo();
-		}
-#else
+#if	UE_VERSION_OLDER_THAN(4,20,0)
 		sk->LODInfo.AddZeroed(1);
 		//const USkeletalMeshLODSettings* DefaultSetting = sk->GetDefaultLODSetting();
 		// if failed to get setting, that means, we don't have proper setting 
 		// in that case, use last index setting
 		//!DefaultSetting->SetLODSettingsToMesh(sk, 0);
+#else
+		{
+			FSkeletalMeshLODInfo &info = sk->AddLODInfo();
+		}
 #endif
 
 		sk->AllocateResourceForRendering();
@@ -664,15 +665,15 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 			FSoftSkinVertexLocal softSkinVertexLocalZero;
 			{
-#if	UE_VERSION_NEWER_THAN(4,20,0)
-				softSkinVertexLocalZero.Position = softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = FVector::ZeroVector;
-				softSkinVertexLocalZero.TangentZ.Set(0, 0, 0, 1);
-#else
+#if	UE_VERSION_OLDER_THAN(4,20,0)
 				{
 					FPackedNormal n(0);
 					softSkinVertexLocalZero.Position = FVector::ZeroVector;
 					softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = softSkinVertexLocalZero.TangentZ = n;
 				}
+#else
+				softSkinVertexLocalZero.Position = softSkinVertexLocalZero.TangentX = softSkinVertexLocalZero.TangentY = FVector::ZeroVector;
+				softSkinVertexLocalZero.TangentZ.Set(0, 0, 0, 1);
 #endif
 				softSkinVertexLocalZero.Color = FColor::White;
 
@@ -1390,10 +1391,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 					totalTime = totalFrameNum / aiA->mTicksPerSecond;
 
-#if	UE_VERSION_NEWER_THAN(4,22,0)
-					ase->SetRawNumberOfFrame(totalFrameNum);
-#else
+#if	UE_VERSION_OLDER_THAN(4,22,0)
 					ase->NumFrames = totalFrameNum;
+#else
+					ase->SetRawNumberOfFrame(totalFrameNum);
 #endif
 				}
 			}

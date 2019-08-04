@@ -271,7 +271,9 @@ namespace {
 	UMaterial* CreateDefaultMaterial(UVrmAssetListObject *vrmAssetList) {
 		//auto MaterialFactory = NewObject<UMaterialFactoryNew>();
 
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public);
+#else
 		UMaterial* UnrealMaterial = nullptr;
 		if (vrmAssetList->Package == GetTransientPackage()) {
 			UnrealMaterial = NewObject<UMaterial>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, nullptr);
@@ -279,8 +281,6 @@ namespace {
 		else {
 			UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public, nullptr);
 		}
-#else
-		UMaterial* UnrealMaterial = NewObject<UMaterial>(vrmAssetList->Package, TEXT("M_BaseMaterial"), RF_Standalone | RF_Public);
 #endif
 
 		if (UnrealMaterial != NULL)

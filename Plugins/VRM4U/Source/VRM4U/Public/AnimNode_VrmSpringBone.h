@@ -71,7 +71,8 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 
 	virtual bool NeedsDynamicReset() const override { return true; }
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 	virtual void ResetDynamics(ETeleportType InTeleportType) override;
 #endif
 

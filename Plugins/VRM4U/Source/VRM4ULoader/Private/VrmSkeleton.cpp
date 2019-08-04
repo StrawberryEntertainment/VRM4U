@@ -13,7 +13,8 @@
 #include "VrmConvert.h"
 #endif
 
-#if	UE_VERSION_NEWER_THAN(4,20,0)
+#if	UE_VERSION_OLDER_THAN(4,20,0)
+#else
 USkeletalMesh* UVrmSkeleton::GetPreviewMesh(bool bFindIfNotSet)
 {
 	//return Super::GetPreviewMesh(bFindIfNotSet);
@@ -68,7 +69,6 @@ void UVrmSkeleton::SetPreviewMesh(USkeletalMesh* PreviewMesh, bool bMarkAsDirty)
 	PreviewSkeletalMesh = PreviewMesh;
 #endif
 }
-#else// UE420
 #endif	// UE420
 
 bool UVrmSkeleton::IsPostLoadThreadSafe() const
