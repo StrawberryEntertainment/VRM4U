@@ -35,7 +35,12 @@ if not %errorlevel% == 0 (
     goto err
 )
 
-::call %CLEAN% %PROJECTNAMEEDITOR% %PLATFORM% Development %UPROJECT% -waitmutex
+if %PLATFORM% == Android (
+    echo android
+) else (
+    echo not android
+    call %CLEAN% %PROJECTNAMEEDITOR% %PLATFORM% Development %UPROJECT% -waitmutex
+)
 
 call %BUILD% %PROJECTNAMEEDITOR%       %PLATFORM% Development %UPROJECT% -waitmutex
 
