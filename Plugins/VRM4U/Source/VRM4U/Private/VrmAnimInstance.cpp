@@ -326,9 +326,9 @@ void UVrmAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
 	//const auto boneTree = BaseSkeletalMeshComponent->SkeletalMesh->Skeleton->GetBoneTree();
 
 	if (targetComponent) {
-		for (auto &a : targetComponent->BoneSpaceTransforms) {
+		//for (auto &a : targetComponent->BoneSpaceTransforms) {
 		//	a.SetIdentity();
-		}
+		//}
 	}
 
 	//for (auto &b : boneTree) {
@@ -337,9 +337,9 @@ void UVrmAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
 void UVrmAnimInstance::NativePostEvaluateAnimation() {
 	auto targetComponent = Cast<USkeletalMeshComponent>(this);
 	if (targetComponent) {
-		for (auto &a : targetComponent->BoneSpaceTransforms) {
+		//for (auto &a : targetComponent->BoneSpaceTransforms) {
 			//a.SetIdentity();
-		}
+		//}
 	}
 
 	if (BaseSkeletalMeshComponent) {
