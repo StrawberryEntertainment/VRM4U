@@ -294,7 +294,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  define AI_NO_EXCEPT noexcept
 #else
 #  if (_MSC_VER >= 1915 )
-#    define AI_NO_EXCEPT noexcept
+#    define AI_NO_EXCEPT
 #  else
 #    define AI_NO_EXCEPT
 #  endif
