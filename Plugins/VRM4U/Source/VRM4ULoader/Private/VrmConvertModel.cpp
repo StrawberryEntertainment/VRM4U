@@ -1292,6 +1292,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	//NewAsset->FindSocket
 
 
+#if WITH_EDITOR
 	if (mScenePtr->mNumAnimations > 0){
 		UAnimSequence *ase;
 		ase = NewObject<UAnimSequence>(vrmAssetList->Package, *(TEXT("A_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
@@ -1448,9 +1449,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			ase->PostProcessSequence();
 		}
 		//AnimationTransformDebug::OutputAnimationTransformDebugData(TransformDebugData, TotalNumKeys, RefSkeleton);
-
-
 	}
+#endif
+
 	return true;
 }
 
