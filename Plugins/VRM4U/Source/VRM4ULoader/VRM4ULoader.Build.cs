@@ -69,7 +69,8 @@ public class VRM4ULoader : ModuleRules
             //PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, "assimp-vc140-mt.lib"));
             PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, "assimp/lib", PlatformString, BuildString, "assimp-vc140-mt.lib"));
 
-            RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(ThirdPartyPath, "assimp/bin", PlatformString, "assimp-vc140-mt.dll")));
+			PublicDelayLoadDLLs.Add("assimp-vc140-mt.dll");
+			RuntimeDependencies.Add(Path.Combine(ThirdPartyPath, "assimp/bin", PlatformString, "assimp-vc140-mt.dll"));
         }
         if (Target.Platform == UnrealTargetPlatform.Android)
         {
