@@ -156,165 +156,153 @@ namespace VRMSpring {
 		// x10 adjust?
 		FVector ue4grav(-gravityDir.X, gravityDir.Z, gravityDir.Y);
 
-		float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd;
-		FVector external = center.TransformVector(ue4grav) * (gravityPower * DeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * DeltaTime;
-		external *= 100.f; // to unreal scale
-		//external.Set(-external.X, external.Z, external.Y); // grav skip
+		const int MAX_LOOP = FMath::Max(1, animNode->loopc);
+		for (int i = 0; i < MAX_LOOP; ++i) {
+			//const float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd;
+			//FVector external = center.TransformVector(ue4grav) * (gravityPower * DeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * DeltaTime;
+			//external *= 100.f; // to unreal scale
+
+			float CurrentDeltaTime = DeltaTime / (float)MAX_LOOP;
+
+			const float stiffnessForce = stiffiness * CurrentDeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd;
+			FVector external = center.TransformVector(ue4grav) * (gravityPower * CurrentDeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * CurrentDeltaTime;
+			external *= 100.f; // to unreal scale
 
 
+			const auto WorldContext = Output.AnimInstanceProxy->GetSkelMeshComponent();
 
-		const auto WorldContext = Output.AnimInstanceProxy->GetSkelMeshComponent();
+			for (int springCount = 0; springCount < SpringDataChain.Num(); ++springCount) {
 
-		for (int springCount = 0; springCount < SpringDataChain.Num(); ++springCount) {
+				auto &ChainRoot = SpringDataChain[springCount];
+				FTransform currentTransform = FTransform::Identity;
 
-			auto &ChainRoot = SpringDataChain[springCount];
-			FTransform currentTransform = FTransform::Identity;
+				for (int chainCount = 0; chainCount < ChainRoot.Num(); ++chainCount) {
 
-			for (int chainCount = 0; chainCount < ChainRoot.Num(); ++chainCount) {
+					auto &sData = ChainRoot[chainCount];
 
-				auto &sData = ChainRoot[chainCount];
+					FVector currentTail = center.TransformPosition(sData.m_currentTail);
+					FVector prevTail = center.TransformPosition(sData.m_prevTail);
 
-				FVector currentTail = center.TransformPosition(sData.m_currentTail);
-				FVector prevTail = center.TransformPosition(sData.m_prevTail);
+					int myBoneIndex = RefSkeleton.FindBoneIndex(sData.boneName);
+					int myParentBoneIndex = RefSkeleton.GetParentIndex(myBoneIndex);
 
-				int myBoneIndex = RefSkeleton.FindBoneIndex(sData.boneName);
-				int myParentBoneIndex = RefSkeleton.GetParentIndex(myBoneIndex);
+					//currentTransform = FTransform::Identity;
+					FQuat ParentRotation = FQuat::Identity;
+					if (chainCount == 0) {
+						FCompactPoseBoneIndex uu(myBoneIndex);
+						FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(uu);
+						ParentRotation = NewBoneTM.GetRotation();
 
-				//currentTransform = FTransform::Identity;
-				FQuat ParentRotation = FQuat::Identity;
-				if (chainCount == 0) {
-					FCompactPoseBoneIndex uu(myBoneIndex);
-					FTransform NewBoneTM = Output.Pose.GetComponentSpaceTransform(uu);
-					ParentRotation = NewBoneTM.GetRotation();
+						currentTransform = NewBoneTM;
+					} else {
+						auto c = RefSkeletonTransform[sData.boneIndex];
+						auto t = c * currentTransform;
 
-					currentTransform = NewBoneTM;
-				}else {
-					auto c = RefSkeletonTransform[sData.boneIndex];
-					auto t = c * currentTransform;
-
-					ParentRotation = t.GetRotation();
-					currentTransform = t;
-				}
-				FQuat m_localRotation = FQuat::Identity;
+						ParentRotation = t.GetRotation();
+						currentTransform = t;
+					}
+					FQuat m_localRotation = FQuat::Identity;
 
 
-				// verlet積分で次の位置を計算
-				FVector nextTail = currentTail
-					+ (currentTail - prevTail) * (1.0f - dragForce) // 前フレームの移動を継続する(減衰もあるよ)
-					+ ParentRotation * m_localRotation * sData.m_boneAxis * stiffnessForce // 親の回転による子ボーンの移動目標
-					+ external // 外力による移動量
-					;
+					// verlet積分で次の位置を計算
+					FVector nextTail = currentTail
+						+ (currentTail - prevTail) * (1.0f - dragForce) // 前フレームの移動を継続する(減衰もあるよ)
+						+ ParentRotation * m_localRotation * sData.m_boneAxis * stiffnessForce // 親の回転による子ボーンの移動目標
+						+ external // 外力による移動量
+						;
 
-				// 長さをboneLengthに強制
-				//nextTail = sData.m_transform.GetLocation() + (nextTail - sData.m_transform.GetLocation()).GetSafeNormal() * sData.m_length;
-				nextTail = currentTransform.GetLocation() + (nextTail - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
+					// 長さをboneLengthに強制
+					//nextTail = sData.m_transform.GetLocation() + (nextTail - sData.m_transform.GetLocation()).GetSafeNormal() * sData.m_length;
+					nextTail = currentTransform.GetLocation() + (nextTail - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
 
-				// Collisionで移動
+					// Collisionで移動
 
-				// vrm <-> physics collision
-				if (animNode->bIgnorePhysicsCollision == false){
-					FVector Start = center.InverseTransformPosition(nextTail);
-					FVector End = Start + FVector(0.001f);
-					//* WorldContextObject
-					float Radius = hitRadius * 100.f;
-					ETraceTypeQuery TraceChannel = ETraceTypeQuery::TraceTypeQuery1;
-					bool bTraceComplex = false;
+					// vrm <-> physics collision
+					if (animNode->bIgnorePhysicsCollision == false) {
+						FVector Start = center.InverseTransformPosition(nextTail);
+						FVector End = Start + FVector(0.001f);
+						//* WorldContextObject
+						float Radius = hitRadius * 100.f;
+						ETraceTypeQuery TraceChannel = ETraceTypeQuery::TraceTypeQuery1;
+						bool bTraceComplex = false;
 
-					TArray<AActor*> ActorsToIgnore;
-					EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
-					TArray<FHitResult> OutHits;
-					bool bIgnoreSelf = true;
-					FLinearColor TraceColor;
-					FLinearColor TraceHitColor;
-					float DrawTime = 0.f;
+						TArray<AActor*> ActorsToIgnore;
+						EDrawDebugTrace::Type DrawDebugType = EDrawDebugTrace::None;
+						TArray<FHitResult> OutHits;
+						bool bIgnoreSelf = true;
+						FLinearColor TraceColor;
+						FLinearColor TraceHitColor;
+						float DrawTime = 0.f;
 
-					bool b = UKismetSystemLibrary::SphereTraceMulti(WorldContext, Start, End, hitRadius * 100.f,
-						TraceChannel, false, ActorsToIgnore, 
-						DrawDebugType,
-						OutHits, bIgnoreSelf, TraceColor, TraceHitColor, DrawTime);
-					if (b) {
-						for (auto hit : OutHits) {
-							{
-								//WorldContext->GetOwner
-								//hit.BoneName
-								
+						bool b = UKismetSystemLibrary::SphereTraceMulti(WorldContext, Start, End, hitRadius * 100.f,
+							TraceChannel, false, ActorsToIgnore,
+							DrawDebugType,
+							OutHits, bIgnoreSelf, TraceColor, TraceHitColor, DrawTime);
+						if (b) {
+							for (auto hit : OutHits) {
+								{
+									//WorldContext->GetOwner
+									//hit.BoneName
+
+								}
+								float r = hitRadius * 100.f + hit.Distance;
+								auto normal = hit.Normal;
+								auto posFromCollider = nextTail + normal * (r);
+								// 長さをboneLengthに強制
+								nextTail = currentTransform.GetLocation() + (posFromCollider - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
 							}
-							float r = hitRadius * 100.f + hit.Distance;
-							auto normal = hit.Normal;
-							auto posFromCollider = nextTail + normal * (r);
-							// 長さをboneLengthに強制
-							nextTail = currentTransform.GetLocation() + (posFromCollider - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
 						}
 					}
-				}
 
-				// vrm <-> vrm collision
-				if (animNode->bIgnoreVRMCollision == false){
-					for (auto ind : ColliderGroupIndexArray) {
-						const auto &cg = colliderGroup[ind];
+					// vrm <-> vrm collision
+					if (animNode->bIgnoreVRMCollision == false) {
+						for (auto ind : ColliderGroupIndexArray) {
+							const auto &cg = colliderGroup[ind];
 
-						int ii = RefSkeleton.FindBoneIndex(cg.node_name);
-						if (ii < 0) {
-							continue;
-						}
-
-						//FCompactPoseBoneIndex uu(cg.node);
-						FCompactPoseBoneIndex uu(ii);
-						FTransform collisionBoneTrans = Output.Pose.GetComponentSpaceTransform(uu);
-
-						for (auto c : cg.colliders) {
-
-
-							float r = (hitRadius + c.radius) * 100.f;
-							//FVector v = collisionBoneTrans.TransformPosition(c.offset*100);
-							auto offs = c.offset;
-							offs.Set(-offs.X, offs.Z, offs.Y);
-							offs *= 100;
-							FVector v = collisionBoneTrans.TransformPosition(offs);
-
-							if ((v - nextTail).SizeSquared() > r * r) {
+							int ii = RefSkeleton.FindBoneIndex(cg.node_name);
+							if (ii < 0) {
 								continue;
 							}
-							// ヒット。Colliderの半径方向に押し出す
-							//var normal = (nextTail - collider.Position).normalized;
-							//var posFromCollider = collider.Position + normal * (Radius + collider.Radius);
-							// 長さをboneLengthに強制
-							//nextTail = m_transform.position + (posFromCollider - m_transform.position).normalized * m_length;
 
-							// ヒット。Colliderの半径方向に押し出す
-							auto normal = (nextTail - v).GetSafeNormal();
-							auto posFromCollider = v + normal * (r);
-							// 長さをboneLengthに強制
-							nextTail = currentTransform.GetLocation() + (posFromCollider - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
+							//FCompactPoseBoneIndex uu(cg.node);
+							FCompactPoseBoneIndex uu(ii);
+							FTransform collisionBoneTrans = Output.Pose.GetComponentSpaceTransform(uu);
+
+							for (auto c : cg.colliders) {
+
+
+								float r = (hitRadius + c.radius) * 100.f;
+								//FVector v = collisionBoneTrans.TransformPosition(c.offset*100);
+								auto offs = c.offset;
+								offs.Set(-offs.X, offs.Z, offs.Y);
+								offs *= 100;
+								FVector v = collisionBoneTrans.TransformPosition(offs);
+
+								if ((v - nextTail).SizeSquared() > r * r) {
+									continue;
+								}
+
+								// ヒット。Colliderの半径方向に押し出す
+								auto normal = (nextTail - v).GetSafeNormal();
+								auto posFromCollider = v + normal * (r);
+								// 長さをboneLengthに強制
+								nextTail = currentTransform.GetLocation() + (posFromCollider - currentTransform.GetLocation()).GetSafeNormal() * sData.m_length;
+							}
 						}
 					}
+
+					sData.m_prevTail = center.InverseTransformPosition(currentTail);
+					sData.m_currentTail = center.InverseTransformPosition(nextTail);
+
+					FQuat rotation = ParentRotation * m_localRotation;
+
+					sData.m_resultQuat = FQuat::FindBetween((rotation * sData.m_boneAxis).GetSafeNormal(),
+						(nextTail - currentTransform.GetLocation()).GetSafeNormal()) * rotation;
+
+					currentTransform.SetRotation(sData.m_resultQuat);
 				}
-
-				{
-					//FCompactPoseBoneIndex uu(myBoneIndex);
-					//sData.m_transform = Output.Pose.GetComponentSpaceTransform(uu);//RefSkeletonTransform[myBoneIndex];
-					//sData.m_transform = currentTransform;
-				}
-
-				//nextTail.Set(100, 0, 0);
-
-				sData.m_prevTail = center.InverseTransformPosition(currentTail);
-				sData.m_currentTail = center.InverseTransformPosition(nextTail);
-
-				FQuat rotation = ParentRotation * m_localRotation;
-
-				//sData.m_resultQuat = FQuat::FindBetween((rotation * sData.m_boneAxis).GetSafeNormal(),
-				//	(nextTail - sData.m_transform.GetLocation()).GetSafeNormal()) * rotation;
-
-				sData.m_resultQuat = FQuat::FindBetween((rotation * sData.m_boneAxis).GetSafeNormal(),
-					(nextTail - currentTransform.GetLocation()).GetSafeNormal()) * rotation;
-				//sData.m_resultQuat = FQuat::FindBetween(rotation * sData.m_boneAxis,
-				//	nextTail) * rotation;
-
-				currentTransform.SetRotation(sData.m_resultQuat);
-
-			}
-		}
+			}// chain loop
+		}// delta time loop
 	}
 
 	void VRMSpringManager::reset() {
