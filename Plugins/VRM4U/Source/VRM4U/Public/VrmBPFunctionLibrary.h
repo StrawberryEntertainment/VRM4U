@@ -31,4 +31,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	static void VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	static UObject* VRMDuplicateAsset(UObject *src, FString name, UObject *thisOwner);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	static void VRMSetMaterial(USkeletalMesh *target, int no, UMaterialInterface *material);
 };

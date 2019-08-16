@@ -5,6 +5,7 @@
 
 #include "Engine/Engine.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Engine/SkeletalMesh.h"
 #include "Logging/MessageLog.h"
 #include "Engine/Canvas.h"
 #include "Materials/MaterialInstanceConstant.h"
@@ -149,6 +150,26 @@ void UVrmBPFunctionLibrary::VRMChangeMaterialParent(UMaterialInstanceConstant *d
 	dst->Parent = NewParent;
 	dst->PostLoad();
 #endif
+}
+
+UObject* UVrmBPFunctionLibrary::VRMDuplicateAsset(UObject *src, FString name, UObject *thisOwner) {
+	if (src == nullptr) {
+		return nullptr;
+	}
+	if (thisOwner == nullptr) {
+		return nullptr;
+	}
+
+	auto *a = DuplicateObject<UObject>(src, thisOwner->GetOuter(), *name);
+	return a;
+}
 
 
+void UVrmBPFunctionLibrary::VRMSetMaterial(USkeletalMesh *target, int no, UMaterialInterface *material) {
+	if (target == nullptr) {
+		return;
+	}
+	if (no < target->Materials.Num()) {
+		target->Materials[no].MaterialInterface = material;
+	}
 }
