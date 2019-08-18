@@ -10,6 +10,9 @@
 #include "Engine/Canvas.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Misc/EngineVersionComparison.h"
+#include "AssetRegistryModule.h"
+#include "ARFilter.h"
+
 
 //#include "VRM4U.h"
 
@@ -173,3 +176,14 @@ void UVrmBPFunctionLibrary::VRMSetMaterial(USkeletalMesh *target, int no, UMater
 		target->Materials[no].MaterialInterface = material;
 	}
 }
+
+bool UVrmBPFunctionLibrary::VRMGetAssetsByPackageName(FName PackageName, TArray<FAssetData>& OutAssetData, bool bIncludeOnlyOnDiskAssets){
+
+	OutAssetData.Empty();
+
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+	auto &AssetRegistry = AssetRegistryModule.Get();
+
+	return AssetRegistry.GetAssetsByPackageName(PackageName, OutAssetData, bIncludeOnlyOnDiskAssets);
+}
+

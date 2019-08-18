@@ -47,7 +47,7 @@ public class VRM4U : ModuleRules
 
                 // ... add other public dependencies that you statically link with here ...
 			}
-            );
+			);
 
 
         PrivateDependencyModuleNames.AddRange(
@@ -56,9 +56,10 @@ public class VRM4U : ModuleRules
 				"Slate",
 				"SlateCore",
                 "Engine",
+				"AssetRegistry",
 				// ... add private dependencies that you statically link with here ...	
 			}
-            );
+			);
 
         DynamicallyLoadedModuleNames.AddRange(
 			new string[]
