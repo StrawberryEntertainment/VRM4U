@@ -15,6 +15,7 @@
 #include "GenericPlatform/GenericApplication.h"
 #include "VrmDropFiles.h"
 #include "VrmRuntimeSettings.h"
+#include "HAL/FileManager.h"
 
 
 class FDropMessageHandler : public IWindowsMessageHandler { 
@@ -84,6 +85,10 @@ public:
 #define LOCTEXT_NAMESPACE "FVRM4ULoaderModule"
 
 class FVRM4ULoaderModule : public IModuleInterface {
+#if PLATFORM_WINDOWS
+	void *assimpDllHandle = nullptr;
+#endif
+
 	void StartupModule()
 	{
 		// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -103,6 +108,12 @@ class FVRM4ULoaderModule : public IModuleInterface {
 			}
 		}
 
+		{
+			FString AbsPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*(FPaths::ProjectPluginsDir() / TEXT("VRM4U/ThirdParty/assimp/bin/x64")));
+			//FPlatformProcess::AddDllDirectory(*AbsPath);
+			assimpDllHandle = FPlatformProcess::GetDllHandle(*(AbsPath / TEXT("assimp-vc140-mt.dll")));
+		}
+
 #endif
 
 	}
@@ -111,6 +122,13 @@ class FVRM4ULoaderModule : public IModuleInterface {
 	{
 		// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 		// we call this function before unloading the module.
+
+#if PLATFORM_WINDOWS
+		if (assimpDllHandle){
+			FPlatformProcess::FreeDllHandle(assimpDllHandle);
+			assimpDllHandle = nullptr;
+		}
+#endif
 	}
 };
 
