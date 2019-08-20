@@ -187,3 +187,22 @@ bool UVrmBPFunctionLibrary::VRMGetAssetsByPackageName(FName PackageName, TArray<
 	return AssetRegistry.GetAssetsByPackageName(PackageName, OutAssetData, bIncludeOnlyOnDiskAssets);
 }
 
+UTextureRenderTarget2D* UVrmBPFunctionLibrary::VRMCreateRenderTarget2D(UObject* WorldContextObject, int32 Width, int32 Height, ETextureRenderTargetFormat Format, FLinearColor ClearColor)
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+
+	if (Width > 0 && Height > 0 && World)
+	{
+		UTextureRenderTarget2D* NewRenderTarget2D = NewObject<UTextureRenderTarget2D>(WorldContextObject);
+		check(NewRenderTarget2D);
+		NewRenderTarget2D->RenderTargetFormat = Format;
+		NewRenderTarget2D->ClearColor = ClearColor;
+		NewRenderTarget2D->InitAutoFormat(Width, Height);
+		NewRenderTarget2D->UpdateResourceImmediate(true);
+
+		return NewRenderTarget2D;
+	}
+
+	return nullptr;
+}
+
