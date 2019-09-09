@@ -80,52 +80,6 @@ namespace {
 	}
 
 
-	static UTexture2D* createTex(int32 InSizeX, int32 InSizeY, FString name, UPackage *package) {
-		auto format = PF_B8G8R8A8;
-		UTexture2D* NewTexture = NULL;
-		if (InSizeX > 0 && InSizeY > 0 &&
-			(InSizeX % GPixelFormats[format].BlockSizeX) == 0 &&
-			(InSizeY % GPixelFormats[format].BlockSizeY) == 0)
-		{
-			if (package == GetTransientPackage()) {
-				NewTexture = NewObject<UTexture2D>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
-			}
-			else {
-				NewTexture = NewObject<UTexture2D>(
-					// GetTransientPackage(),
-					package,
-					*name,
-					//RF_Transient
-					RF_Public | RF_Standalone
-					);
-			}
-			NewTexture->Modify();
-#if WITH_EDITOR
-			NewTexture->PreEditChange(NULL);
-#endif
-
-			NewTexture->PlatformData = new FTexturePlatformData();
-			NewTexture->PlatformData->SizeX = InSizeX;
-			NewTexture->PlatformData->SizeY = InSizeY;
-			NewTexture->PlatformData->PixelFormat = format;
-
-			int32 NumBlocksX = InSizeX / GPixelFormats[format].BlockSizeX;
-			int32 NumBlocksY = InSizeY / GPixelFormats[format].BlockSizeY;
-			FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
-			Mip->SizeX = InSizeX;
-			Mip->SizeY = InSizeY;
-			Mip->BulkData.Lock(LOCK_READ_WRITE);
-			Mip->BulkData.Realloc(NumBlocksX * NumBlocksY * GPixelFormats[format].BlockBytes);
-			Mip->BulkData.Unlock();
-		}
-		else
-		{
-			UE_LOG(LogTexture, Warning, TEXT("Invalid parameters specified for UTexture2D::Create()"));
-		}
-		return NewTexture;
-	}
-
-
 	bool createAndAddMaterial(UMaterialInstanceConstant *dm, int matIndex, UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 		auto i = matIndex;
 		const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
@@ -382,6 +336,50 @@ namespace {
 	}
 }// namespace
 
+UTexture2D* VRMConverter::CreateTexture(int32 InSizeX, int32 InSizeY, FString name, UPackage *package) {
+	auto format = PF_B8G8R8A8;
+	UTexture2D* NewTexture = NULL;
+	if (InSizeX > 0 && InSizeY > 0 &&
+		(InSizeX % GPixelFormats[format].BlockSizeX) == 0 &&
+		(InSizeY % GPixelFormats[format].BlockSizeY) == 0)
+	{
+		if (package == GetTransientPackage()) {
+			NewTexture = NewObject<UTexture2D>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
+		} else {
+			NewTexture = NewObject<UTexture2D>(
+				// GetTransientPackage(),
+				package,
+				*name,
+				//RF_Transient
+				RF_Public | RF_Standalone
+				);
+		}
+		NewTexture->Modify();
+#if WITH_EDITOR
+		NewTexture->PreEditChange(NULL);
+#endif
+
+		NewTexture->PlatformData = new FTexturePlatformData();
+		NewTexture->PlatformData->SizeX = InSizeX;
+		NewTexture->PlatformData->SizeY = InSizeY;
+		NewTexture->PlatformData->PixelFormat = format;
+
+		int32 NumBlocksX = InSizeX / GPixelFormats[format].BlockSizeX;
+		int32 NumBlocksY = InSizeY / GPixelFormats[format].BlockSizeY;
+		FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
+		Mip->SizeX = InSizeX;
+		Mip->SizeY = InSizeY;
+		Mip->BulkData.Lock(LOCK_READ_WRITE);
+		Mip->BulkData.Realloc(NumBlocksX * NumBlocksY * GPixelFormats[format].BlockBytes);
+		Mip->BulkData.Unlock();
+	} else
+	{
+		UE_LOG(LogTexture, Warning, TEXT("Invalid parameters specified for UTexture2D::Create()"));
+	}
+	return NewTexture;
+}
+
+
 bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 	if (vrmAssetList == nullptr || mScenePtr == nullptr) {
 		return false;
@@ -444,7 +442,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 			}
 
-			UTexture2D* NewTexture2D = createTex(Width, Height, FString(TEXT("T_")) + baseName, vrmAssetList->Package);
+			UTexture2D* NewTexture2D = CreateTexture(Width, Height, FString(TEXT("T_")) + baseName, vrmAssetList->Package);
 			//UTexture2D* NewTexture2D = _CreateTransient(Width, Height, PF_B8G8R8A8, t.mFilename.C_Str());
 
 			// Fill in the base mip for the texture we created

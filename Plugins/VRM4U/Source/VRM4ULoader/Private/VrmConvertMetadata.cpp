@@ -18,26 +18,45 @@
 #include "UObject/Package.h"
 #include "UObject/UObjectGlobals.h"
 
+static UVrmLicenseObject *tmpLicense = nullptr;
+UVrmLicenseObject* VRMConverter::GetVRMMeta(const aiScene *mScenePtr) {
+	tmpLicense = nullptr;
+	VRMConverter::ConvertVrmMeta(nullptr, mScenePtr);
+
+	return tmpLicense;
+}
+
 
 bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 
+	tmpLicense = nullptr;
 	VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
-	UVrmMetaObject *m;
-	if (vrmAssetList->Package == GetTransientPackage()) {
-		m = NewObject<UVrmMetaObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
-	}else {
-		m = NewObject<UVrmMetaObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_Meta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-	}
-	vrmAssetList->VrmMetaObject = m;
+	UVrmMetaObject *m = nullptr;
+	UVrmLicenseObject *lic = nullptr;
 
-	UVrmLicenseObject *lic;
-	if (vrmAssetList->Package == GetTransientPackage()) {
-		lic = NewObject<UVrmLicenseObject>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
-	}else {
-		lic = NewObject<UVrmLicenseObject>(vrmAssetList->Package, *(vrmAssetList->BaseFileName + TEXT("_License")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+	{
+		UPackage *package = GetTransientPackage();
+
+		if (vrmAssetList) {
+			package = vrmAssetList->Package;
+		}
+
+		if (package == GetTransientPackage()) {
+			m = NewObject<UVrmMetaObject>(package, NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
+			lic = NewObject<UVrmLicenseObject>(package, NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
+		} else {
+			m = NewObject<UVrmMetaObject>(package, *(vrmAssetList->BaseFileName + TEXT("_Meta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			lic = NewObject<UVrmLicenseObject>(package, *(vrmAssetList->BaseFileName + TEXT("_License")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		}
+
+		if (vrmAssetList) {
+			vrmAssetList->VrmMetaObject = m;
+			vrmAssetList->VrmLicenseObject = lic;
+		} else {
+			tmpLicense = lic;
+		}
 	}
-	vrmAssetList->VrmLicenseObject = lic;
 
 	if (meta == nullptr) {
 		return false;
@@ -139,18 +158,18 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 					t.dst = UTF8_TO_TCHAR(p.Value.C_Str());
 				}
 			}
-			if (FString(TEXT("texture")) == p.Key.C_Str()) {
+			if (vrmAssetList) {
+				if (FString(TEXT("texture")) == p.Key.C_Str()) {
 
-				int t = FCString::Atoi(*FString(p.Value.C_Str()));
-				if (t >= 0 && t < vrmAssetList->Textures.Num()) {
-					lic->thumbnail = vrmAssetList->Textures[t];
+					int t = FCString::Atoi(*FString(p.Value.C_Str()));
+					if (t >= 0 && t < vrmAssetList->Textures.Num()) {
+						lic->thumbnail = vrmAssetList->Textures[t];
+						break;
+					}
 				}
 			}
-
 		}
 	}
-
-
 
 	return true;
 }

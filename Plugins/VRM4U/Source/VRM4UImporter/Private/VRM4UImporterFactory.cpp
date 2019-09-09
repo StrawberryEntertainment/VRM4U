@@ -25,6 +25,7 @@
 #include "VrmOptionWindow.h"
 #include "VrmImportUI.h"
 #include "VrmConvert.h"
+#include "VrmLicenseObject.h"
 
 #define LOCTEXT_NAMESPACE "VRMImporter"
 
@@ -122,12 +123,22 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 {
 	
 	static UVrmImportUI *ImportUI = nullptr;
-	
+	TAssetPtr<UObject> refPointerToLic;
 	{
 		if (ImportUI == nullptr){
 			ImportUI = NewObject<UVrmImportUI>(this, NAME_None, RF_NoFlags);
 			ImportUI->AddToRoot();
 		}
+
+		{
+			auto *p = ULoaderBPFunctionLibrary::GetVRMMeta(fullFileName);
+			
+			ImportUI->TitleAuthor = TEXT("\"") + p->title + TEXT("\"") + TEXT(" / ") + TEXT("\"") + p->author + TEXT("\"");
+			ImportUI->Thumbnail = p->thumbnail;
+
+			refPointerToLic = p;
+		}
+
 
 		TSharedPtr<SWindow> ParentWindow;
 
@@ -174,7 +185,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		);
 
 		// @todo: we can make this slow as showing progress bar later
-		FSlateApplication::Get().AddModalWindow(Window, ParentWindow, false);
+		FSlateApplication::Get().AddModalWindow(Window, ParentWindow);
 
 		if (VrmOptionWindow->ShouldImport() == false) {
 			return nullptr;
@@ -375,8 +386,8 @@ UVrmImportUI::UVrmImportUI(const FObjectInitializer& ObjectInitializer)
 
 bool UVrmImportUI::CanEditChange( const UProperty* InProperty ) const
 {
-	/*
 	bool bIsMutable = Super::CanEditChange( InProperty );
+	/*
 	if( bIsMutable && InProperty != NULL )
 	{
 		FName PropName = InProperty->GetFName();
@@ -395,10 +406,8 @@ bool UVrmImportUI::CanEditChange( const UProperty* InProperty ) const
 			bIsMutable = false;
 		}
 	}
-
+*/
 	return bIsMutable;
-	*/
-	return true;
 }
 
 void UVrmImportUI::ParseFromJson(TSharedRef<class FJsonObject> ImportSettingsJson)

@@ -16,6 +16,7 @@ class UTexture2D;
 class UMaterialInterface;
 class USkeletalMesh;
 class UVrmAssetListObject;
+class UVrmLicenseObject;
 class UPackage;
 
 UENUM(BlueprintType)
@@ -40,12 +41,14 @@ public:
 
 	static bool NormalizeBoneName(const aiScene *mScenePtr);
 
+	static UTexture2D* CreateTexture(int32 InSizeX, int32 InSizeY, FString name, UPackage *package);
 	static bool ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
 	static bool ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
 	static bool ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 
+	static UVrmLicenseObject *GetVRMMeta(const aiScene *mScenePtr);
 	static bool ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertHumanoid(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);
 	static bool ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr);

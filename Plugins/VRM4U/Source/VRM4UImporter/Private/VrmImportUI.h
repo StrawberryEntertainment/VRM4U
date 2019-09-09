@@ -33,9 +33,16 @@ public:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, config, Category=Miscellaneous, meta=(OBJRestrict="true"))
 	//uint32 bOverrideFullName:1;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Thumbnail"))
+	//UVrmLicenseObject *License;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "VRM Title / Author"))
+	FString TitleAuthor;
+
 	/** Remove bone has no mesh */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Remove bone used DCC tool"))
 	bool bSimpleRoot = true;
+
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Delete bone without mesh"))
 	bool bSkipNoMeshBone = false;
@@ -78,6 +85,9 @@ public:
 	/** Materal Type */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	TEnumAsByte<enum EVRMImportMaterialType> MaterialType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = Thumbnail, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Thumbnail"))
+	UTexture2D *Thumbnail;
 
 
 	/** If checked, create new PhysicsAsset if it doesn't have it */

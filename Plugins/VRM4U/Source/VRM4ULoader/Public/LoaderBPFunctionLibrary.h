@@ -5,8 +5,6 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "LoaderBPFunctionLibrary.generated.h"
 
-class UVrmAssetListObject;
-
 UENUM(BlueprintType)
 enum class EPathType : uint8
 {
@@ -79,7 +77,7 @@ class VRM4ULOADER_API ULoaderBPFunctionLibrary : public UBlueprintFunctionLibrar
 public:
 
 	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "OutVrmAsset"))
-	static bool LoadVRMFile(const UVrmAssetListObject *InVrmAsset, UVrmAssetListObject *&OutVrmAsset, FString filepath);
+	static bool LoadVRMFile(const class UVrmAssetListObject *InVrmAsset, class UVrmAssetListObject *&OutVrmAsset, FString filepath);
 
 	static void SetImportMode(bool bImportMode, class UPackage *package);
 
@@ -93,5 +91,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	static bool CopyPhysicsAsset(USkeletalMesh *dstMesh, const USkeletalMesh *srcMesh);
+
+	static class UVrmLicenseObject *GetVRMMeta(FString filepath);
 
 };
