@@ -53,23 +53,40 @@ namespace {
 UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	Formats.Add( TEXT( "vrm;Model" ) );
-	Formats.Add(TEXT("glb;Model"));
-	Formats.Add(TEXT("bvh;Model"));
+
+	FString table[] = {
+		TEXT("vrm"),
+		TEXT("glb"),
+		TEXT("bvh"),
+	};
+	for (auto &a : table) {
+		Formats.Add(a + TEXT(";Model VRM4U"));
+	}
 
 	bCreateNew = false;
 	bEditorImport = true;
 
-	ImportPriority = DefaultImportPriority - 10;
+	ImportPriority = FMath::Max(0, DefaultImportPriority - 10);
 }
 
 
 bool UVRM4UImporterFactory::FactoryCanImport(const FString& Filename)
 {
+	fullFileName.Empty();
+
 	const FString Extension = FPaths::GetExtension(Filename);
+	bool allowAll = false;
+
+	const UVrmRuntimeSettings* Settings = GetDefault<UVrmRuntimeSettings>();
+	if (Settings) {
+		if (Settings->bAllowAllAssimpFormat) {
+			allowAll = true;
+		}
+	}
+
 
 	//if( Extension == TEXT("vrm") || Extension == TEXT("gltf") || Extension == TEXT("glb"))
-	if( Extension == TEXT("vrm") || Extension == TEXT("glb") || Extension == TEXT("bvh"))
+	if(allowAll || Extension == TEXT("vrm") || Extension == TEXT("glb") || Extension == TEXT("bvh"))
 	{
 		fullFileName = Filename;
 		return true;
@@ -121,6 +138,9 @@ T* GetObjectFromStringAsset(FStringAssetReference const& AssetRef)
 
 UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn)
 {
+	if (fullFileName.IsEmpty()) {
+		return nullptr;
+	}
 	
 	static UVrmImportUI *ImportUI = nullptr;
 	TAssetPtr<UObject> refPointerToLic;
@@ -129,14 +149,17 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 			ImportUI = NewObject<UVrmImportUI>(this, NAME_None, RF_NoFlags);
 			ImportUI->AddToRoot();
 		}
+		ImportUI->TitleAuthor.Empty();
+		ImportUI->Thumbnail = nullptr;
 
 		{
 			auto *p = ULoaderBPFunctionLibrary::GetVRMMeta(fullFileName);
-			
-			ImportUI->TitleAuthor = TEXT("\"") + p->title + TEXT("\"") + TEXT(" / ") + TEXT("\"") + p->author + TEXT("\"");
-			ImportUI->Thumbnail = p->thumbnail;
+			if (p) {
+				ImportUI->TitleAuthor = TEXT("\"") + p->title + TEXT("\"") + TEXT(" / ") + TEXT("\"") + p->author + TEXT("\"");
+				ImportUI->Thumbnail = p->thumbnail;
 
-			refPointerToLic = p;
+				refPointerToLic = p;
+			}
 		}
 
 

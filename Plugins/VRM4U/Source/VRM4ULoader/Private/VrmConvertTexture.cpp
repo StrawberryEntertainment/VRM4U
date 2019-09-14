@@ -620,8 +620,9 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			//MyComponent1->SetMaterial(0, DynMaterial);
 			//MyComponent2->SetMaterial(0, DynMaterial);
 
-			if (index >= 0 && index < vrmAssetList->Textures.Num()) {
-				
+			if (index >= 0) {
+			//if (index >= 0 && index < vrmAssetList->Textures.Num()) {
+
 				UMaterialInstanceConstant* dm = nullptr;
 				{
 					const FString origname = (FString(TEXT("M_")) + NormalizeFileName(aiMat.GetName().C_Str()));
@@ -670,7 +671,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 							v->ParameterValue = FLinearColor(f[0], f[1], 0, 0);
 						}
 					}
-					{
+					if (index < vrmAssetList->Textures.Num()) {
 						LocalTextureSet(dm, TEXT("gltf_tex_diffuse"), vrmAssetList->Textures[index]);
 					}
 					{

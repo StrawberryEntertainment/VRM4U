@@ -239,7 +239,9 @@ UVrmLicenseObject* ULoaderBPFunctionLibrary::GetVRMMeta(FString filepath) {
 
 		//UE_LOG(LogTemp, Log, TEXT("VRM:(%3.3lf secs) ReadFileFromMemory"), FPlatformTime::Seconds() - StartTime);
 	}
-
+	if (mScenePtr == nullptr) {
+		return nullptr;
+	}
 	auto *p = VRMConverter::GetVRMMeta(mScenePtr);
 
 	UTexture2D* NewTexture2D = nullptr;
@@ -393,6 +395,9 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		mScenePtr = mImporter.ReadFileFromMemory(Res.GetData(), Res.Num(),
 			aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes,
 			e.c_str());
+		if (mScenePtr == nullptr) {
+			mScenePtr = mImporter.ReadFile(file, aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes);
+		}
 
 		UE_LOG(LogTemp, Log, TEXT("VRM:(%3.3lf secs) ReadFileFromMemory"), FPlatformTime::Seconds() - StartTime);
 		StartTime = FPlatformTime::Seconds();

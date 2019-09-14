@@ -26,6 +26,9 @@ class VRM4U_API UVrmRuntimeSettings : public UObject
 		))
 	uint32 bDropVRMFileEnable:1;
 
+	UPROPERTY(EditAnywhere, Category = Settings)
+	bool bAllowAllAssimpFormat = true;
+
 	//UPROPERTY(config, EditAnywhere, Category = Settings, meta = (AllowedClasses = "VrmAssetListObject", ExactClass = false))
 
 	// Asset List
