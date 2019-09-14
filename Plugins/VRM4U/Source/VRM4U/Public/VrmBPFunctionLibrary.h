@@ -20,6 +20,8 @@ public:
 	UFUNCTION(BlueprintCallable,Category="VRM4U")
 	static void VRMTransMatrix(const FTransform &transform, TArray<FLinearColor> &matrix, TArray<FLinearColor> &matrix_inv);
 
+	UFUNCTION(BlueprintPure, Category = "VRM4U")
+	static void VRMGetMorphTargetList(const USkeletalMesh *target, TArray<FString> &morphTargetList);
 
 	UFUNCTION(BlueprintPure, Category = "VRM4U")
 	static void VRMGetMaterialPropertyOverrides(const UMaterialInterface *Material, TEnumAsByte<EBlendMode> &BlendMode, TEnumAsByte<EMaterialShadingModel> &ShadingModel, bool &IsTwoSided, bool &IsMasked);

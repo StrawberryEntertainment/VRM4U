@@ -9,6 +9,7 @@
 #include "Logging/MessageLog.h"
 #include "Engine/Canvas.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Animation/MorphTarget.h"
 #include "Misc/EngineVersionComparison.h"
 #include "AssetRegistryModule.h"
 #include "ARFilter.h"
@@ -31,6 +32,18 @@ void UVrmBPFunctionLibrary::VRMTransMatrix(const FTransform &transform, TArray<F
 
 	return;
 }
+
+void UVrmBPFunctionLibrary::VRMGetMorphTargetList(const USkeletalMesh *target, TArray<FString> &morphTargetList) {
+	morphTargetList.Empty();
+
+	if (target == nullptr) {
+		return;
+	}
+	for (const auto &a : target->MorphTargets) {
+		morphTargetList.Add(a->GetName());
+	}
+}
+
 
 void UVrmBPFunctionLibrary::VRMGetMaterialPropertyOverrides(const UMaterialInterface *Material, TEnumAsByte<EBlendMode> &BlendMode, TEnumAsByte<EMaterialShadingModel> &ShadingModel, bool &IsTwoSided, bool &IsMasked){
 	if (Material == nullptr) {
