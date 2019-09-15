@@ -22,12 +22,16 @@ void UVrmAssetListObject::CopyMember(UVrmAssetListObject *dst) const {
 	dst->BaseMToonLitOpaqueMaterial = BaseMToonLitOpaqueMaterial;
 	dst->BaseMToonLitTranslucentMaterial = BaseMToonLitTranslucentMaterial;
 	dst->OptMToonLitOpaqueMaterial = OptMToonLitOpaqueMaterial;
+	dst->OptMToonLitOpaqueTwoSidedMaterial = OptMToonLitOpaqueTwoSidedMaterial;
 	dst->OptMToonLitTranslucentMaterial = OptMToonLitTranslucentMaterial;
+	dst->OptMToonLitTranslucentTwoSidedMaterial = OptMToonLitTranslucentTwoSidedMaterial;
 
 	dst->BaseMToonUnlitOpaqueMaterial = BaseMToonUnlitOpaqueMaterial;
 	dst->BaseMToonUnlitTranslucentMaterial = BaseMToonUnlitTranslucentMaterial;
 	dst->OptMToonUnlitOpaqueMaterial = OptMToonUnlitOpaqueMaterial;
+	dst->OptMToonUnlitOpaqueTwoSidedMaterial = OptMToonUnlitOpaqueTwoSidedMaterial;
 	dst->OptMToonUnlitTranslucentMaterial = OptMToonUnlitTranslucentMaterial;
+	dst->OptMToonUnlitTranslucentTwoSidedMaterial = OptMToonUnlitTranslucentTwoSidedMaterial;
 
 	dst->OptMToonOutlineMaterial = OptMToonOutlineMaterial;
 

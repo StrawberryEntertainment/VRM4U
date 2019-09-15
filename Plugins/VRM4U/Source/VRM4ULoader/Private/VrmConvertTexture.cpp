@@ -165,10 +165,10 @@ namespace {
 				//v->ParameterValue = t.value;
 			}
 
-			if (vrmMat.floatProperties._CullMode == 0.f) {
-				dm->BasePropertyOverrides.bOverride_TwoSided = true;
-				dm->BasePropertyOverrides.TwoSided = 1;
-			}
+			//if (vrmMat.floatProperties._CullMode == 0.f) {
+			//	dm->BasePropertyOverrides.bOverride_TwoSided = true;
+			//	dm->BasePropertyOverrides.TwoSided = 1;
+			//}
 			if (vrmMat.floatProperties._Cutoff != 0.f) {
 				dm->BasePropertyOverrides.bOverride_OpacityMaskClipValue = true;
 				dm->BasePropertyOverrides.OpacityMaskClipValue = vrmMat.floatProperties._Cutoff;
@@ -181,8 +181,8 @@ namespace {
 					break;
 				case 2:
 				case 3:
-					dm->BasePropertyOverrides.bOverride_BlendMode = true;
-					dm->BasePropertyOverrides.BlendMode = EBlendMode::BLEND_Translucent;
+					//dm->BasePropertyOverrides.bOverride_BlendMode = true;
+					//dm->BasePropertyOverrides.BlendMode = EBlendMode::BLEND_Translucent;
 					break;
 				}
 			}
@@ -552,10 +552,52 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 				// mtoon optimize
 				if (bMToon && bOptimizeMaterial) {
+					bool bTwoSided = false;
+					bool bTranslucent = false;
+					{
+						aiString alphaMode;
+						aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+						FString alpha = alphaMode.C_Str();
+						if (alpha == TEXT("BLEND")) {
+							bTranslucent = true;
+						}
+
+						const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+						if ((int)iMat < meta->materialNum) {
+							auto &vrmMat = meta->material[iMat];
+							if (vrmMat.floatProperties._CullMode == 0.f) {
+								bTwoSided = true;
+							}
+						}
+					}
+
+					// lit, opaque, twoside
+					UMaterialInterface *table[2][2][2] = {
+						{
+							vrmAssetList->OptMToonLitOpaqueMaterial,
+							vrmAssetList->OptMToonLitOpaqueTwoSidedMaterial,
+							vrmAssetList->OptMToonLitTranslucentMaterial,
+							vrmAssetList->OptMToonLitTranslucentTwoSidedMaterial,
+						},
+						{
+							vrmAssetList->OptMToonUnlitOpaqueMaterial,
+							vrmAssetList->OptMToonUnlitOpaqueTwoSidedMaterial,
+							vrmAssetList->OptMToonUnlitTranslucentMaterial,
+							vrmAssetList->OptMToonUnlitTranslucentTwoSidedMaterial,
+						},
+					};
+					int c[3] = {
+						bLit ? 0 : 1,
+						bTranslucent ? 1 : 0,
+						bTwoSided ? 1 : 0,
+					};
+
+					baseM = table[c[0]][c[1]][c[2]];
+
 					if (bLit) {
-						baseM = vrmAssetList->OptMToonLitOpaqueMaterial;
+						//baseM = vrmAssetList->OptMToonLitOpaqueMaterial;
 					}else{
-						baseM = vrmAssetList->OptMToonUnlitOpaqueMaterial;
+						//baseM = vrmAssetList->OptMToonUnlitOpaqueMaterial;
 					}
 				}
 
@@ -674,7 +716,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					if (index < vrmAssetList->Textures.Num()) {
 						LocalTextureSet(dm, TEXT("gltf_tex_diffuse"), vrmAssetList->Textures[index]);
 					}
-					{
+					if (bMToon == false){
 						aiString alphaMode;
 						aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
 						FString alpha = alphaMode.C_Str();

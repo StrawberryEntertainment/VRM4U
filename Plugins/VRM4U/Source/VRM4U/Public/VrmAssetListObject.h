@@ -43,8 +43,15 @@ public:
 	UMaterialInterface* OptMToonLitOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
+	UMaterialInterface* OptMToonLitOpaqueTwoSidedMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
 	UMaterialInterface* OptMToonLitTranslucentMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Lit")
+	UMaterialInterface* OptMToonLitTranslucentTwoSidedMaterial;
+
+	// unlit
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_unlit")
 	UMaterialInterface* BaseMToonUnlitOpaqueMaterial;
@@ -56,7 +63,13 @@ public:
 	UMaterialInterface* OptMToonUnlitOpaqueMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Unlit")
+	UMaterialInterface* OptMToonUnlitOpaqueTwoSidedMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Unlit")
 	UMaterialInterface* OptMToonUnlitTranslucentMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon_Unlit")
+	UMaterialInterface* OptMToonUnlitTranslucentTwoSidedMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "InMaterial_MToon")
 	UMaterialInterface* OptMToonOutlineMaterial;
