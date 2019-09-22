@@ -194,10 +194,18 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 			}
 
 			//UV Coordinates - inconsistent coordinates
-			if (mesh->HasTextureCoords(0))
-			{
-				FVector2D uv = FVector2D(mesh->mTextureCoords[0][j].x, -mesh->mTextureCoords[0][j].y);
-				mi.UV0.Add(uv);
+			for (int u = 0; u < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++u) {
+				if (mesh->HasTextureCoords(u))
+				{
+					if (mi.UV0.Num() <= u) {
+						mi.UV0.Push(TArray<FVector2D>());
+						if (u >= 1) {
+							UE_LOG(LogTemp, Warning, TEXT("test uv2.\n"));
+						}
+					}
+					FVector2D uv = FVector2D(mesh->mTextureCoords[u][j].x, -mesh->mTextureCoords[u][j].y);
+					mi.UV0[u].Add(uv);
+				}
 			}
 
 			//Tangent
@@ -659,7 +667,18 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				allIndex += result.meshInfo[meshID].Triangles.Num();
 				allVertex += result.meshInfo[meshID].Vertices.Num();
 			}
-			v.StaticMeshVertexBuffer.Init(allVertex, 1);
+			{
+				int uvNum = 1;
+				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
+					auto &mInfo = result.meshInfo[meshID];
+					uvNum = FMath::Max(uvNum, mInfo.UV0.Num());
+					if (uvNum >= 2){
+						UE_LOG(LogTemp, Warning, TEXT("test uv2.\n"));
+					}
+				}
+				v.StaticMeshVertexBuffer.Init(allVertex, uvNum);
+			}
+			
 			v.PositionVertexBuffer.Init(allVertex);
 			//rd.SkinWeightVertexBuffer.Init(allVertex);
 
@@ -713,13 +732,13 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}
 					v.PositionVertexBuffer.VertexPosition(currentVertex + i) *= VRMConverter::Options::Get().GetModelScale();
 
-					{
+					for (int u=0; u<mInfo.UV0.Num(); ++u){
 						FVector2D uv(0, 0);
-						if (i < mInfo.UV0.Num()) {
-							uv = mInfo.UV0[i];
+						if (i < mInfo.UV0[u].Num()) {
+							uv = mInfo.UV0[u][i];
 						}
-						v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, 0, uv);
-						meshS->UVs[0] = uv;
+						v.StaticMeshVertexBuffer.SetVertexUV(currentVertex + i, u, uv);
+						meshS->UVs[u] = uv;
 					}
 
 					if (i < mInfo.Tangents.Num()){
@@ -1148,6 +1167,22 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 			FBox BoundingBox(BoundMin, BoundMax);
 			sk->SetImportedBounds(FBoxSphereBounds(BoundingBox));
+		}
+
+		{
+			{
+				int uvNum = 1;
+				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
+					auto &mInfo = result.meshInfo[meshID];
+					uvNum = FMath::Max(uvNum, mInfo.UV0.Num());
+					if (uvNum >= 2) {
+						UE_LOG(LogTemp, Warning, TEXT("test uv2.\n"));
+					}
+				}
+				sk->GetImportedModel()->LODModels[0].NumTexCoords = uvNum;
+			}
+
+			sk->UpdateUVChannelData(true);
 		}
 
 #if WITH_EDITOR

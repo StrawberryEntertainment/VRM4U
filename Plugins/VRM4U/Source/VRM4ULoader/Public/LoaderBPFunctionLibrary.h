@@ -29,8 +29,8 @@ struct FMeshInfo
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<FVector> Normals;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
-		TArray<FVector2D> UV0;
+//	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
+	TArray< TArray<FVector2D> > UV0;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<FLinearColor> VertexColors;
