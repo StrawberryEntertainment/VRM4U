@@ -76,7 +76,7 @@ bool UVrmSkeleton::IsPostLoadThreadSafe() const
 	return true;
 }
 
-static int countParent(aiNode *node, TArray<aiNode*> &t, int c) {
+static int countParent(const aiNode *node, TArray<const aiNode*> &t, int c) {
 	for (auto &a : t) {
 		for (uint32_t i = 0; i < a->mNumChildren; ++i) {
 			if (node == a->mChildren[i]) {
@@ -139,7 +139,7 @@ static bool hasMeshInChild(aiNode *node) {
 }
 
 
-static void rr3(aiNode *node, TArray<aiNode*> &t, bool &bHasMesh, const bool bOnlyRootBone) {
+static void rr3(const aiNode *node, TArray<const aiNode*> &t, bool &bHasMesh, const bool bOnlyRootBone) {
 	bHasMesh = false;
 	if (node == nullptr) {
 		return;
@@ -162,7 +162,7 @@ static void rr3(aiNode *node, TArray<aiNode*> &t, bool &bHasMesh, const bool bOn
 	}
 }
 
-static void rr(aiNode *node, TArray<aiNode*> &t, bool &bHasMesh, const bool bOnlyRootBone, aiScene *scene) {
+static void rr(const aiNode *node, TArray<const aiNode*> &t, bool &bHasMesh, const bool bOnlyRootBone, aiScene *scene) {
 
 	auto target = node;
 
@@ -267,7 +267,7 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 		//}
 		//boneOffset = offset-1;
 
-		TArray<aiNode*> bone;
+		TArray<const aiNode*> bone;
 		{
 			bool dummy = false;
 			bool bSimpleRootBone = false;
@@ -357,6 +357,7 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 						}
 					}
 				}
+				/*
 				if (0) {
 					// ascii code
 					aiString origName = a->mName;
@@ -386,6 +387,7 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 					}
 
 				}
+				*/
 
 				rec_low.Add(str.ToLower());
 				rec_orig.Add(str);
@@ -394,6 +396,8 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 
 
 		int totalBoneCount = 0;
+		FVector RootTransOffset(0.f);
+
 		for (auto &a: bone) {
 			FMeshBoneInfo info;
 			info.Name = UTF8_TO_TCHAR(a->mName.C_Str());
@@ -404,18 +408,8 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 			FTransform pose;
 			int32 index = 0;
 			FMatrix m;
-			if (bone.Find(a->mParent, index) == false) {
-				//continue;
-				// root
-				info.ParentIndex = INDEX_NONE;
-				m.SetIdentity();
-				//m = m.ApplyScale(100);
-			}
-			else {
-				if (index != 0) {
-					//index += offset - 1;
-				}
-				info.ParentIndex = index;
+
+			{
 				auto &t = a->mTransformation;
 				m.M[0][0] = t.a1; m.M[1][0] = t.a2; m.M[2][0] = t.a3; m.M[3][0] = -t.a4*100.f;
 				m.M[0][1] = t.b1; m.M[1][1] = t.b2; m.M[2][1] = t.b3; m.M[3][1] = t.c4*100.f;//t.b4*100.f;
@@ -432,6 +426,31 @@ void UVrmSkeleton::readVrmBone(aiScene* scene, int &boneOffset) {
 					m.M[3][2] *= VRMConverter::Options::Get().GetModelScale();
 					//m.M[3][3] *= VRMConverter::Options::Get().GetModelScale();
 				}
+			}
+
+
+			if (bone.Find(a->mParent, index) == false) {
+				//continue;
+				// root
+				info.ParentIndex = INDEX_NONE;
+
+				RootTransOffset.Set(m.M[3][0], m.M[3][1], m.M[3][2]);
+
+				m.SetIdentity();
+			}
+			else {
+				if (index != 0) {
+					//index += offset - 1;
+				}
+				info.ParentIndex = index;
+
+				// parent == root
+				if (index == 0) {
+					m.M[3][0] += RootTransOffset.X;
+					m.M[3][1] += RootTransOffset.Y;
+					m.M[3][2] += RootTransOffset.Z;
+				}
+
 
 				if (a == scene->mRootNode) {
 					//pose.SetScale3D(FVector(100));
