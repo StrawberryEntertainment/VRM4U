@@ -1170,6 +1170,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		}
 
 		{
+#if WITH_EDITOR
 			{
 				int uvNum = 1;
 				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
@@ -1181,7 +1182,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				}
 				sk->GetImportedModel()->LODModels[0].NumTexCoords = uvNum;
 			}
-
+#endif
 			sk->UpdateUVChannelData(true);
 		}
 
