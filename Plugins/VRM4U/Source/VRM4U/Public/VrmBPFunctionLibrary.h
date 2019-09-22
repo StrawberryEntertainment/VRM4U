@@ -42,6 +42,9 @@ public:
 	static void VRMSetMaterial(USkeletalMesh *target, int no, UMaterialInterface *material);
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	static void VRMSetImportedBounds(USkeletalMesh *target, FVector min, FVector max);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	static bool VRMGetAssetsByPackageName(FName PackageName, TArray<FAssetData>& OutAssetData, bool bIncludeOnlyOnDiskAssets = false);
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))

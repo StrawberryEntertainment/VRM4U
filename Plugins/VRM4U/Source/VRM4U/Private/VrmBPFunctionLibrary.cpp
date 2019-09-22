@@ -190,6 +190,14 @@ void UVrmBPFunctionLibrary::VRMSetMaterial(USkeletalMesh *target, int no, UMater
 	}
 }
 
+void UVrmBPFunctionLibrary::VRMSetImportedBounds(USkeletalMesh *target, FVector min, FVector max) {
+	if (target == nullptr) {
+		return;
+	}
+	FBox BoundingBox(min, max);
+	target->SetImportedBounds(FBoxSphereBounds(BoundingBox));
+}
+
 bool UVrmBPFunctionLibrary::VRMGetAssetsByPackageName(FName PackageName, TArray<FAssetData>& OutAssetData, bool bIncludeOnlyOnDiskAssets){
 
 	OutAssetData.Empty();
