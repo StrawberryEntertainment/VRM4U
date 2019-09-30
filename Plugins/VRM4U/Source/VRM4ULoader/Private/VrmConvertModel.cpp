@@ -276,7 +276,9 @@ static UPhysicsConstraintTemplate *createConstraint(USkeletalMesh *sk, UPhysicsA
 
 	if (BoneIndex1 == INDEX_NONE || BoneIndex2 == INDEX_NONE) {
 #if WITH_EDITOR
-		ct->PostEditChange();
+		if (VRMConverter::IsImportMode()) {
+			ct->PostEditChange();
+		}
 #endif
 		return ct;
 	}
@@ -332,7 +334,9 @@ static UPhysicsConstraintTemplate *createConstraint(USkeletalMesh *sk, UPhysicsA
 
 #if WITH_EDITOR
 	ct->SetDefaultProfile(ct->DefaultInstance);
-	ct->PostEditChange();
+	if (VRMConverter::IsImportMode()) {
+		ct->PostEditChange();
+	}
 #endif
 	//ct->DefaultInstance.InitConstraint();
 
@@ -1182,12 +1186,16 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				}
 				sk->GetImportedModel()->LODModels[0].NumTexCoords = uvNum;
 			}
+			if (VRMConverter::IsImportMode()) {
+				sk->UpdateUVChannelData(true);
+			}
 #endif
-			sk->UpdateUVChannelData(true);
 		}
 
 #if WITH_EDITOR
-		sk->PostEditChange();
+		if (VRMConverter::IsImportMode()) {
+			sk->PostEditChange();
+		}
 #endif
 	}
 
@@ -1317,7 +1325,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			pa->UpdateBoundsBodiesArray();
 
 #if WITH_EDITOR
-			pa->PostEditChange();
+			if (VRMConverter::IsImportMode()) {
+				pa->PostEditChange();
+			}
 #endif
 
 		}

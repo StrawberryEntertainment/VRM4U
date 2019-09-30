@@ -25,7 +25,11 @@
 namespace {
 	void LocalMaterialSetParent(UMaterialInstanceConstant *material, UMaterialInterface *parent) {
 #if WITH_EDITOR
-		material->SetParentEditorOnly(parent);
+		if (VRMConverter::IsImportMode()) {
+			material->SetParentEditorOnly(parent);
+		} else {
+			material->Parent = parent;
+		}
 #else
 		material->Parent = parent;
 #endif
@@ -33,7 +37,15 @@ namespace {
 
 	void LocalTextureSet(UMaterialInstanceConstant *dm, FName name, UTexture2D * tex) {
 #if WITH_EDITOR
-		dm->SetTextureParameterValueEditorOnly(name, tex);
+		if (VRMConverter::IsImportMode()) {
+			dm->SetTextureParameterValueEditorOnly(name, tex);
+		}else{
+			FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
+			v->ParameterInfo.Index = INDEX_NONE;
+			v->ParameterInfo.Name = name;
+			v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+			v->ParameterValue = tex;
+}
 #else
 		FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
 		v->ParameterInfo.Index = INDEX_NONE;
@@ -46,7 +58,15 @@ namespace {
 	void LocalScalarParameterSet(UMaterialInstanceConstant *dm, FName name, float f) {
 
 #if WITH_EDITOR
-		dm->SetScalarParameterValueEditorOnly(name, f);
+		if (VRMConverter::IsImportMode()) {
+			dm->SetScalarParameterValueEditorOnly(name, f);
+		} else {
+			FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
+			v->ParameterInfo.Index = INDEX_NONE;
+			v->ParameterInfo.Name = name;
+			v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+			v->ParameterValue = f;
+		}
 #else
 		FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
 		v->ParameterInfo.Index = INDEX_NONE;
@@ -59,7 +79,15 @@ namespace {
 	void LocalVectorParameterSet(UMaterialInstanceConstant *dm, FName name, FLinearColor c) {
 
 #if WITH_EDITOR
-		dm->SetVectorParameterValueEditorOnly(name, c);
+		if (VRMConverter::IsImportMode()) {
+			dm->SetVectorParameterValueEditorOnly(name, c);
+		} else {
+			FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+			v->ParameterInfo.Index = INDEX_NONE;
+			v->ParameterInfo.Name = name;
+			v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+			v->ParameterValue = c;
+		}
 #else
 		FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
 		v->ParameterInfo.Index = INDEX_NONE;
@@ -72,8 +100,12 @@ namespace {
 
 	void LocalMaterialFinishParam(UMaterialInstanceConstant *material) {
 #if WITH_EDITOR
-		material->PreEditChange(NULL);
-		material->PostEditChange();
+		if (VRMConverter::IsImportMode()) {
+			material->PreEditChange(NULL);
+			material->PostEditChange();
+		} else {
+			material->PostLoad();
+		}
 #else
 		material->PostLoad();
 #endif

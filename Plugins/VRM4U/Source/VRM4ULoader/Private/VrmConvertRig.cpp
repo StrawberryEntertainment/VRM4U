@@ -23,7 +23,9 @@
 #include "Animation/MorphTarget.h"
 #include "Animation/NodeMappingContainer.h"
 #include "Animation/Rig.h"
+#include "Animation/PoseAsset.h"
 #include "Animation/Skeleton.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
@@ -481,6 +483,75 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	//mc->AddMapping
 	mc->PostEditChange();
 	vrmAssetList->HumanoidRig = mc;
+
+#if 0
+	{
+		FString name = FString(TEXT("POSE_")) + vrmAssetList->BaseFileName;
+		UPoseAsset *pose = NewObject<UPoseAsset>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
+		pose->SetSkeleton(k);
+
+		FString name2 = FString(TEXT("aaa_")) + vrmAssetList->BaseFileName;
+		USkeletalMeshComponent *smc = NewObject<USkeletalMeshComponent>(GetTransientPackage(), *name2, RF_Public | RF_Standalone);
+		smc->SetSkeletalMesh(vrmAssetList->SkeletalMesh);
+
+		FSmartName PoseName;
+		PoseName.DisplayName = TEXT("pose1");
+		pose->AddOrUpdatePose(PoseName, smc);
+
+		/*
+		{
+			FSmartName PoseName;
+			PoseName.DisplayName = TEXT("pose1");
+			auto &bone = k->GetRefLocalPoses();
+
+			TArray<FName> TrackNames;
+			// note this ignores root motion
+			TArray<FTransform> BoneTransform = bone;// MeshComponent->GetComponentSpaceTransforms();
+			const FReferenceSkeleton& RefSkeleton = k->GetReferenceSkeleton();
+			for (int32 BoneIndex = 0; BoneIndex < RefSkeleton.GetNum(); ++BoneIndex)
+			{
+				TrackNames.Add(RefSkeleton.GetBoneName(BoneIndex));
+			}
+
+			// convert to local space
+			for (int32 BoneIndex = BoneTransform.Num() - 1; BoneIndex >= 0; --BoneIndex)
+			{
+				const int32 ParentIndex = RefSkeleton.GetParentIndex(BoneIndex);
+				if (ParentIndex != INDEX_NONE)
+				{
+					BoneTransform[BoneIndex] = BoneTransform[BoneIndex].GetRelativeTransform(BoneTransform[ParentIndex]);
+				}
+			}
+
+			const USkeleton* MeshSkeleton = k;
+			const FSmartNameMapping* Mapping = MeshSkeleton->GetSmartNameContainer(USkeleton::AnimCurveMappingName);
+
+			TArray<float> NewCurveValues;
+			NewCurveValues.AddZeroed(PoseContainer.Curves.Num());
+
+			/*
+			if (Mapping)
+			{
+				const FBlendedHeapCurve& MeshCurves = MeshComponent->GetAnimationCurves();
+
+				for (int32 NewCurveIndex = 0; NewCurveIndex < NewCurveValues.Num(); ++NewCurveIndex)
+				{
+					FAnimCurveBase& Curve = PoseContainer.Curves[NewCurveIndex];
+					SmartName::UID_Type CurveUID = Mapping->FindUID(Curve.Name.DisplayName);
+					if (CurveUID != SmartName::MaxUID)
+					{
+						const float MeshCurveValue = MeshCurves.Get(CurveUID);
+						NewCurveValues[NewCurveIndex] = MeshCurveValue;
+					}
+				}
+			}
+			*/
+
+		//	pose->AddOrUpdatePose(PoseName, TrackNames, BoneTransform, NewCurveValues);
+			//pose->PoseContainer.MarkPoseFlags(MySkeleton, RetargetSource);
+		//}
+	}
+#endif
 
 #endif
 #endif //420

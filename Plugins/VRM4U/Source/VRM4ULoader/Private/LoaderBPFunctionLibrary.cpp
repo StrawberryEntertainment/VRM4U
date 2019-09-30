@@ -66,7 +66,9 @@ static bool saveObject(UObject *u, bool bSave) {
 	//FAssetRegistryModule::AssetCreated(u);
 	//bool bSaved = UPackage::SavePackage(package, u, EObjectFlags::RF_Standalone, *(package->GetName()), GError, nullptr, true, true, SAVE_NoError);
 
-	u->PostEditChange();
+	if (VRMConverter::IsImportMode()) {
+		u->PostEditChange();
+	}
 #endif
 	return true;
 }
