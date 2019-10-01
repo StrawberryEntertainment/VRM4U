@@ -95,7 +95,7 @@ static int countChild(aiNode *node, int c) {
 	return c;
 }
 
-bool findActiveBone(aiNode *node, TArray<FString> &table) {
+bool findActiveBone(const aiNode *node, TArray<FString> &table) {
 
 	if (table.Find(node->mName.C_Str()) != INDEX_NONE) {
 		return true;
@@ -108,13 +108,13 @@ bool findActiveBone(aiNode *node, TArray<FString> &table) {
 	return false;
 }
 
-TArray<FString> makeActiveBone(aiScene *scene) {
+TArray<FString> makeActiveBone(const aiScene *scene) {
 	TArray <FString> boneNameTable;
 	for (uint32 m = 0; m < scene->mNumMeshes; ++m) {
-		auto &aiM = *scene->mMeshes[m];
+		const auto &aiM = *scene->mMeshes[m];
 
 		for (uint32 b = 0; b < aiM.mNumBones; ++b) {
-			auto &aiB = *aiM.mBones[b];
+			const auto &aiB = *aiM.mBones[b];
 			boneNameTable.AddUnique(aiB.mName.C_Str());
 		}
 	}
@@ -171,6 +171,7 @@ static void rr(const aiNode *node, TArray<const aiNode*> &t, bool &bHasMesh, con
 		int maxIndex = -1;
 		int maxChild = 0;
 
+		// find deep tree
 		for (uint32 i = 0; i < node->mNumChildren; ++i) {
 			int cc = countChild(node->mChildren[i], 0);
 
@@ -194,7 +195,15 @@ static void rr(const aiNode *node, TArray<const aiNode*> &t, bool &bHasMesh, con
 		}
 
 		if (maxIndex >= 0) {
-			target = node->mChildren[maxIndex];
+
+			const auto t = node->mChildren[maxIndex]->mTransformation;
+			float f = 0.f;
+			f += FMath::Abs(t.a4) + FMath::Abs(t.b4) + FMath::Abs(t.c4);
+			if (f < 1.e-8f) {
+				target = node->mChildren[maxIndex];
+			} else {
+				// root transform must zero.
+			}
 		}
 	}
 
