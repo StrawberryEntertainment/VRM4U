@@ -941,7 +941,12 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 					FSkelMeshRenderSection &NewRenderSection = rd.RenderSections[meshID];
 					//NewRenderSection = rd.RenderSections[0];
-					if (Options::Get().IsMergeMaterial()) {
+
+					bool bUseMergeMaterial = Options::Get().IsMergeMaterial();
+					if ((int)aiM->mMaterialIndex >= vrmAssetList->MaterialMergeTable.Num()) {
+						bUseMergeMaterial = false;
+					}
+					if (bUseMergeMaterial) {
 						NewRenderSection.MaterialIndex = vrmAssetList->MaterialMergeTable[aiM->mMaterialIndex];// ModelSection.MaterialIndex;
 					}else {
 						NewRenderSection.MaterialIndex = aiM->mMaterialIndex;// ModelSection.MaterialIndex;
@@ -1023,6 +1028,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 #if WITH_EDITORONLY_DATA
 				{
 					auto &s = sk->GetImportedModel()->LODModels[0].Sections[meshID];
+					s.MaterialIndex = 0;
 
 					TMap<int32, TArray<int32>> OverlappingVertices;
 

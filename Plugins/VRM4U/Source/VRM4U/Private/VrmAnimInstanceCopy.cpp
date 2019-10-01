@@ -286,8 +286,17 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 
 		//FVector newLoc = dstTrans.GetLocation();
 		if (BoneCount==1){
+			int32_t p = dstIndex;
+			float HipHeight = 0;
+			while(p != INDEX_NONE){
+
+				HipHeight += dstRefSkeletonTransform[p].GetLocation().Z;
+				p = GetSkelMeshComponent()->SkeletalMesh->RefSkeleton.GetParentIndex(p);
+			}
+			//FVector diff = srcCurrentTrans.GetLocation() - srcRefTrans.GetLocation();
+			//FVector scale = dstRefTrans.GetLocation() / srcRefTrans.GetLocation();
 			FVector diff = srcCurrentTrans.GetLocation() - srcRefTrans.GetLocation();
-			FVector scale = dstRefTrans.GetLocation() / srcRefTrans.GetLocation();
+			float scale = HipHeight / srcRefTrans.GetLocation().Z;
 			dstTrans.SetTranslation(dstRefTrans.GetLocation() + diff * scale);
 			//if (newLoc.Normalize()) {
 				//auto dstRefLocation = dstRefTrans.GetLocation();

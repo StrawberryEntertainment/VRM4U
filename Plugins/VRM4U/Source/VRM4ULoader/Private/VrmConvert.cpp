@@ -231,63 +231,75 @@ bool VRMConverter::Options::IsCreateHumanoidRenamedMesh() const {
 }
 
 bool VRMConverter::Options::IsMobileBone() const {
+	bool ret = false;
+#if (PLATFORM_WINDOWS)
+#else
+	ret = true;
+#endif
+
+
 #if WITH_EDITOR
-	if (Window == nullptr) return false;
+	if (Window == nullptr) return ret;
 
 	return Window->bMobileBone;
 #else
-	return false;
+	return ret;
 #endif
 }
 
 bool VRMConverter::Options::IsDebugOneBone() const {
+	bool ret = false;
 #if WITH_EDITOR
-	if (Window == nullptr) return false;
+	if (Window == nullptr) return ret;
 
 	return Window->bDebugOneBone;
 #else
-	return false;
+	return ret;
 #endif
 }
 
 bool VRMConverter::Options::IsSimpleRootBone() const {
+	bool ret = true;
 #if WITH_EDITOR
-	if (Window == nullptr) return false;
+	if (Window == nullptr) return ret;
 
 	return Window->bSimpleRoot;
 #else
-	return true;
+	return ret;
 #endif
 }
 
 bool VRMConverter::Options::IsSkipPhysics() const {
+	bool ret = true;
 #if WITH_EDITOR
-	if (Window == nullptr) return false;
+	if (Window == nullptr) return ret;
 
 	return Window->bSkipPhysics;
 #else
-	return true;
+	return ret;
 #endif
 }
 
 
 bool VRMConverter::Options::IsMergeMaterial() const {
+	bool ret = true;
 #if WITH_EDITOR
-	if (Window == nullptr) return false;
+	if (Window == nullptr) return ret;
 
 	return Window->bMergeMaterial;
 #else
-	return false;
+	return ret;
 #endif
 }
 
 bool VRMConverter::Options::IsOptimizeMaterial() const {
+	bool ret = true;
 #if WITH_EDITOR
-	if (Window == nullptr) return false;
+	if (Window == nullptr) return ret;
 
 	return Window->bOptimizeMaterial;
 #else
-	return false;
+	return ret;
 #endif
 }
 
