@@ -28,6 +28,8 @@ public class VRM4ULoader : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(
 			new string[] {
+				"Slate",
+				"SlateCore",
 				"Core",
 				"CoreUObject",
                 "Engine",
@@ -38,16 +40,6 @@ public class VRM4ULoader : ModuleRules
                 "VRM4U",
 
             });
-
-        PrivateDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "Slate",
-                "SlateCore",
-                "Engine",
-				// ... add private dependencies that you statically link with here ...	
-			}
-            );
 
         DynamicallyLoadedModuleNames.AddRange(
             new string[]

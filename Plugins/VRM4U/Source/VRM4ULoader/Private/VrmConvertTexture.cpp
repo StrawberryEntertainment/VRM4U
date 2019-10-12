@@ -21,6 +21,7 @@
 #include "Materials/MaterialInstanceConstant.h"
 #include "VrmAssetListObject.h"
 #include "Async/ParallelFor.h"
+#include "UObject/UObjectHash.h"
 
 namespace {
 	void LocalMaterialSetParent(UMaterialInstanceConstant *material, UMaterialInterface *parent) {
@@ -710,6 +711,19 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					if (vrmAssetList->Package == GetTransientPackage()) {
 						dm = NewObject<UMaterialInstanceConstant>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
 					} else {
+						TArray<UObject*> ret;
+						GetObjectsWithOuter(vrmAssetList->Package, ret);
+						for (auto *a : ret) {
+							auto s = a->GetName().ToLower();
+							if(s.IsEmpty()) continue;
+
+							if (s == name.ToLower()) {
+								a->ClearFlags(EObjectFlags::RF_Standalone);
+								a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+								a->ConditionalBeginDestroy();
+								break;
+							}
+						}
 						dm = NewObject<UMaterialInstanceConstant>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 					}
 				}
