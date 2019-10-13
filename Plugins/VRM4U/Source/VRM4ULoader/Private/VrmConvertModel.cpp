@@ -529,7 +529,23 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	if (vrmAssetList->Package == GetTransientPackage()) {
 		sk = NewObject<USkeletalMesh>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
 	}else {
-		sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *(FString(TEXT("SK_")) + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		TArray<UObject*> ret;
+		FString name = (FString(TEXT("SK_")) + vrmAssetList->BaseFileName);
+		GetObjectsWithOuter(vrmAssetList->Package, ret);
+		for (auto *a : ret) {
+			auto s = a->GetName().ToLower();
+			if (s.IsEmpty()) continue;
+
+			if (s == name.ToLower()) {
+				a->ClearFlags(EObjectFlags::RF_Standalone);
+				a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+				//a->ConditionalBeginDestroy();
+				//a->Rename(TEXT("aaaaaaa"));
+
+				break;
+			}
+		}
+		sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	}
 
 	USkeleton *k = Options::Get().GetSkeleton();
@@ -537,7 +553,22 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		if (vrmAssetList->Package == GetTransientPackage()) {
 			k = NewObject<USkeleton>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
 		}else {
-			k = NewObject<USkeleton>(vrmAssetList->Package, *(TEXT("SKEL_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			TArray<UObject*> ret;
+			FString name = (TEXT("SKEL_") + vrmAssetList->BaseFileName);
+			GetObjectsWithOuter(vrmAssetList->Package, ret);
+			for (auto *a : ret) {
+				auto s = a->GetName().ToLower();
+				if (s.IsEmpty()) continue;
+
+				if (s == name.ToLower()) {
+					a->ClearFlags(EObjectFlags::RF_Standalone);
+					a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+					a->ConditionalBeginDestroy();
+					break;
+				}
+			}
+
+			k = NewObject<USkeleton>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 		}
 	}
 
@@ -1212,7 +1243,21 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			if (vrmAssetList->Package == GetTransientPackage()) {
 				pa = NewObject<UPhysicsAsset>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 			}else {
-				pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *(TEXT("PHYS_") + vrmAssetList->BaseFileName), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+				TArray<UObject*> ret;
+				FString name = (TEXT("PHYS_") + vrmAssetList->BaseFileName);
+				GetObjectsWithOuter(vrmAssetList->Package, ret);
+				for (auto *a : ret) {
+					auto s = a->GetName().ToLower();
+					if (s.IsEmpty()) continue;
+
+					if (s == name.ToLower()) {
+						a->ClearFlags(EObjectFlags::RF_Standalone);
+						a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+						a->ConditionalBeginDestroy();
+						break;
+					}
+				}
+				pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 			}
 			pa->Modify();
 #if WITH_EDITORONLY_DATA
