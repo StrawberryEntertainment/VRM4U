@@ -56,6 +56,8 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 			TArray<FMorphTargetDelta> tmpData;
 			tmpData.SetNumZeroed(aiA.mNumVertices);
 
+			bool bIncludeNormal = VRMConverter::Options::Get().IsEnableMorphTargetNormal();
+
 			ParallelFor(aiA.mNumVertices, [&](int32 i) {
 				FMorphTargetDelta &v = tmpData[i];
 				v.SourceIdx = i + currentVertex;
@@ -65,12 +67,14 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 					aiA.mVertices[i][1] * 100.f
 				);
 
-				const FVector n(
-					-aiA.mNormals[i][0],
-					aiA.mNormals[i][2],
-					aiA.mNormals[i][1]);
-				if (n.Size() > 1.f) {
-					v.TangentZDelta = n.GetUnsafeNormal();
+				if (bIncludeNormal) {
+					const FVector n(
+						-aiA.mNormals[i][0],
+						aiA.mNormals[i][2],
+						aiA.mNormals[i][1]);
+					if (n.Size() > 1.f) {
+						v.TangentZDelta = n.GetUnsafeNormal();
+					}
 				}
 			});
 			MorphDeltas.Append(tmpData);

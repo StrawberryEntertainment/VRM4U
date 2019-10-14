@@ -592,6 +592,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						aiReturn result = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
 						FString alpha = alphaMode.C_Str();
 						if (alpha == TEXT("BLEND")) {
+							// check also _ZWrite
 							bTranslucent = true;
 						}
 
@@ -600,6 +601,9 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 							auto &vrmMat = meta->material[iMat];
 							if (vrmMat.floatProperties._CullMode == 0.f) {
 								bTwoSided = true;
+							}
+							if (vrmMat.floatProperties._ZWrite == 1.f) {
+								bTranslucent = false;
 							}
 						}
 					}

@@ -73,6 +73,8 @@ public:
 
 		bool IsSkipMorphTarget() const;
 
+		bool IsEnableMorphTargetNormal() const;
+
 		bool IsCreateHumanoidRenamedMesh() const;
 
 		bool IsDebugOneBone() const;
@@ -82,6 +84,7 @@ public:
 		bool IsMergeMaterial() const;
 
 		bool IsOptimizeMaterial() const;
+
 
 		bool IsVRMModel() const;
 		void SetVRMModel(bool bVRM);

@@ -220,6 +220,16 @@ bool VRMConverter::Options::IsSkipMorphTarget() const {
 #endif
 }
 
+bool VRMConverter::Options::IsEnableMorphTargetNormal() const {
+#if WITH_EDITOR
+	if (Window == nullptr) return false;
+
+	return Window->bEnableMorphTargetNormal;
+#else
+	return false;
+#endif
+}
+
 bool VRMConverter::Options::IsCreateHumanoidRenamedMesh() const {
 #if WITH_EDITOR
 	if (Window == nullptr) return false;
