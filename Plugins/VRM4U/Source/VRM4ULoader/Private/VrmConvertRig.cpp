@@ -235,7 +235,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				};
 
 				// find bone from child bone
-				for (int i = cc.Num() - 1; i > 0; --i) {
+				for (int i = cc.Num() - 2; i > 0; --i) {
 					const auto &m = mc->GetNodeMappingTable();
 
 					{
