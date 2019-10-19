@@ -14,6 +14,10 @@
 #include "AssetRegistryModule.h"
 #include "ARFilter.h"
 
+#include "Rendering/SkeletalMeshLODModel.h"
+#include "Rendering/SkeletalMeshLODRenderData.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+
 
 //#include "VRM4U.h"
 
@@ -148,7 +152,7 @@ void UVrmBPFunctionLibrary::VRMDrawMaterialToRenderTarget(UObject* WorldContextO
 #endif
 }
 
-void UVrmBPFunctionLibrary::VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent) {
+void UVrmBPFunctionLibrary::VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent, USkeletalMesh *UseSkeletalMesh) {
 	if (dst == nullptr) {
 		return;
 	}
@@ -158,10 +162,20 @@ void UVrmBPFunctionLibrary::VRMChangeMaterialParent(UMaterialInstanceConstant *d
 	}
 	dst->MarkPackageDirty();
 
+	if (UseSkeletalMesh) {
+		UseSkeletalMesh->MarkPackageDirty();
+	}
+
 #if WITH_EDITOR
 	dst->PreEditChange(NULL);
 	dst->SetParentEditorOnly(NewParent);
 	dst->PostEditChange();
+
+	if (UseSkeletalMesh) {
+		UseSkeletalMesh->PreEditChange(NULL);
+		UseSkeletalMesh->PostEditChange();
+	}
+
 #else
 	dst->Parent = NewParent;
 	dst->PostLoad();
@@ -227,3 +241,45 @@ UTextureRenderTarget2D* UVrmBPFunctionLibrary::VRMCreateRenderTarget2D(UObject* 
 	return nullptr;
 }
 
+bool UVrmBPFunctionLibrary::VRMRenderingThreadEnable(bool bEnable) {
+	if (GIsThreadedRendering)
+	{
+		if (bEnable == false) {
+			StopRenderingThread();
+			GUseThreadedRendering = false;
+		}
+	} else
+	{
+		if (bEnable == true) {
+			GUseThreadedRendering = true;
+			StartRenderingThread();
+		}
+	}
+	return true;
+}
+
+bool UVrmBPFunctionLibrary::VRMGetShadowEnable(const USkeletalMesh *mesh, int MaterialIndex) {
+
+	if (mesh == nullptr) {
+		return false;
+	}
+	if (mesh->GetResourceForRendering() == nullptr) {
+		return false;
+	}
+
+	const FSkeletalMeshLODRenderData &rd = mesh->GetResourceForRendering()->LODRenderData[0];
+
+	bool bShadow = false;
+
+	for (const auto &a : rd.RenderSections) {
+		if (a.MaterialIndex != MaterialIndex) continue;
+		if (a.bDisabled) continue;
+
+		if (a.NumVertices == 0) return false;
+		if (a.NumTriangles == 0) return false;
+
+		bShadow |= a.bCastShadow;
+	}
+
+	return bShadow;
+}

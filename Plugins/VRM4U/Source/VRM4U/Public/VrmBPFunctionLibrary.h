@@ -33,7 +33,7 @@ public:
 	static void VRMDrawMaterialToRenderTarget(UObject* WorldContextObject, UTextureRenderTarget2D* TextureRenderTarget, UMaterialInterface* Material);
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
-	static void VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent);
+	static void VRMChangeMaterialParent(UMaterialInstanceConstant *dst, UMaterialInterface* NewParent, USkeletalMesh *UseSkeletalMesh);
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	static UObject* VRMDuplicateAsset(UObject *src, FString name, UObject *thisOwner);
@@ -49,4 +49,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
 	static UTextureRenderTarget2D* VRMCreateRenderTarget2D(UObject* WorldContextObject, int32 Width = 256, int32 Height = 256, ETextureRenderTargetFormat Format = RTF_RGBA16f, FLinearColor ClearColor = FLinearColor::Black);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
+	static bool VRMRenderingThreadEnable(bool bEnable);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
+	static bool VRMGetShadowEnable(const USkeletalMesh *mesh, int MaterialIndex);
 };
