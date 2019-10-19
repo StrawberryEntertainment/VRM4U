@@ -555,6 +555,67 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 
 #endif
 #endif //420
+
+	if (vrmAssetList){
+		// dummy Collision
+
+		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
+		UPhysicsAsset *pa = sk->PhysicsAsset;
+		FString h = TEXT("hips");
+		if (meta && pa){
+			for (const auto &a : meta->humanoidBone) {
+
+				if (h.Compare(a.humanBoneName.C_Str())) {
+					continue;
+				}
+
+				const int targetBone = sk->RefSkeleton.FindRawBoneIndex(a.nodeName.C_Str());
+				if (targetBone == INDEX_NONE) {
+					break;
+				}
+
+				FVector center(0, 0, 0);
+				{
+					int i = targetBone;
+					while (sk->RefSkeleton.GetParentIndex(i) != INDEX_NONE) {
+
+						center += sk->RefSkeleton.GetRefBonePose()[i].GetLocation();
+						i = sk->RefSkeleton.GetParentIndex(i);
+					}
+				}
+
+				USkeletalBodySetup *bs = nullptr;
+				int BodyIndex1 = -1;
+
+				bs = NewObject<USkeletalBodySetup>(pa, TEXT("dummy_for_clip"));
+
+				FKAggregateGeom agg;
+				FKSphereElem SphereElem;
+				SphereElem.Center = FVector(0);
+				SphereElem.Radius = center.Size();
+				agg.SphereElems.Add(SphereElem);
+
+				bs->Modify();
+				bs->BoneName = a.nodeName.C_Str();
+				bs->AddCollisionFrom(agg);
+				bs->CollisionTraceFlag = CTF_UseSimpleAsComplex;
+				// newly created bodies default to simulating
+				bs->PhysicsType = PhysType_Kinematic;	// fix
+														//bs->get
+				bs->CollisionReponse = EBodyCollisionResponse::BodyCollision_Disabled;
+				bs->DefaultInstance.InertiaTensorScale.Set(2, 2, 2);
+				bs->DefaultInstance.LinearDamping = 0.f;
+				bs->DefaultInstance.AngularDamping = 0.f;
+
+				bs->InvalidatePhysicsData();
+				bs->CreatePhysicsMeshes();
+				BodyIndex1 = pa->SkeletalBodySetups.Add(bs);
+				break;
+			}
+		}
+	}
+
 	return true;
 
 }
