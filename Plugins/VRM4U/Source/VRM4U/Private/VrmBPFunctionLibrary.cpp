@@ -9,6 +9,7 @@
 #include "Logging/MessageLog.h"
 #include "Engine/Canvas.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Animation/MorphTarget.h"
 #include "Misc/EngineVersionComparison.h"
 #include "AssetRegistryModule.h"
@@ -170,6 +171,13 @@ void UVrmBPFunctionLibrary::VRMChangeMaterialParent(UMaterialInstanceConstant *d
 	dst->PreEditChange(NULL);
 	dst->SetParentEditorOnly(NewParent);
 	dst->PostEditChange();
+
+	// remove dynamic materials
+	for (TObjectIterator<UMaterialInstanceDynamic> Itr; Itr; ++Itr) {
+		if (Itr->Parent == dst) {
+			Itr->ConditionalBeginDestroy();
+		}
+	}
 
 	if (UseSkeletalMesh) {
 		UseSkeletalMesh->PreEditChange(NULL);
