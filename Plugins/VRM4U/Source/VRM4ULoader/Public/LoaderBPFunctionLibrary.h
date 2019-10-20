@@ -3,6 +3,7 @@
 #pragma once
 #include "ProceduralMeshComponent.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "VrmConvert.h"
 #include "LoaderBPFunctionLibrary.generated.h"
 
 UENUM(BlueprintType)
@@ -75,6 +76,9 @@ class VRM4ULOADER_API ULoaderBPFunctionLibrary : public UBlueprintFunctionLibrar
 	GENERATED_BODY()
 	
 public:
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U")
+	static bool VRMSetLoadMaterialType(EVRMImportMaterialType type);
 
 	UFUNCTION(BlueprintCallable,Category="VRM4U", meta = (DynamicOutputParam = "OutVrmAsset"))
 	static bool LoadVRMFile(const class UVrmAssetListObject *InVrmAsset, class UVrmAssetListObject *&OutVrmAsset, FString filepath);

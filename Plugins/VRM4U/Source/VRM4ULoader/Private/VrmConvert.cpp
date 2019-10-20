@@ -333,13 +333,17 @@ float VRMConverter::Options::GetModelScale() const {
 }
 
 
+static EVRMImportMaterialType mType = EVRMImportMaterialType::VRMIMT_Auto;
+void VRMConverter::Options::SetMaterialType(EVRMImportMaterialType t) {
+	mType = t;
+}
 EVRMImportMaterialType VRMConverter::Options::GetMaterialType() const {
 #if WITH_EDITOR
-	if (Window == nullptr) return EVRMImportMaterialType::VRMIMT_Auto;
+	if (Window == nullptr) return mType;
 
 	return Window->MaterialType;
 #else
-	return EVRMImportMaterialType::VRMIMT_Auto;
+	return mType;
 #endif
 }
 

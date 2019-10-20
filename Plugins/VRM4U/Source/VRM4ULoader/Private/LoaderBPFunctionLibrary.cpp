@@ -337,6 +337,11 @@ UVrmLicenseObject* ULoaderBPFunctionLibrary::GetVRMMeta(FString filepath) {
 	return p;
 }
 
+bool ULoaderBPFunctionLibrary::VRMSetLoadMaterialType(EVRMImportMaterialType type) {
+	VRMConverter::Options::Get().SetMaterialType(type);
+	return true;
+}
+
 bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset, UVrmAssetListObject *&OutVrmAsset, FString filepath) {
 
 	if (InVrmAsset == nullptr) {

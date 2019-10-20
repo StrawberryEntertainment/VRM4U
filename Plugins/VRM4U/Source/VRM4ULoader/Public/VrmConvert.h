@@ -92,6 +92,9 @@ public:
 		float GetModelScale() const;
 
 		EVRMImportMaterialType GetMaterialType() const;
+		void SetMaterialType(EVRMImportMaterialType type);
+
+
 	};
 };
 
