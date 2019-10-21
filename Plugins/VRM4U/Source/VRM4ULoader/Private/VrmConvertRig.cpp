@@ -516,6 +516,8 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 			pose->AddOrUpdatePoseWithUniqueName(Cast<USkeletalMeshComponent>(PreviewComponent), &PoseName);
 			pose->RenameSmartName(PoseName.DisplayName, TEXT("POSE_T"));
 
+			//pose->AddOrUpdatePose(PoseName, Cast<USkeletalMeshComponent>(PreviewComponent));
+
 			auto &dstTrans = kk->GetEditableComponentSpaceTransforms();
 			{
 				struct RetargetParts {
@@ -537,7 +539,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				{
 					RetargetParts t;
 					t.BoneUE4 = TEXT("lowerarm_r");
-					t.rot = FRotator(10, -30, 0);
+					t.rot = FRotator(0, -30, 0);
 					retargetTable.Push(t);
 				}
 				{
@@ -555,7 +557,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				{
 					RetargetParts t;
 					t.BoneUE4 = TEXT("lowerarm_l");
-					t.rot = FRotator(-10, 30, 0);
+					t.rot = FRotator(-0, 30, 0);
 					retargetTable.Push(t);
 				}
 				{
@@ -567,13 +569,13 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				{
 					RetargetParts t;
 					t.BoneUE4 = TEXT("Thigh_R");
-					t.rot = FRotator(-10, 0, 0);
+					t.rot = FRotator(-7, 0, 0);
 					retargetTable.Push(t);
 				}
 				{
 					RetargetParts t;
 					t.BoneUE4 = TEXT("Thigh_L");
-					t.rot = FRotator(10, 0, 0);
+					t.rot = FRotator(7, 0, 0);
 					retargetTable.Push(t);
 				}
 
@@ -591,16 +593,28 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				}
 
 				auto &rk = k->GetReferenceSkeleton();
+
+				// init retarget pose
+				for (int i = 0; i < dstTrans.Num(); ++i) {
+					auto &t = dstTrans[i];
+					t = rk.GetRefBonePose()[i];
+				}
+				sk->RetargetBasePose = dstTrans;
+
+				// override
 				for (int i = 0; i < dstTrans.Num(); ++i) {
 					auto &t = dstTrans[i];
 
-					t.SetIdentity();
-					t = rk.GetRefBonePose()[i];
 					auto *m = mapTable.Find(rk.GetBoneName(i).ToString());
 					if (m) {
 						t.SetRotation(FQuat(m->rot));
 					}
 				}
+
+				if (VRMConverter::Options::Get().IsAPoseRetarget() == true) {
+					sk->RetargetBasePose = dstTrans;
+				}
+
 				for (int i = 0; i < dstTrans.Num(); ++i) {
 					int parent = rk.GetParentIndex(i);
 					if (parent == INDEX_NONE) continue;
@@ -611,15 +625,6 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 			pose->AddOrUpdatePoseWithUniqueName(Cast<USkeletalMeshComponent>(PreviewComponent), &PoseName);
 			pose->RenameSmartName(PoseName.DisplayName, TEXT("POSE_A"));
 
-			//pose->ConvertSpace(true,0);
-
-			FName RetargetSourceName = TEXT("tmp");
-			FReferencePose RetargetSource;
-			RetargetSource.PoseName = TEXT("tmp");
-			RetargetSource.ReferencePose = dstTrans;
-
-			k->AnimRetargetSources.Empty();
-			k->AnimRetargetSources.Add(RetargetSourceName, RetargetSource);
 		}
 	}
 #endif
