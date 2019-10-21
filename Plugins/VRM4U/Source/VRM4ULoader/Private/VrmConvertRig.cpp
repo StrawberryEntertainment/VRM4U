@@ -11,6 +11,7 @@
 #include <assimp/vrm/vrmmeta.h>
 
 #include "VrmAssetListObject.h"
+#include "VrmMetaObject.h"
 #include "VrmSkeleton.h"
 #include "LoaderBPFunctionLibrary.h"
 
@@ -29,6 +30,11 @@
 
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
+
+#include "IPersonaToolkit.h"
+#include "PersonaModule.h"
+#include "Modules/ModuleManager.h"
+#include "Animation/DebugSkelMeshComponent.h"
 
 
 //#include "Engine/.h"
@@ -181,7 +187,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 
 	FString PelvisBoneName;
 	{
-		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+		const VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
 		auto func = [&](const FString &a, const FString b) {
 			mc->AddMapping(*a, *b);
@@ -484,72 +490,135 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	mc->PostEditChange();
 	vrmAssetList->HumanoidRig = mc;
 
-#if 0
+#if 1
 	{
+		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
+
 		FString name = FString(TEXT("POSE_")) + vrmAssetList->BaseFileName;
 		UPoseAsset *pose = NewObject<UPoseAsset>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
 		pose->SetSkeleton(k);
-
-		FString name2 = FString(TEXT("aaa_")) + vrmAssetList->BaseFileName;
-		USkeletalMeshComponent *smc = NewObject<USkeletalMeshComponent>(GetTransientPackage(), *name2, RF_Public | RF_Standalone);
-		smc->SetSkeletalMesh(vrmAssetList->SkeletalMesh);
+		pose->SetPreviewMesh(sk);
 
 		FSmartName PoseName;
-		PoseName.DisplayName = TEXT("pose1");
-		pose->AddOrUpdatePose(PoseName, smc);
 
-		/*
+		//USkeletalMeshComponent *smc = nullptr;
 		{
-			FSmartName PoseName;
-			PoseName.DisplayName = TEXT("pose1");
-			auto &bone = k->GetRefLocalPoses();
+			FPersonaModule& PersonaModule = FModuleManager::LoadModuleChecked<FPersonaModule>("Persona");
+			auto PersonaToolkit = PersonaModule.CreatePersonaToolkit(sk);
 
-			TArray<FName> TrackNames;
-			// note this ignores root motion
-			TArray<FTransform> BoneTransform = bone;// MeshComponent->GetComponentSpaceTransforms();
-			const FReferenceSkeleton& RefSkeleton = k->GetReferenceSkeleton();
-			for (int32 BoneIndex = 0; BoneIndex < RefSkeleton.GetNum(); ++BoneIndex)
-			{
-				TrackNames.Add(RefSkeleton.GetBoneName(BoneIndex));
-			}
+			UDebugSkelMeshComponent* PreviewComponent = PersonaToolkit->GetPreviewMeshComponent();
 
-			// convert to local space
-			for (int32 BoneIndex = BoneTransform.Num() - 1; BoneIndex >= 0; --BoneIndex)
+			auto *kk = Cast<USkeletalMeshComponent>(PreviewComponent);
+			kk->SetComponentSpaceTransformsDoubleBuffering(false);
+
+			pose->AddOrUpdatePoseWithUniqueName(Cast<USkeletalMeshComponent>(PreviewComponent), &PoseName);
+			pose->RenameSmartName(PoseName.DisplayName, TEXT("POSE_T"));
+
+			auto &dstTrans = kk->GetEditableComponentSpaceTransforms();
 			{
-				const int32 ParentIndex = RefSkeleton.GetParentIndex(BoneIndex);
-				if (ParentIndex != INDEX_NONE)
+				struct RetargetParts {
+					FString BoneUE4;
+					FString BoneVRM;
+					FString BoneModel;
+
+					FRotator rot;
+				};
+				TArray<RetargetParts> retargetTable;
+				TMap<FString, RetargetParts> mapTable;
+
 				{
-					BoneTransform[BoneIndex] = BoneTransform[BoneIndex].GetRelativeTransform(BoneTransform[ParentIndex]);
+					RetargetParts t;
+					t.BoneUE4 = TEXT("UpperArm_R");
+					t.rot = FRotator(40, 0, 0);
+					retargetTable.Push(t);
 				}
-			}
-
-			const USkeleton* MeshSkeleton = k;
-			const FSmartNameMapping* Mapping = MeshSkeleton->GetSmartNameContainer(USkeleton::AnimCurveMappingName);
-
-			TArray<float> NewCurveValues;
-			NewCurveValues.AddZeroed(PoseContainer.Curves.Num());
-
-			/*
-			if (Mapping)
-			{
-				const FBlendedHeapCurve& MeshCurves = MeshComponent->GetAnimationCurves();
-
-				for (int32 NewCurveIndex = 0; NewCurveIndex < NewCurveValues.Num(); ++NewCurveIndex)
 				{
-					FAnimCurveBase& Curve = PoseContainer.Curves[NewCurveIndex];
-					SmartName::UID_Type CurveUID = Mapping->FindUID(Curve.Name.DisplayName);
-					if (CurveUID != SmartName::MaxUID)
-					{
-						const float MeshCurveValue = MeshCurves.Get(CurveUID);
-						NewCurveValues[NewCurveIndex] = MeshCurveValue;
+					RetargetParts t;
+					t.BoneUE4 = TEXT("lowerarm_r");
+					t.rot = FRotator(10, -30, 0);
+					retargetTable.Push(t);
+				}
+				{
+					RetargetParts t;
+					t.BoneUE4 = TEXT("Hand_R");
+					t.rot = FRotator(10, 0, 0);
+					retargetTable.Push(t);
+				}
+				{
+					RetargetParts t;
+					t.BoneUE4 = TEXT("UpperArm_L");
+					t.rot = FRotator(-40, 0, 0);
+					retargetTable.Push(t);
+				}
+				{
+					RetargetParts t;
+					t.BoneUE4 = TEXT("lowerarm_l");
+					t.rot = FRotator(-10, 30, 0);
+					retargetTable.Push(t);
+				}
+				{
+					RetargetParts t;
+					t.BoneUE4 = TEXT("Hand_L");
+					t.rot = FRotator(-10, 0, 0);
+					retargetTable.Push(t);
+				}
+				{
+					RetargetParts t;
+					t.BoneUE4 = TEXT("Thigh_R");
+					t.rot = FRotator(-10, 0, 0);
+					retargetTable.Push(t);
+				}
+				{
+					RetargetParts t;
+					t.BoneUE4 = TEXT("Thigh_L");
+					t.rot = FRotator(10, 0, 0);
+					retargetTable.Push(t);
+				}
+
+				for (auto &a : retargetTable) {
+					for (auto &t : table) {
+						if (t.BoneUE4.Compare(a.BoneUE4) != 0) {
+							continue;
+						}
+						auto *m = vrmAssetList->VrmMetaObject->humanoidBoneTable.Find(t.BoneVRM);
+						a.BoneVRM = t.BoneVRM;
+						a.BoneModel = *m;
+						mapTable.Add(a.BoneModel, a);
+						break;
 					}
 				}
-			}
-			*/
 
-		//	pose->AddOrUpdatePose(PoseName, TrackNames, BoneTransform, NewCurveValues);
-			//pose->PoseContainer.MarkPoseFlags(MySkeleton, RetargetSource);
-		//}
+				auto &rk = k->GetReferenceSkeleton();
+				for (int i = 0; i < dstTrans.Num(); ++i) {
+					auto &t = dstTrans[i];
+
+					t.SetIdentity();
+					t = rk.GetRefBonePose()[i];
+					auto *m = mapTable.Find(rk.GetBoneName(i).ToString());
+					if (m) {
+						t.SetRotation(FQuat(m->rot));
+					}
+				}
+				for (int i = 0; i < dstTrans.Num(); ++i) {
+					int parent = rk.GetParentIndex(i);
+					if (parent == INDEX_NONE) continue;
+					
+					dstTrans[i] = dstTrans[i] * dstTrans[parent];
+				}
+			}
+			pose->AddOrUpdatePoseWithUniqueName(Cast<USkeletalMeshComponent>(PreviewComponent), &PoseName);
+			pose->RenameSmartName(PoseName.DisplayName, TEXT("POSE_A"));
+
+			//pose->ConvertSpace(true,0);
+
+			FName RetargetSourceName = TEXT("tmp");
+			FReferencePose RetargetSource;
+			RetargetSource.PoseName = TEXT("tmp");
+			RetargetSource.ReferencePose = dstTrans;
+
+			k->AnimRetargetSources.Empty();
+			k->AnimRetargetSources.Add(RetargetSourceName, RetargetSource);
+		}
 	}
 #endif
 
@@ -559,7 +628,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	if (vrmAssetList){
 		// dummy Collision
 
-		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+		const VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 		UPhysicsAsset *pa = sk->PhysicsAsset;
 		FString h = TEXT("hips");

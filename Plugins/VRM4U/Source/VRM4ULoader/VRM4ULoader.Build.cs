@@ -38,9 +38,10 @@ public class VRM4ULoader : ModuleRules
                 "AnimGraphRuntime",
                 "ProceduralMeshComponent",
                 "VRM4U",
-
+				"Persona",
             });
 
+		
         DynamicallyLoadedModuleNames.AddRange(
             new string[]
             {
