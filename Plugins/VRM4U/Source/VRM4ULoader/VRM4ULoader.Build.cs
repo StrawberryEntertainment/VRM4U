@@ -38,11 +38,15 @@ public class VRM4ULoader : ModuleRules
                 "AnimGraphRuntime",
                 "ProceduralMeshComponent",
                 "VRM4U",
-				"Persona",
             });
 
-		
-        DynamicallyLoadedModuleNames.AddRange(
+		if (Target.bBuildEditor) {
+			PrivateDependencyModuleNames.Add("Persona");
+		}
+
+
+
+		DynamicallyLoadedModuleNames.AddRange(
             new string[]
             {
             }

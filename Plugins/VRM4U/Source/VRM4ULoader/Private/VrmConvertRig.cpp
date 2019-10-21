@@ -31,10 +31,12 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/PhysicsConstraintTemplate.h"
 
+#if WITH_EDITOR
 #include "IPersonaToolkit.h"
 #include "PersonaModule.h"
 #include "Modules/ModuleManager.h"
 #include "Animation/DebugSkelMeshComponent.h"
+#endif
 
 
 //#include "Engine/.h"
