@@ -15,6 +15,9 @@
 #include "AssetRegistryModule.h"
 #include "ARFilter.h"
 
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/LightComponent.h"
+
 #include "Rendering/SkeletalMeshLODModel.h"
 #include "Rendering/SkeletalMeshLODRenderData.h"
 #include "Rendering/SkeletalMeshRenderData.h"
@@ -290,4 +293,24 @@ bool UVrmBPFunctionLibrary::VRMGetShadowEnable(const USkeletalMesh *mesh, int Ma
 	}
 
 	return bShadow;
+}
+
+void UVrmBPFunctionLibrary::VRMSetLightingChannelPrim(UPrimitiveComponent *prim, bool bChannel0, bool bChannel1, bool bChannel2) {
+	if (prim == nullptr) {
+		return;
+	}
+
+	prim->LightingChannels.bChannel0 = bChannel0;
+	prim->LightingChannels.bChannel1 = bChannel1;
+	prim->LightingChannels.bChannel2 = bChannel2;
+}
+
+void UVrmBPFunctionLibrary::VRMSetLightingChannelLight(ULightComponent *light, bool bChannel0, bool bChannel1, bool bChannel2) {
+	if (light == nullptr) {
+		return;
+	}
+
+	light->LightingChannels.bChannel0 = bChannel0;
+	light->LightingChannels.bChannel1 = bChannel1;
+	light->LightingChannels.bChannel2 = bChannel2;
 }

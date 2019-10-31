@@ -55,4 +55,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
 	static bool VRMGetShadowEnable(const USkeletalMesh *mesh, int MaterialIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
+	static void VRMSetLightingChannelPrim(UPrimitiveComponent *prim, bool channel0, bool channel1, bool channel2);
+
+	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
+	static void VRMSetLightingChannelLight(ULightComponent *light, bool channel0, bool channel1, bool channel2);
+
+	
 };
