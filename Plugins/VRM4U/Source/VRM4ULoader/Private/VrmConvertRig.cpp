@@ -585,9 +585,11 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 							continue;
 						}
 						auto *m = vrmAssetList->VrmMetaObject->humanoidBoneTable.Find(t.BoneVRM);
-						a.BoneVRM = t.BoneVRM;
-						a.BoneModel = *m;
-						mapTable.Add(a.BoneModel, a);
+						if (m) {
+							a.BoneVRM = t.BoneVRM;
+							a.BoneModel = *m;
+							mapTable.Add(a.BoneModel, a);
+						}
 						break;
 					}
 				}

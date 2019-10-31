@@ -479,6 +479,9 @@ void FAnimNode_VrmSpringBone::CacheBones_AnyThread(const FAnimationCacheBonesCon
 #else
 void FAnimNode_VrmSpringBone::ResetDynamics(ETeleportType InTeleportType) {
 	Super::ResetDynamics(InTeleportType);
+	if (SpringManager.Get()) {
+		SpringManager.Get()->reset();
+	}
 }
 #endif
 
