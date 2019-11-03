@@ -143,8 +143,17 @@ namespace {
 				{TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor},
 				{TEXT("_UvAnimMaskTexture"),	vrmMat.vectorProperties._UvAnimMaskTexture},
 			};
-
+			int count = 0;
 			for (auto &t : table) {
+				++count;
+				switch (count) {
+				case 1:
+				case 2:
+					t.value[0] = t.value[1] = t.value[2] = t.value[3] = 1.f;
+					break;
+				default:
+					break;
+				}
 				LocalVectorParameterSet(dm, *(TEXT("mtoon") + t.key), FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]));
 
 				//FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
@@ -237,11 +246,17 @@ namespace {
 				{TEXT("mtoon_tex_OutlineWidthTexture"),	vrmMat.textureProperties._OutlineWidthTexture},
 				{TEXT("_UvAnimMaskTexture"),	vrmMat.textureProperties._UvAnimMaskTexture},
 			};
+			int count = 0;
 			for (auto &t : table) {
+				++count;
 				if (t.value < 0) {
 					continue;
 				}
 				LocalTextureSet(dm, *t.key, vrmAssetList->Textures[t.value]);
+				if (count == 1) {
+					// main => shade tex
+					LocalTextureSet(dm, *table[1].key, vrmAssetList->Textures[t.value]);
+				}
 
 				//FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();
 				//v->ParameterInfo.Index = INDEX_NONE;
@@ -735,15 +750,16 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 
 				if (dm) {
 					{
-						aiColor4D col;
+						FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
+						v->ParameterInfo.Index = INDEX_NONE;
+						v->ParameterInfo.Name = TEXT("gltf_basecolor");
+						v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
+
+						aiColor4D col(1.f, 1.f, 1.f, 1.f);
 						aiReturn result = aiMat.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, col);
 						if (result == 0) {
-							FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
-							v->ParameterInfo.Index = INDEX_NONE;
-							v->ParameterInfo.Name = TEXT("gltf_basecolor");
-							v->ParameterInfo.Association = EMaterialParameterAssociation::GlobalParameter;
-							v->ParameterValue = FLinearColor(col.r, col.g, col.b, col.a);
 						}
+						v->ParameterValue = FLinearColor(col.r, col.g, col.b, col.a);
 					}
 
 					{
@@ -765,6 +781,20 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					}
 					if (index < vrmAssetList->Textures.Num()) {
 						LocalTextureSet(dm, TEXT("gltf_tex_diffuse"), vrmAssetList->Textures[index]);
+						{
+							FString str = TEXT("mtoon_tex_ShadeTexture");
+							bool bFindShadeTex = false;
+							for (auto &t : dm->TextureParameterValues) {
+								if (str.Compare(t.ParameterInfo.Name.ToString(), ESearchCase::IgnoreCase) == 0) {
+									if (t.ParameterValue) {
+										bFindShadeTex = true;
+									}
+								}
+							}
+							if (bFindShadeTex == false) {
+								LocalTextureSet(dm, *str, vrmAssetList->Textures[index]);
+							}
+						}
 					}
 					if (bMToon == false){
 						aiString alphaMode;
