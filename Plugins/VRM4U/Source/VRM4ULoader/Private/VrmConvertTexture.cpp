@@ -117,6 +117,9 @@ namespace {
 		auto i = matIndex;
 		const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
+		if (meta == nullptr) {
+			return false;
+		}
 		if (i >= meta->materialNum) {
 			return false;
 		}
@@ -612,13 +615,15 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						}
 
 						const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
-						if ((int)iMat < meta->materialNum) {
-							auto &vrmMat = meta->material[iMat];
-							if (vrmMat.floatProperties._CullMode == 0.f) {
-								bTwoSided = true;
-							}
-							if (vrmMat.floatProperties._ZWrite == 1.f) {
-								bTranslucent = false;
+						if (meta) {
+							if ((int)iMat < meta->materialNum) {
+								auto &vrmMat = meta->material[iMat];
+								if (vrmMat.floatProperties._CullMode == 0.f) {
+									bTwoSided = true;
+								}
+								if (vrmMat.floatProperties._ZWrite == 1.f) {
+									bTranslucent = false;
+								}
 							}
 						}
 					}

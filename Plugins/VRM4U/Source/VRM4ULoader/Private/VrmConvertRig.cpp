@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
+﻿// VRM4U Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmConvertRig.h"
 #include "VrmConvert.h"
@@ -123,6 +123,83 @@ namespace {
 	{"Custom_4",""},
 	{"Custom_5",""},
 	};
+
+	static const Table table_pmx[] = {
+		{"Root",TEXT("全ての親")},
+		{"Pelvis",TEXT("センター")},
+		{"spine_01",TEXT("上半身")},
+		{"spine_02",TEXT("上半身")},
+		{"spine_03",TEXT("上半身2")},
+		{"clavicle_l",TEXT("左肩")},
+		{"UpperArm_L",TEXT("左腕")},
+		{"lowerarm_l",TEXT("左ひじ")},
+		{"Hand_L",TEXT("左手首")},
+		{"index_01_l",TEXT("左人指１")},
+		{"index_02_l",TEXT("左人指２")},
+		{"index_03_l",TEXT("左人指３")},
+		{"middle_01_l",TEXT("左中指１")},
+		{"middle_02_l",TEXT("左中指２")},
+		{"middle_03_l",TEXT("左中指３")},
+		{"pinky_01_l",TEXT("左小指１")},
+		{"pinky_02_l",TEXT("左小指２")},
+		{"pinky_03_l",TEXT("左小指３")},
+		{"ring_01_l",TEXT("左薬指１")},
+		{"ring_02_l",TEXT("左薬指２")},
+		{"ring_03_l",TEXT("左薬指３")},
+		{"thumb_01_l",TEXT("左親指１")},
+		{"thumb_02_l",TEXT("左親指１")},
+		{"thumb_03_l",TEXT("左親指２")},
+		{"lowerarm_twist_01_l",TEXT("")},
+		{"upperarm_twist_01_l",TEXT("")},
+		{"clavicle_r",TEXT("右肩")},
+		{"UpperArm_R",TEXT("右腕")},
+		{"lowerarm_r",TEXT("右ひじ")},
+		{"Hand_R",TEXT("右手首")},
+		{"index_01_r",TEXT("右人指１")},
+		{"index_02_r",TEXT("右人指２")},
+		{"index_03_r",TEXT("右人指３")},
+		{"middle_01_r",TEXT("右中指１")},
+		{"middle_02_r",TEXT("右中指２")},
+		{"middle_03_r",TEXT("右中指３")},
+		{"pinky_01_r",TEXT("右小指１")},
+		{"pinky_02_r",TEXT("右小指２")},
+		{"pinky_03_r",TEXT("右小指３")},
+		{"ring_01_r",TEXT("右薬指１")},
+		{"ring_02_r",TEXT("右薬指２")},
+		{"ring_03_r",TEXT("右薬指３")},
+		{"thumb_01_r",TEXT("右親指１")},
+		{"thumb_02_r",TEXT("右親指１")},
+		{"thumb_03_r",TEXT("右親指２")},
+		{"lowerarm_twist_01_r",TEXT("")},
+		{"upperarm_twist_01_r",TEXT("")},
+		{"neck_01",TEXT("首")},
+		{"head",TEXT("頭")},
+		{"Thigh_L",TEXT("左足")},
+		{"calf_l",TEXT("左ひざ")},
+		{"calf_twist_01_l",TEXT("")},
+		{"Foot_L",TEXT("左足首")},
+		{"ball_l",TEXT("左つま先")},
+		{"thigh_twist_01_l",TEXT("")},
+		{"Thigh_R",TEXT("右足")},
+		{"calf_r",TEXT("右ひざ	")},
+		{"calf_twist_01_r",TEXT("")},
+		{"Foot_R",TEXT("右足首")},
+		{"ball_r",TEXT("右つま先")},
+		{"thigh_twist_01_r",TEXT("")},
+		{"ik_foot_root",TEXT("")},
+		{"ik_foot_l",TEXT("")},
+		{"ik_foot_r",TEXT("")},
+		{"ik_hand_root",TEXT("")},
+		{"ik_hand_gun",TEXT("")},
+		{"ik_hand_l",TEXT("")},
+		{"ik_hand_r",TEXT("")},
+		{"Custom_1",TEXT("")},
+		{"Custom_2",TEXT("")},
+		{"Custom_3",TEXT("")},
+		{"Custom_4",TEXT("")},
+		{"Custom_5",TEXT("")},
+	};
+
 #endif
 
 	static int GetChildBoneLocal(const FReferenceSkeleton &skeleton, const int32 ParentBoneIndex, TArray<int32> & Children) {
@@ -320,7 +397,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				}
 			}
 		} else {
-			// auto mapping
+			// BVH auto mapping
 			
 			const auto &rSk = k->GetReferenceSkeleton(); //EngineHumanoidRig->GetSourceReferenceSkeleton();
 			
@@ -456,8 +533,21 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 						func2(TEXT("Thigh_L"), rSk.GetBoneName(p));
 					}
 				}
+
+				{
+					// pmx bone map
+					for (const auto &t : table_pmx) {
+						FString target = t.BoneVRM;
+						const FString &ue4 = t.BoneUE4;
+
+						auto ind = k->GetReferenceSkeleton().FindBoneIndex(*target);
+						if (ind != INDEX_NONE) {
+							func(ue4, target);
+						}
+					}
+				}// pmx map
 			}
-		}
+		}// map end
 	}
 
 	{
