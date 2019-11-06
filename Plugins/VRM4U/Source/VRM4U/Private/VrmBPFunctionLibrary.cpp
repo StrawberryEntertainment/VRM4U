@@ -314,3 +314,11 @@ void UVrmBPFunctionLibrary::VRMSetLightingChannelLight(ULightComponent *light, b
 	light->LightingChannels.bChannel1 = bChannel1;
 	light->LightingChannels.bChannel2 = bChannel2;
 }
+
+void UVrmBPFunctionLibrary::VRMakeCameraTrackingFocusSettings(AActor *ActorToTrack, FVector RelativeOffset, bool bDrawDebugTrackingFocusPoint, FCameraTrackingFocusSettings &Settings){
+#if	UE_VERSION_OLDER_THAN(4,23,0)
+#endif
+	Settings.ActorToTrack = ActorToTrack;
+	Settings.RelativeOffset = RelativeOffset;
+	Settings.bDrawDebugTrackingFocusPoint = bDrawDebugTrackingFocusPoint;
+}

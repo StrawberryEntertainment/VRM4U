@@ -4,6 +4,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "CinematicCamera/Public/CineCameraComponent.h"
 #include "VrmBPFunctionLibrary.generated.h"
 
 class UTextureRenderTarget2D;
@@ -62,5 +63,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "VRM4U", meta = (WorldContext = "WorldContextObject"))
 	static void VRMSetLightingChannelLight(ULightComponent *light, bool channel0, bool channel1, bool channel2);
 
-	
+	UFUNCTION(BlueprintPure, Category = "VRM4U", meta = (DynamicOutputParam = "Settings"))
+	static void VRMakeCameraTrackingFocusSettings(AActor *ActorToTrack, FVector RelativeOffset, bool bDrawDebugTrackingFocusPoint, FCameraTrackingFocusSettings &Settings);
+
 };

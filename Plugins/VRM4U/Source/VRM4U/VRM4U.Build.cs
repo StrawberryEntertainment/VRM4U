@@ -57,6 +57,7 @@ public class VRM4U : ModuleRules
 				"SlateCore",
                 "Engine",
 				"AssetRegistry",
+				"CinematicCamera",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
