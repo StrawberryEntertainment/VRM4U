@@ -4,7 +4,16 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Misc/EngineVersionComparison.h"
+
+#if	UE_VERSION_OLDER_THAN(4,19,0)
 #include "CinematicCamera/Public/CineCameraComponent.h"
+#else
+struct FCameraTrackingFocusSettings {
+	int dummy;
+};
+#endif
+
 #include "VrmBPFunctionLibrary.generated.h"
 
 class UTextureRenderTarget2D;
@@ -65,5 +74,4 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "VRM4U", meta = (DynamicOutputParam = "Settings"))
 	static void VRMakeCameraTrackingFocusSettings(AActor *ActorToTrack, FVector RelativeOffset, bool bDrawDebugTrackingFocusPoint, FCameraTrackingFocusSettings &Settings);
-
 };
