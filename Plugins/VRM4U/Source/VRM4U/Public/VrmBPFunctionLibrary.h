@@ -6,12 +6,12 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Misc/EngineVersionComparison.h"
 
-#if	UE_VERSION_OLDER_THAN(4,19,0)
-#include "CinematicCamera/Public/CineCameraComponent.h"
-#else
+#if	UE_VERSION_OLDER_THAN(4,20,0)
 struct FCameraTrackingFocusSettings {
 	int dummy;
 };
+#else
+#include "CinematicCamera/Public/CineCameraComponent.h"
 #endif
 
 #include "VrmBPFunctionLibrary.generated.h"
