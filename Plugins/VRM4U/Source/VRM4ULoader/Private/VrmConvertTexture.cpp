@@ -146,17 +146,7 @@ namespace {
 				{TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor},
 				{TEXT("_UvAnimMaskTexture"),	vrmMat.vectorProperties._UvAnimMaskTexture},
 			};
-			int count = 0;
 			for (auto &t : table) {
-				++count;
-				switch (count) {
-				case 1:
-				case 2:
-					t.value[0] = t.value[1] = t.value[2] = t.value[3] = 1.f;
-					break;
-				default:
-					break;
-				}
 				LocalVectorParameterSet(dm, *(TEXT("mtoon") + t.key), FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]));
 
 				//FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
