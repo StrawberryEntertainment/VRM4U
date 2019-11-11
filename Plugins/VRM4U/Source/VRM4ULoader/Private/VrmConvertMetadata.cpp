@@ -87,11 +87,11 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 	}
 
 	// spring
-	m->VRMSprintMeta.SetNum(meta->sprintNum);
-	for (int i = 0; i < meta->sprintNum; ++i) {
+	m->VRMSpringMeta.SetNum(meta->springNum);
+	for (int i = 0; i < meta->springNum; ++i) {
 		const auto &vrms = meta->springs[i];
 
-		auto &s = m->VRMSprintMeta[i];
+		auto &s = m->VRMSpringMeta[i];
 		s.stiffiness = vrms.stiffiness;
 		s.gravityPower = vrms.gravityPower;
 		s.gravityDir.Set(vrms.gravityDir[0], vrms.gravityDir[1], vrms.gravityDir[2]);

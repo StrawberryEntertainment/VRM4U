@@ -317,11 +317,11 @@ namespace VRMSpring {
 		const FReferenceSkeleton &RefSkeleton = skeletalMesh->RefSkeleton;
 		const auto &RefSkeletonTransform = RefSkeleton.GetRefBonePose();
 
-		spring.SetNum(meta->VRMSprintMeta.Num());
+		spring.SetNum(meta->VRMSpringMeta.Num());
 
 		for (int i = 0; i < spring.Num(); ++i) {
 			auto &s = spring[i];
-			const auto &metaS = meta->VRMSprintMeta[i];
+			const auto &metaS = meta->VRMSpringMeta[i];
 
 			s.skeletalMesh = meta->SkeletalMesh;
 

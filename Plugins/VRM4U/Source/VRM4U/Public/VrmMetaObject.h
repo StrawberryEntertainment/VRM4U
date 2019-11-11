@@ -118,7 +118,7 @@ public:
 	TArray<FVrmBlendShapeGroup> BlendShapeGroup;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	TArray<FVRMSpringMeta> VRMSprintMeta;
+	TArray<FVRMSpringMeta> VRMSpringMeta;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	TArray<FVRMColliderMeta> VRMColliderMeta;

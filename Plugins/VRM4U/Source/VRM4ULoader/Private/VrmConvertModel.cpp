@@ -1239,7 +1239,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	UPhysicsAsset *pa = nullptr;
 	if (mScenePtr->mVRMMeta && Options::Get().IsSkipPhysics()==false) {
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
-		if (meta->sprintNum > 0) {
+		if (meta->springNum > 0) {
 			if (vrmAssetList->Package == GetTransientPackage()) {
 				pa = NewObject<UPhysicsAsset>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 			}else {
@@ -1269,7 +1269,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			{
 				TArray<int> swingBoneIndexArray;
 
-				for (int i = 0; i < meta->sprintNum; ++i) {
+				for (int i = 0; i < meta->springNum; ++i) {
 					auto &spring = meta->springs[i];
 					for (int j = 0; j < spring.boneNum; ++j) {
 						auto &sbone = spring.bones_name[j];

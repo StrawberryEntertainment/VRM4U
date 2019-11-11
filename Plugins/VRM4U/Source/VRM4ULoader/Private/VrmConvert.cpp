@@ -152,7 +152,7 @@ bool VRMConverter::NormalizeBoneName(const aiScene *mScenePtr) {
 	{
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 
-		for (int s = 0; s < meta->sprintNum; ++s) {
+		for (int s = 0; s < meta->springNum; ++s) {
 			auto &a = meta->springs[s];
 			if (a.bones_name == nullptr) {
 				continue;
