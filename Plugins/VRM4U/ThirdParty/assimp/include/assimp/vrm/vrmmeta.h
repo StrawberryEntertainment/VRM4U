@@ -109,8 +109,8 @@ extern "C" {
             float _ZWrite;
         };
         struct ASSIMP_API VRMMaterialVectorProperties {
-            vec4 _Color;
-            vec4 _ShadeColor;
+            vec4 _Color = {1,1,1,1};
+            vec4 _ShadeColor = {1,1,1,1};
             vec4 _MainTex;
             vec4 _ShadeTexture;
             vec4 _BumpMap;
@@ -186,7 +186,7 @@ extern "C" {
         {
             VRMLicense license;
 
-            int sprintNum = 0;
+            int springNum = 0;
             VRMSpring *springs = nullptr;
 
             int colliderGroupNum = 0;
