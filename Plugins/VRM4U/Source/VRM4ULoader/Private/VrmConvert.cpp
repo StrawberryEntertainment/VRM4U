@@ -61,7 +61,7 @@ FString VRMConverter::NormalizeFileName(const FString &str) {
 }
 
 static bool hasInvalidBoneName(const aiString &s) {
-	for (int i = 0; i < s.length; ++i) {
+	for (uint32_t i = 0; i < s.length; ++i) {
 		if (s.data[i] >= 0 && s.data[i] <= 0x7e) {
 			continue;
 		}

@@ -129,7 +129,7 @@ namespace {
 				FString key;
 				float* value;
 			};
-			TT table[] = {
+			TT tableParam[] = {
 				{TEXT("_Color"),			vrmMat.vectorProperties._Color},
 				{TEXT("_ShadeColor"),	vrmMat.vectorProperties._ShadeColor},
 				{TEXT("_MainTex"),		vrmMat.vectorProperties._MainTex},
@@ -146,7 +146,7 @@ namespace {
 				{TEXT("_OutlineColor"),			vrmMat.vectorProperties._OutlineColor},
 				{TEXT("_UvAnimMaskTexture"),	vrmMat.vectorProperties._UvAnimMaskTexture},
 			};
-			for (auto &t : table) {
+			for (auto &t : tableParam) {
 				LocalVectorParameterSet(dm, *(TEXT("mtoon") + t.key), FLinearColor(t.value[0], t.value[1], t.value[2], t.value[3]));
 
 				//FVectorParameterValue *v = new (dm->VectorParameterValues) FVectorParameterValue();
@@ -161,7 +161,7 @@ namespace {
 				FString key;
 				float& value;
 			};
-			TT table[] = {
+			TT tableParam[] = {
 				{TEXT("_Cutoff"),		vrmMat.floatProperties._Cutoff},
 				{TEXT("_BumpScale"),	vrmMat.floatProperties._BumpScale},
 				{TEXT("_ReceiveShadowRate"),	vrmMat.floatProperties._ReceiveShadowRate},
@@ -190,7 +190,7 @@ namespace {
 				{TEXT("_ZWrite"),			vrmMat.floatProperties._ZWrite},
 			};
 
-			for (auto &t : table) {
+			for (auto &t : tableParam) {
 				LocalScalarParameterSet(dm, *(TEXT("mtoon") + t.key), t.value);
 
 				//FScalarParameterValue *v = new (dm->ScalarParameterValues) FScalarParameterValue();
@@ -227,7 +227,7 @@ namespace {
 				FString key;
 				int value;
 			};
-			TT table[] = {
+			TT tableParam[] = {
 				{TEXT("mtoon_tex_MainTex"),		vrmMat.textureProperties._MainTex},
 				{TEXT("mtoon_tex_ShadeTexture"),	vrmMat.textureProperties._ShadeTexture},
 				{TEXT("mtoon_tex_BumpMap"),		vrmMat.textureProperties._BumpMap},
@@ -240,7 +240,7 @@ namespace {
 				{TEXT("_UvAnimMaskTexture"),	vrmMat.textureProperties._UvAnimMaskTexture},
 			};
 			int count = 0;
-			for (auto &t : table) {
+			for (auto &t : tableParam) {
 				++count;
 				if (t.value < 0) {
 					continue;
@@ -248,7 +248,7 @@ namespace {
 				LocalTextureSet(dm, *t.key, vrmAssetList->Textures[t.value]);
 				if (count == 1) {
 					// main => shade tex
-					LocalTextureSet(dm, *table[1].key, vrmAssetList->Textures[t.value]);
+					LocalTextureSet(dm, *tableParam[1].key, vrmAssetList->Textures[t.value]);
 				}
 
 				//FTextureParameterValue *v = new (dm->TextureParameterValues) FTextureParameterValue();

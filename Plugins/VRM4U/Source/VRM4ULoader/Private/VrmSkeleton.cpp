@@ -180,13 +180,13 @@ static void rr(const aiNode *node, TArray<const aiNode*> &t, bool &bHasMesh, con
 
 		}
 
-		auto table = makeActiveBone(scene);
+		auto tableBone = makeActiveBone(scene);
 
 		for (uint32 i = 0; i < node->mNumChildren; ++i) {
 			if (i == maxIndex) {
 				continue;
 			}
-			if (findActiveBone(node->mChildren[i], table)){
+			if (findActiveBone(node->mChildren[i], tableBone)){
 				maxIndex = -1;
 				break;
 			}

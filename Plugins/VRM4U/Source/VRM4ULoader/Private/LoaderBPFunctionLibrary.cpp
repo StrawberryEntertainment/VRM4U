@@ -1,6 +1,7 @@
 // VRM4U Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "LoaderBPFunctionLibrary.h"
+
 //#include "VRM4U.h"
 #include "VrmSkeleton.h"
 #include "VrmSkeletalMesh.h"
@@ -58,6 +59,19 @@ namespace {
 	FReturnedData result;
 }
 
+namespace {
+	class RenderControl {
+	public:
+		RenderControl() {
+			StopRenderingThread();
+			GUseThreadedRendering = false;
+		}
+		~RenderControl() {
+			GUseThreadedRendering = true;
+			StartRenderingThread();
+		}
+	};
+}
 
 static bool saveObject(UObject *u, bool bSave) {
 #if WITH_EDITOR
@@ -344,6 +358,8 @@ bool ULoaderBPFunctionLibrary::VRMSetLoadMaterialType(EVRMImportMaterialType typ
 }
 
 bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset, UVrmAssetListObject *&OutVrmAsset, FString filepath) {
+
+	//RenderControl _dummy_control;
 
 	if (InVrmAsset == nullptr) {
 		return false;
