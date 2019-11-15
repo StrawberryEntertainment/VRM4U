@@ -9,9 +9,7 @@
 #include <assimp/scene.h>       // Output data structure
 #include <assimp/mesh.h>       // Output data structure
 
-#if WITH_EDITOR
 #include "VrmConvert.h"
-#endif
 
 #if	UE_VERSION_OLDER_THAN(4,20,0)
 #else
@@ -196,9 +194,9 @@ static void rr(const aiNode *node, TArray<const aiNode*> &t, bool &bHasMesh, con
 
 		if (maxIndex >= 0) {
 
-			const auto t = node->mChildren[maxIndex]->mTransformation;
+			const auto trans = node->mChildren[maxIndex]->mTransformation;
 			float f = 0.f;
-			f += FMath::Abs(t.a4) + FMath::Abs(t.b4) + FMath::Abs(t.c4);
+			f += FMath::Abs(trans.a4) + FMath::Abs(trans.b4) + FMath::Abs(trans.c4);
 			if (f < 1.e-8f) {
 				target = node->mChildren[maxIndex];
 			} else {

@@ -27,7 +27,7 @@ void UAnimGraphNode_VrmSpringBone::ValidateAnimNodePostCompile(FCompilerResultsL
 				MessageLog.Warning(*LOCTEXT("VrmDifferentSkeleton", "@@ - You must set VrmMetaObject has same skeleton").ToString(), this);
 			}
 		}
-		if (CompiledClass->GetTargetSkeleton()->GetBoneTree().Num() <= 0) {
+		if (CompiledClass->GetTargetSkeleton()->GetReferenceSkeleton().GetRawBoneNum() <= 0) {
 			MessageLog.Warning(*LOCTEXT("VrmNoBone", "@@ - Skeleton bad data").ToString(), this);
 		}
 	}
@@ -48,7 +48,7 @@ void UAnimGraphNode_VrmSpringBone::ValidateAnimNodeDuringCompilation(USkeleton* 
 			//		MessageLog.Warning(*LOCTEXT("VrmDifferentSkeleton", "@@ - You must set VrmMetaObject has same skeleton").ToString(), this);
 				}
 			}
-			if (ForSkeleton->GetBoneTree().Num() <= 0) {
+			if (ForSkeleton->GetReferenceSkeleton().GetRawBoneNum() <= 0) {
 			//	MessageLog.Warning(*LOCTEXT("VrmNoBone", "@@ - Skeleton bad data").ToString(), this);
 			}
 		}

@@ -647,7 +647,12 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 		sk->AllocateResourceForRendering();
 		FSkeletalMeshRenderData *p = sk->GetResourceForRendering();
+#if	UE_VERSION_OLDER_THAN(4,24,0)
 		FSkeletalMeshLODRenderData *pRd = new(p->LODRenderData) FSkeletalMeshLODRenderData();
+#else
+		FSkeletalMeshLODRenderData *pRd = new FSkeletalMeshLODRenderData();
+		p->LODRenderData.Add(pRd);
+#endif
 
 		{
 			pRd->StaticVertexBuffers.PositionVertexBuffer.Init(10);
@@ -748,7 +753,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			int currentVertex = 0;
 
 #if WITH_EDITORONLY_DATA
+#if	UE_VERSION_OLDER_THAN(4,24,0)
 			new(sk->GetImportedModel()->LODModels) FSkeletalMeshLODModel();
+#else
+			sk->GetImportedModel()->LODModels.Add(new FSkeletalMeshLODModel());
+#endif
 			sk->GetImportedModel()->LODModels[0].Sections.SetNum(result.meshInfo.Num());
 #endif
 

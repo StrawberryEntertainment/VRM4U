@@ -109,9 +109,11 @@ class FVRM4ULoaderModule : public IModuleInterface {
 		}
 
 		{
-			FString AbsPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*(FPaths::ProjectPluginsDir() / TEXT("VRM4U/ThirdParty/assimp/bin/x64")));
-			//FPlatformProcess::AddDllDirectory(*AbsPath);
-			assimpDllHandle = FPlatformProcess::GetDllHandle(*(AbsPath / TEXT("assimp-vc140-mt.dll")));
+			{
+				FString AbsPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*(FPaths::ProjectPluginsDir() / TEXT("VRM4U/ThirdParty/assimp/bin/x64")));
+				//FPlatformProcess::AddDllDirectory(*AbsPath);
+				assimpDllHandle = FPlatformProcess::GetDllHandle(*(AbsPath / TEXT("assimp-vc140-mt.dll")));
+			}
 
 			if (assimpDllHandle == nullptr) {
 				FString AbsPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*(FPaths::EnginePluginsDir() / TEXT("VRM4U/ThirdParty/assimp/bin/x64")));

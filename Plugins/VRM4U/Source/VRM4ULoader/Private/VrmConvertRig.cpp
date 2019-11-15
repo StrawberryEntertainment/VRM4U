@@ -244,8 +244,11 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 #if	UE_VERSION_OLDER_THAN(4,20,0)
 #else
 #if WITH_EDITOR
-	FString name = FString(TEXT("RIG_")) + vrmAssetList->BaseFileName;
-	UNodeMappingContainer* mc = NewObject<UNodeMappingContainer>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
+	UNodeMappingContainer* mc = nullptr;
+	{
+		FString name = FString(TEXT("RIG_")) + vrmAssetList->BaseFileName;
+		mc = NewObject<UNodeMappingContainer>(vrmAssetList->Package, *name, RF_Public | RF_Standalone);
+	}
 
 	auto *k = vrmAssetList->SkeletalMesh->Skeleton;
 	vrmAssetList->SkeletalMesh->NodeMappingData.Add(mc);

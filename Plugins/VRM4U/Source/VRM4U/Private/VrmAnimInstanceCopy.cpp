@@ -348,9 +348,15 @@ bool FVrmAnimInstanceCopyProxy::Evaluate(FPoseContext& Output) {
 
 	return true;
 }
+#if	UE_VERSION_OLDER_THAN(4,24,0)
 void FVrmAnimInstanceCopyProxy::UpdateAnimationNode(float DeltaSeconds) {
 	CurrentDeltaTime = DeltaSeconds;
 }
+#else
+void FVrmAnimInstanceCopyProxy::UpdateAnimationNode(const FAnimationUpdateContext& InContext) {
+	CurrentDeltaTime = InContext.GetDeltaTime();
+}
+#endif
 
 /////
 

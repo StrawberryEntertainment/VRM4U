@@ -281,8 +281,14 @@ bool FVrmAnimInstanceProxy::Evaluate(FPoseContext& Output) {
 */
 	return true;
 }
+
+#if	UE_VERSION_OLDER_THAN(4,24,0)
 void FVrmAnimInstanceProxy::UpdateAnimationNode(float DeltaSeconds) {
 }
+#else
+void FVrmAnimInstanceProxy::UpdateAnimationNode(const FAnimationUpdateContext& InContext){
+}
+#endif
 
 /////
 

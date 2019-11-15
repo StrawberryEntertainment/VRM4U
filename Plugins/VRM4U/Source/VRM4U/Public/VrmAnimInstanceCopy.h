@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimInstanceProxy.h"
+#include "Misc/EngineVersionComparison.h"
 
 #include "VrmAnimInstanceCopy.generated.h"
 
@@ -27,7 +28,11 @@ public:
 
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;
 	virtual bool Evaluate(FPoseContext& Output) override;
+#if	UE_VERSION_OLDER_THAN(4,24,0)
 	virtual void UpdateAnimationNode(float DeltaSeconds) override;
+#else
+	virtual void UpdateAnimationNode(const FAnimationUpdateContext& InContext);
+#endif
 };
 
 /**

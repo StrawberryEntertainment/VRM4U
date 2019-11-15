@@ -244,8 +244,6 @@ UVrmLicenseObject* ULoaderBPFunctionLibrary::GetVRMMeta(FString filepath) {
 	if (mScenePtr == nullptr) {
 		return nullptr;
 	}
-	auto *p = VRMConverter::GetVRMMeta(mScenePtr);
-
 	UTexture2D* NewTexture2D = nullptr;
 
 	VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
@@ -335,6 +333,7 @@ UVrmLicenseObject* ULoaderBPFunctionLibrary::GetVRMMeta(FString filepath) {
 		}
 	}
 
+	auto *p = VRMConverter::GetVRMMeta(mScenePtr);
 	p->thumbnail = NewTexture2D;
 	return p;
 }

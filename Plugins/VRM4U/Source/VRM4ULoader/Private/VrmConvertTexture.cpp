@@ -407,7 +407,12 @@ UTexture2D* VRMConverter::CreateTexture(int32 InSizeX, int32 InSizeY, FString na
 
 		int32 NumBlocksX = InSizeX / GPixelFormats[format].BlockSizeX;
 		int32 NumBlocksY = InSizeY / GPixelFormats[format].BlockSizeY;
+#if	UE_VERSION_OLDER_THAN(4,24,0)
 		FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
+#else
+		FTexture2DMipMap* Mip = new FTexture2DMipMap();
+		NewTexture->PlatformData->Mips.Add(Mip);
+#endif
 		Mip->SizeX = InSizeX;
 		Mip->SizeY = InSizeY;
 		Mip->BulkData.Lock(LOCK_READ_WRITE);
@@ -554,8 +559,6 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			bool bMToon = false;
 			bool bLit = false;
 			{
-				aiString alphaMode;
-				aiReturn result00 = aiMat.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
 				FString ShaderName = aiMat.mShaderName.C_Str();
 
 				if (ShaderName.Find(TEXT("MToon")) >= 0) {
