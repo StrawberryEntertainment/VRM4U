@@ -387,6 +387,27 @@ UTexture2D* VRMConverter::CreateTexture(int32 InSizeX, int32 InSizeY, FString na
 		if (package == GetTransientPackage()) {
 			NewTexture = NewObject<UTexture2D>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient);
 		} else {
+			TArray<UObject*> ret;
+			GetObjectsWithOuter(package, ret);
+			for (auto *a : ret) {
+				auto s = a->GetName().ToLower();
+				if (s.IsEmpty()) continue;
+
+				if (s == name.ToLower()) {
+					//a->ClearFlags(EObjectFlags::RF_Standalone);
+					//a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+					//a->ConditionalBeginDestroy();
+					//a->Rename(TEXT("aaaaaaa"));
+					//auto *q = Cast<USkeletalMesh>(a);
+					//if (q) {
+					//	q->Materials.Empty();
+					//}
+					a->Rename(NULL, GetTransientPackage(), REN_DontCreateRedirectors | REN_NonTransactional | REN_ForceNoResetLoaders);
+
+					break;
+				}
+			}
+
 			NewTexture = NewObject<UTexture2D>(
 				// GetTransientPackage(),
 				package,
@@ -407,7 +428,7 @@ UTexture2D* VRMConverter::CreateTexture(int32 InSizeX, int32 InSizeY, FString na
 
 		int32 NumBlocksX = InSizeX / GPixelFormats[format].BlockSizeX;
 		int32 NumBlocksY = InSizeY / GPixelFormats[format].BlockSizeY;
-#if	UE_VERSION_OLDER_THAN(4,24,0)
+#if	UE_VERSION_OLDER_THAN(4,23,0)
 		FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
 #else
 		FTexture2DMipMap* Mip = new FTexture2DMipMap();
@@ -735,9 +756,13 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 							if(s.IsEmpty()) continue;
 
 							if (s == name.ToLower()) {
-								a->ClearFlags(EObjectFlags::RF_Standalone);
-								a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
-								a->ConditionalBeginDestroy();
+								//a->ClearFlags(EObjectFlags::RF_Standalone);
+								//a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+								//a->ConditionalBeginDestroy();
+								static int ccc = 0;
+								++ccc;
+								a->Rename(*(FString(TEXT("need_reload_tex_VRM"))+FString::FromInt(ccc)), GetTransientPackage(), REN_DontCreateRedirectors | REN_NonTransactional | REN_ForceNoResetLoaders);
+
 								break;
 							}
 						}

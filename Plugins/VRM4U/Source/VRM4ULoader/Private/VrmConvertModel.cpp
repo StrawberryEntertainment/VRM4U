@@ -537,10 +537,17 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			if (s.IsEmpty()) continue;
 
 			if (s == name.ToLower()) {
-				a->ClearFlags(EObjectFlags::RF_Standalone);
-				a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+				//a->ClearFlags(EObjectFlags::RF_Standalone);
+				//a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
 				//a->ConditionalBeginDestroy();
 				//a->Rename(TEXT("aaaaaaa"));
+				//auto *q = Cast<USkeletalMesh>(a);
+				//if (q) {
+				//	q->Materials.Empty();
+				//}
+				static int ccc = 0;
+				++ccc;
+				a->Rename(*(FString(TEXT("need_reload_sk_VRM"))+FString::FromInt(ccc)), GetTransientPackage(), REN_DontCreateRedirectors | REN_NonTransactional | REN_ForceNoResetLoaders);
 
 				break;
 			}
@@ -647,7 +654,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 		sk->AllocateResourceForRendering();
 		FSkeletalMeshRenderData *p = sk->GetResourceForRendering();
-#if	UE_VERSION_OLDER_THAN(4,24,0)
+#if	UE_VERSION_OLDER_THAN(4,23,0)
 		FSkeletalMeshLODRenderData *pRd = new(p->LODRenderData) FSkeletalMeshLODRenderData();
 #else
 		FSkeletalMeshLODRenderData *pRd = new FSkeletalMeshLODRenderData();
@@ -753,7 +760,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			int currentVertex = 0;
 
 #if WITH_EDITORONLY_DATA
-#if	UE_VERSION_OLDER_THAN(4,24,0)
+#if	UE_VERSION_OLDER_THAN(4,23,0)
 			new(sk->GetImportedModel()->LODModels) FSkeletalMeshLODModel();
 #else
 			sk->GetImportedModel()->LODModels.Add(new FSkeletalMeshLODModel());

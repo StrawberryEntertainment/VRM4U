@@ -61,14 +61,21 @@ namespace {
 
 namespace {
 	class RenderControl {
+		bool tmp = false;
 	public:
 		RenderControl() {
-			StopRenderingThread();
-			GUseThreadedRendering = false;
+			tmp = GUseThreadedRendering;
+
+			if (tmp) {
+				StopRenderingThread();
+				GUseThreadedRendering = false;
+			}
 		}
 		~RenderControl() {
-			GUseThreadedRendering = true;
-			StartRenderingThread();
+			if (tmp) {
+				GUseThreadedRendering = true;
+				StartRenderingThread();
+			}
 		}
 	};
 }
@@ -359,7 +366,7 @@ bool ULoaderBPFunctionLibrary::VRMSetLoadMaterialType(EVRMImportMaterialType typ
 
 bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset, UVrmAssetListObject *&OutVrmAsset, FString filepath) {
 
-	//RenderControl _dummy_control;
+	RenderControl _dummy_control;
 
 	if (InVrmAsset == nullptr) {
 		return false;
