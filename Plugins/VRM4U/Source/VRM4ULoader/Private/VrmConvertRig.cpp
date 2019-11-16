@@ -48,7 +48,7 @@ namespace {
 		FString BoneVRM;
 	};
 
-	static const Table table[] = {
+	static const Table s_vrm_humanoid_table[] = {
 	{"Root",""},
 	{"Pelvis","hips"},
 	{"spine_01","spine"},
@@ -280,7 +280,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 		};
 
 		if (meta) {
-			for (auto &t : table) {
+			for (auto &t : s_vrm_humanoid_table) {
 				FString target = t.BoneVRM;
 				const FString &ue4 = t.BoneUE4;
 
@@ -673,7 +673,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				}
 
 				for (auto &a : retargetTable) {
-					for (auto &t : table) {
+					for (auto &t : s_vrm_humanoid_table) {
 						if (t.BoneUE4.Compare(a.BoneUE4) != 0) {
 							continue;
 						}

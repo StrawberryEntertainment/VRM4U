@@ -54,7 +54,7 @@
 
 // tem
 namespace {
-	UPackage *package = nullptr;
+	UPackage *s_vrm_package = nullptr;
 	FString baseFileName;
 	FReturnedData result;
 }
@@ -200,7 +200,7 @@ bool ULoaderBPFunctionLibrary::VRMReTransformHumanoidBone(USkeletalMeshComponent
 
 void ULoaderBPFunctionLibrary::SetImportMode(bool bIm, class UPackage *p) {
 	VRMConverter::SetImportMode(bIm);
-	package = p;
+	s_vrm_package = p;
 }
 
 namespace {
@@ -447,15 +447,15 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		//	package = CreatePackage(nullptr, *name);
 		//}
 
-		if (package == nullptr) {
-			package = GetTransientPackage();
+		if (s_vrm_package == nullptr) {
+			s_vrm_package = GetTransientPackage();
 		}
 	}
 	UVrmAssetListObject *out = nullptr;
-	if (package == GetTransientPackage()) {
-		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, NAME_None));
+	if (s_vrm_package == GetTransientPackage()) {
+		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, s_vrm_package, NAME_None));
 	}else {
-		out = NewObject<UVrmAssetListObject>(package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		out = NewObject<UVrmAssetListObject>(s_vrm_package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 		//out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, UVrmAssetListObject::StaticClass()));
 		//out->Modify();
 		InVrmAsset->CopyMember(out);
@@ -469,7 +469,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 
 	out->OrigFileName = baseFileName;
 	out->BaseFileName = VRMConverter::NormalizeFileName(baseFileName);
-	out->Package = package;
+	out->Package = s_vrm_package;
 
 	{
 		bool ret = true;

@@ -622,7 +622,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 					}
 
 					// lit, opaque, twoside
-					UMaterialInterface *table[2][2][2] = {
+					UMaterialInterface *table_param[2][2][2] = {
 						{
 							vrmAssetList->OptMToonLitOpaqueMaterial,
 							vrmAssetList->OptMToonLitOpaqueTwoSidedMaterial,
@@ -642,7 +642,7 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 						bTwoSided ? 1 : 0,
 					};
 
-					baseM = table[c[0]][c[1]][c[2]];
+					baseM = table_param[c[0]][c[1]][c[2]];
 
 					if (bLit) {
 						//baseM = vrmAssetList->OptMToonLitOpaqueMaterial;
