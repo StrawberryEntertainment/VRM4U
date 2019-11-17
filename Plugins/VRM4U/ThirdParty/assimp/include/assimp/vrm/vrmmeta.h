@@ -35,6 +35,16 @@ extern "C" {
             ~VRMBlendShapeGroup() {
                 delete[] bind;
             }
+
+            void CopyFrom(const VRMBlendShapeGroup &src){
+				groupName = src.groupName;
+
+                bindNum = src.bindNum;
+				bind = new VRMBlendShapeBind[bindNum];
+                for (int i=0; i<bindNum; ++i){
+					bind[i] = src.bind[i];
+                }
+            }
         };
 
         struct ASSIMP_API VRMHumanoid {
@@ -51,7 +61,7 @@ extern "C" {
             float hitRadius = 0.f;
 
             int boneNum = 0;
-            int *bones;
+            int *bones = nullptr;
             aiString *bones_name = nullptr;
 
             int colliderGourpNum = 0;
@@ -60,6 +70,30 @@ extern "C" {
             ~VRMSpring() {
                 delete[] bones_name;
                 delete[] colliderGroups;
+            }
+
+            void CopyFrom(const VRMSpring &src){
+                stiffiness = src.stiffiness;
+				gravityPower = src.gravityPower;
+				gravityDir[0] = src.gravityDir[0];
+				gravityDir[1] = src.gravityDir[1];
+				gravityDir[2] = src.gravityDir[2];
+				dragForce = src.dragForce;
+				hitRadius = src.hitRadius;
+
+                boneNum = src.boneNum;
+				bones = new int[boneNum];
+				bones_name = new aiString[boneNum];
+                for (int i=0; i<boneNum; ++i){
+					bones[i] = src.bones[i];
+					bones_name[i] = src.bones_name[i];
+                }
+
+                colliderGourpNum = src.colliderGourpNum;
+				colliderGroups = new int[colliderGourpNum];
+                for (int i=0; i<colliderGourpNum; ++i){
+					colliderGroups[i] = src.colliderGroups[i];
+                }
             }
         };
         struct ASSIMP_API VRMCollider {
@@ -75,6 +109,17 @@ extern "C" {
 
             ~VRMColliderGroup() {
                 delete[] colliders;
+            }
+
+            void CopyFrom(const VRMColliderGroup &src){
+				node = src.node;
+				node_name = src.node_name;
+
+                colliderNum = src.colliderNum;
+				colliders = new VRMCollider[colliderNum];
+                for (int i=0; i<colliderNum; ++i){
+					colliders[i] = src.colliders[i];
+                }
             }
         };
         // physics
@@ -143,6 +188,14 @@ extern "C" {
             VRMMaterialFloatProperties floatProperties;
             VRMMaterialVectorProperties vectorProperties;
             VRMMaterialTextureProperties textureProperties;
+
+            void CopyFrom(const VRMMaterial &src){
+				name = src.name;
+				shaderName = src.shaderName;
+				floatProperties = src.floatProperties;
+				vectorProperties = src.vectorProperties;
+				textureProperties = src.textureProperties;
+            }
         };
         // material
 
@@ -179,6 +232,14 @@ extern "C" {
             ~VRMLicense() {
                 delete[] licensePair;
             }
+
+            void CopyFrom(const VRMLicense &src) {
+				licensePairNum = src.licensePairNum;
+				licensePair = new VRMLicensePair[licensePairNum];
+                for (int i=0; i<licensePairNum; ++i){
+					licensePair[i] = src.licensePair[i];
+                }
+            }
         };
         // license end
 
@@ -208,6 +269,44 @@ extern "C" {
                 delete[] colliderGroups;
                 delete[] blensShapeGourp;
                 delete[] material;
+            }
+
+            VRMMetadata *CreateClone(){
+				auto *p = new VRMMetadata();
+
+                p->license.CopyFrom(license);
+
+                p->springNum = springNum;
+				p->springs = new VRMSpring[springNum];
+                for (int i=0;i<springNum; ++i){
+					p->springs[i].CopyFrom(springs[i]);
+                }
+
+                p->colliderGroupNum = colliderGroupNum;
+				p->colliderGroups = new VRMColliderGroup[colliderGroupNum];
+                for (int i=0; i<colliderGroupNum; ++i){
+					p->colliderGroups[i].CopyFrom(colliderGroups[i]);
+				}
+
+                for (int i=0; i<sizeof(humanoidBone)/sizeof(humanoidBone[0]); ++i){
+					p->humanoidBone[i] = humanoidBone[i];
+                }
+
+				p->blensShapeGroupNum = blensShapeGroupNum;
+				p->blensShapeGourp = new VRMBlendShapeGroup[blensShapeGroupNum];
+				for (int i = 0; i < blensShapeGroupNum; ++i) {
+					p->blensShapeGourp[i].CopyFrom(blensShapeGourp[i]);
+				}
+
+
+				p->materialNum = materialNum;
+				p->material = new VRMMaterial[materialNum];
+				for (int i = 0; i < materialNum; ++i) {
+					p->material[i].CopyFrom(material[i]);
+				}
+
+
+                return p;
             }
 
         };
