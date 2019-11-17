@@ -336,10 +336,12 @@ void UVrmBPFunctionLibrary::VRMGetCameraTransform(const UObject* WorldContextObj
 	bool bSet = false;
 	transform.SetScale3D(FVector(1.f));
 
+	auto *c = UGameplayStatics::GetPlayerCameraManager(WorldContextObject, PlayerIndex);
+
 #if WITH_EDITOR
 	if (bGameOnly == false) {
 		if (GEditor) {
-			if (GEditor->bIsSimulatingInEditor) {
+			if (GEditor->bIsSimulatingInEditor || c==nullptr) {
 				if (GEditor->GetActiveViewport()) {
 					FEditorViewportClient* ViewportClient = StaticCast<FEditorViewportClient*>(GEditor->GetActiveViewport()->GetClient());
 					if (ViewportClient) {
@@ -354,7 +356,6 @@ void UVrmBPFunctionLibrary::VRMGetCameraTransform(const UObject* WorldContextObj
 	}
 #endif
 	if (bSet == false) {
-		auto *c = UGameplayStatics::GetPlayerCameraManager(WorldContextObject, PlayerIndex);
 		if (c) {
 			transform.SetLocation(c->GetCameraLocation());
 			transform.SetRotation(c->GetCameraRotation().Quaternion());
