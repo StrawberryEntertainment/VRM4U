@@ -834,8 +834,6 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				//break;
 			}
 
-			pa->InvalidateAllPhysicsMeshes();
-
 			pa->UpdateBoundsBodiesArray();
 			pa->UpdateBodySetupIndexMap();
 			RefreshSkelMeshOnPhysicsAssetChange(sk);
