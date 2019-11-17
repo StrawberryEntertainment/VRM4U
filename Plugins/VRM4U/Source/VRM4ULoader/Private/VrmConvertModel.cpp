@@ -145,6 +145,21 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 			bSkin = false;
 		}
 
+		{
+			int m = mesh->mNumVertices;
+			mi.Vertices.Reserve(m);
+			mi.Normals.Reserve(m);
+
+			if (mesh->HasVertexColors(0)) {
+				mi.VertexColors.Reserve(m);
+			}
+			if (mesh->HasTangentsAndBitangents()) {
+				mi.Tangents.Reserve(m);
+			}
+			if (mesh->HasTextureCoords(0)) {
+				mi.UV0.Reserve(m);
+			}
+		}
 
 		//transform.
 		aiMatrix4x4 tempTrans = node->mTransformation;
@@ -190,7 +205,7 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 			}
 			else
 			{
-				mi.Normals.Push(FVector::ZeroVector);
+				mi.Normals.Push(FVector(0,1,0));
 			}
 
 			//UV Coordinates - inconsistent coordinates
