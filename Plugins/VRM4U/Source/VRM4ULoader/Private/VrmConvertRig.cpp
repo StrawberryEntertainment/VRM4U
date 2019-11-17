@@ -727,18 +727,62 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 #endif
 #endif //420
 
-	if (vrmAssetList){
+#if 1
+	if (vrmAssetList) {
 		// dummy Collision
 
 		const VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 		UPhysicsAsset *pa = sk->PhysicsAsset;
-		FString h = TEXT("hips");
-		if (meta && pa){
+		const FString dummy_target[] = {
+			TEXT("hips"),
+			TEXT("head"),
+
+			TEXT("rightHand"),
+			TEXT("leftHand"),
+			TEXT("leftMiddleDistal"),
+			TEXT("rightMiddleDistal"),
+
+
+			TEXT("rightFoot"),
+			TEXT("leftFoot"),
+
+			TEXT("leftToes"),
+			TEXT("rightToes"),
+
+			TEXT("rightLowerArm"),
+			TEXT("leftLowerArm"),
+
+			TEXT("rightLowerLeg"),
+			TEXT("leftLowerLeg"),
+		};
+		if (meta && pa) {
 			for (const auto &a : meta->humanoidBone) {
 
-				if (h.Compare(a.humanBoneName.C_Str())) {
-					continue;
+				{
+					bool bFound = false;
+					for (auto &d : dummy_target) {
+						if (d.Compare(a.humanBoneName.C_Str()) == 0) {
+							bFound = true;
+						}
+					}
+					if (bFound == false) {
+						continue;
+					}
+				}
+
+				{
+					bool b = false;
+					for (const auto *bs : pa->SkeletalBodySetups) {
+						FString s = bs->BoneName.ToString();
+						if (s.Compare(a.nodeName.C_Str(), ESearchCase::IgnoreCase) == 0) {
+							b = true;
+							break;
+						}
+					}
+					if (b) {
+						continue;
+					}
 				}
 
 				const int targetBone = sk->RefSkeleton.FindRawBoneIndex(a.nodeName.C_Str());
@@ -746,6 +790,8 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 					break;
 				}
 
+
+				/*
 				FVector center(0, 0, 0);
 				{
 					int i = targetBone;
@@ -755,17 +801,19 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 						i = sk->RefSkeleton.GetParentIndex(i);
 					}
 				}
+				*/
 
 				USkeletalBodySetup *bs = nullptr;
 				int BodyIndex1 = -1;
 
-				bs = NewObject<USkeletalBodySetup>(pa, TEXT("dummy_for_clip"));
+				bs = NewObject<USkeletalBodySetup>(pa, *(FString(TEXT("dummy_for_clip"))+ a.humanBoneName.C_Str()), RF_Transactional);
 
 				FKAggregateGeom agg;
 				FKSphereElem SphereElem;
 				SphereElem.Center = FVector(0);
-				SphereElem.Radius = center.Size();
+				SphereElem.Radius = 1.f;// center.Size();// 1.f;
 				agg.SphereElems.Add(SphereElem);
+				SphereElem.SetName(TEXT("dummy_for_clip"));
 
 				bs->Modify();
 				bs->BoneName = a.nodeName.C_Str();
@@ -782,10 +830,27 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 				bs->InvalidatePhysicsData();
 				bs->CreatePhysicsMeshes();
 				BodyIndex1 = pa->SkeletalBodySetups.Add(bs);
-				break;
+
+				//break;
 			}
+
+			pa->InvalidateAllPhysicsMeshes();
+
+			pa->UpdateBoundsBodiesArray();
+			pa->UpdateBodySetupIndexMap();
+			RefreshSkelMeshOnPhysicsAssetChange(sk);
+#if WITH_EDITOR
+			pa->RefreshPhysicsAssetChange();
+#endif
+
+#if WITH_EDITOR
+			if (VRMConverter::IsImportMode()) {
+				pa->PostEditChange();
+			}
+#endif
 		}
 	}
+#endif
 
 	return true;
 

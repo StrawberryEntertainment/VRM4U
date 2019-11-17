@@ -145,7 +145,7 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 			bSkin = false;
 		}
 
-		{
+		if (0){
 			int m = mesh->mNumVertices;
 			mi.Vertices.Reserve(m);
 			mi.Normals.Reserve(m);
