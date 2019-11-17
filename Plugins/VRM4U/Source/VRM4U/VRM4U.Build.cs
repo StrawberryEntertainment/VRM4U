@@ -62,7 +62,12 @@ public class VRM4U : ModuleRules
 			}
 			);
 
-        DynamicallyLoadedModuleNames.AddRange(
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.Add("UnrealEd");
+		}
+
+		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
             }

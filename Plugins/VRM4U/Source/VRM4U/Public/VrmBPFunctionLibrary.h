@@ -74,4 +74,8 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "VRM4U", meta = (DynamicOutputParam = "Settings"))
 	static void VRMakeCameraTrackingFocusSettings(AActor *ActorToTrack, FVector RelativeOffset, bool bDrawDebugTrackingFocusPoint, FCameraTrackingFocusSettings &Settings);
+
+	UFUNCTION(BlueprintPure, Category = "VRM4U", meta = (WorldContext = "WorldContextObject", DynamicOutputParam = "transform"))
+	static void VRMGetCameraTransform(const UObject* WorldContextObject, int32 PlayerIndex, bool bGameOnly, FTransform &transform);
+
 };

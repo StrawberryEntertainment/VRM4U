@@ -23,6 +23,12 @@
 #include "Rendering/SkeletalMeshRenderData.h"
 
 
+#if WITH_EDITOR
+#include "Editor.h"
+#include "EditorViewportClient.h"
+#endif
+#include "Kismet/GameplayStatics.h"
+
 //#include "VRM4U.h"
 
 void UVrmBPFunctionLibrary::VRMTransMatrix(const FTransform &transform, TArray<FLinearColor> &matrix, TArray<FLinearColor> &matrix_inv){
@@ -322,4 +328,36 @@ void UVrmBPFunctionLibrary::VRMakeCameraTrackingFocusSettings(AActor *ActorToTra
 	Settings.RelativeOffset = RelativeOffset;
 	Settings.bDrawDebugTrackingFocusPoint = bDrawDebugTrackingFocusPoint;
 #endif
+}
+
+
+void UVrmBPFunctionLibrary::VRMGetCameraTransform(const UObject* WorldContextObject, int32 PlayerIndex, bool bGameOnly, FTransform &transform) {
+
+	bool bSet = false;
+	transform.SetScale3D(FVector(1.f));
+
+#if WITH_EDITOR
+	if (bGameOnly == false) {
+		if (GEditor) {
+			if (GEditor->bIsSimulatingInEditor) {
+				if (GEditor->GetActiveViewport()) {
+					FEditorViewportClient* ViewportClient = StaticCast<FEditorViewportClient*>(GEditor->GetActiveViewport()->GetClient());
+					if (ViewportClient) {
+						const auto &a = ViewportClient->ViewTransformPerspective;
+						transform.SetLocation(a.GetLocation());
+						transform.SetRotation(a.GetRotation().Quaternion());
+						bSet = true;
+					}
+				}
+			}
+		}
+	}
+#endif
+	if (bSet == false) {
+		auto *c = UGameplayStatics::GetPlayerCameraManager(WorldContextObject, PlayerIndex);
+		if (c) {
+			transform.SetLocation(c->GetCameraLocation());
+			transform.SetRotation(c->GetCameraRotation().Quaternion());
+		}
+	}
 }
