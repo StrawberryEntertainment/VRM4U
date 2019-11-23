@@ -706,6 +706,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			sk->Materials[i].UVChannelData = FMeshUVChannelInfo(1);
 			sk->Materials[i].MaterialSlotName = UTF8_TO_TCHAR(mScenePtr->mMaterials[i]->GetName().C_Str());
 		}
+		if (sk->Materials.Num() == 0) {
+			sk->Materials.SetNum(1);
+		}
 	}
 	//USkeleton* NewAsset = NewObject<USkeleton>();
 
