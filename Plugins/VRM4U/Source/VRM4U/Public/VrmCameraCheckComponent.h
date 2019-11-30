@@ -8,6 +8,12 @@
 
 #if WITH_EDITOR
 #include "Editor/UnrealEdTypes.h"
+#else
+
+#if PLATFORM_ANDROID || PLATFORM_IOS
+enum ELevelViewportType {};
+#endif
+
 #endif
 
 
