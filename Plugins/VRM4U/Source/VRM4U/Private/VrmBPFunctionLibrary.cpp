@@ -345,10 +345,12 @@ void UVrmBPFunctionLibrary::VRMGetCameraTransform(const UObject* WorldContextObj
 				if (GEditor->GetActiveViewport()) {
 					FEditorViewportClient* ViewportClient = StaticCast<FEditorViewportClient*>(GEditor->GetActiveViewport()->GetClient());
 					if (ViewportClient) {
-						const auto &a = ViewportClient->ViewTransformPerspective;
-						transform.SetLocation(a.GetLocation());
-						transform.SetRotation(a.GetRotation().Quaternion());
-						bSet = true;
+						if (ViewportClient->AspectRatio > 0.f) {
+							const auto &a = ViewportClient->ViewTransformPerspective;
+							transform.SetLocation(a.GetLocation());
+							transform.SetRotation(a.GetRotation().Quaternion());
+							bSet = true;
+						}
 					}
 				}
 			}
