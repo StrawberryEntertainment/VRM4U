@@ -56,7 +56,6 @@
 namespace {
 	UPackage *s_vrm_package = nullptr;
 	FString baseFileName;
-	FReturnedData result;
 }
 
 namespace {
