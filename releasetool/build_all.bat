@@ -1,3 +1,11 @@
+::4_24
+call build_ver.bat 4.24 Win64 MyProjectBuildScriptEditor VRM4U_4_24.zip
+if not %errorlevel% == 0 (
+    echo [ERROR] :P
+    goto err
+)
+
+
 ::4_23
 call build_ver.bat 4.23 Win64 MyProjectBuildScriptEditor VRM4U_4_23.zip
 if not %errorlevel% == 0 (
