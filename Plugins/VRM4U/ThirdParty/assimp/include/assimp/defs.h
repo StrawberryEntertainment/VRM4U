@@ -307,13 +307,13 @@ static const ai_real ai_epsilon = (ai_real) 0.00001;
 
 #ifndef _MSC_VER
 #  if __cplusplus >= 201103L // C++11
-#    define AI_NO_EXCEPT noexcept
+#    define AI_NO_EXCEPT //noexcept
 #  else
 #    define AI_NO_EXCEPT
 #  endif
 #else
 #  if (_MSC_VER >= 1915 )
-#    define AI_NO_EXCEPT noexcept
+#    define AI_NO_EXCEPT //noexcept
 #  else
 #    define AI_NO_EXCEPT
 #  endif
