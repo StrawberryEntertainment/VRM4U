@@ -570,6 +570,18 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		sk = NewObject<USkeletalMesh>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 	}
 
+	{
+#if WITH_EDITOR
+		sk->PreEditChange(NULL);
+		//Dirty the DDC Key for any imported Skeletal Mesh
+#if	UE_VERSION_OLDER_THAN(4,24,0)
+#else
+		sk->InvalidateDeriveDataCacheGUID();
+#endif
+#endif
+	}
+
+
 	USkeleton *k = Options::Get().GetSkeleton();
 	if (k == nullptr){
 		if (vrmAssetList->Package == GetTransientPackage()) {
