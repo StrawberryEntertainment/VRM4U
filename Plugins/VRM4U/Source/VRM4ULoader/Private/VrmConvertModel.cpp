@@ -1288,26 +1288,33 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 	}
 
 	UPhysicsAsset *pa = nullptr;
+	{
+		// remove
+		if (vrmAssetList->Package == GetTransientPackage()) {
+		} else {
+			TArray<UObject*> ret;
+			FString name = (TEXT("PHYS_") + vrmAssetList->BaseFileName);
+			GetObjectsWithOuter(vrmAssetList->Package, ret);
+			for (auto *a : ret) {
+				auto s = a->GetName().ToLower();
+				if (s.IsEmpty()) continue;
+
+				if (s == name.ToLower()) {
+					a->ClearFlags(EObjectFlags::RF_Standalone);
+					a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
+					a->ConditionalBeginDestroy();
+					break;
+				}
+			}
+		}
+	}
 	if (mScenePtr->mVRMMeta && Options::Get().IsSkipPhysics()==false) {
 		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
 		if (meta->springNum > 0) {
 			if (vrmAssetList->Package == GetTransientPackage()) {
 				pa = NewObject<UPhysicsAsset>(GetTransientPackage(), NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 			}else {
-				TArray<UObject*> ret;
 				FString name = (TEXT("PHYS_") + vrmAssetList->BaseFileName);
-				GetObjectsWithOuter(vrmAssetList->Package, ret);
-				for (auto *a : ret) {
-					auto s = a->GetName().ToLower();
-					if (s.IsEmpty()) continue;
-
-					if (s == name.ToLower()) {
-						a->ClearFlags(EObjectFlags::RF_Standalone);
-						a->SetFlags(EObjectFlags::RF_Public | RF_Transient);
-						a->ConditionalBeginDestroy();
-						break;
-					}
-				}
 				pa = NewObject<UPhysicsAsset>(vrmAssetList->Package, *name, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 			}
 			pa->Modify();
