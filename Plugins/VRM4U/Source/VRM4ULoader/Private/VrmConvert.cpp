@@ -281,6 +281,10 @@ bool VRMConverter::Options::IsSimpleRootBone() const {
 
 bool VRMConverter::Options::IsSkipPhysics() const {
 	bool ret = true;
+
+	if (IsDebugOneBone()) {
+		return true;
+	}
 #if WITH_EDITOR
 	if (Window == nullptr) return ret;
 
@@ -333,6 +337,9 @@ float VRMConverter::Options::GetModelScale() const {
 }
 
 bool VRMConverter::Options::IsAPoseRetarget() const {
+	if (IsDebugOneBone()) {
+		return false;
+	}
 #if WITH_EDITOR
 	if (Window == nullptr) return false;
 

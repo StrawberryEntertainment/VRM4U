@@ -420,7 +420,7 @@ static void CreateSwingHead(UVrmAssetListObject *vrmAssetList, VRM::VRMSpring &s
 	if (addedList.Find(boneName.ToString().ToLower()) < 0) {
 		addedList.Add(boneName.ToString().ToLower());
 
-		bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
+		bs = NewObject<USkeletalBodySetup>(pa, NAME_None, RF_Transactional);
 
 		//int nodeID = mScenePtr->mRootNode->FindNode(sbone.c_str());
 		//sk->RefSkeleton.GetRawRefBoneInfo[0].
@@ -594,6 +594,23 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		}
 	}
 
+	int allIndex = 0;
+	int allVertex = 0;
+	int uvNum = 1;
+	{
+		for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
+			allIndex += result.meshInfo[meshID].Triangles.Num();
+			allVertex += result.meshInfo[meshID].Vertices.Num();
+		}
+		for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
+			auto &mInfo = result.meshInfo[meshID];
+			uvNum = FMath::Max(uvNum, mInfo.UV0.Num());
+			if (uvNum >= 2) {
+				UE_LOG(LogTemp, Warning, TEXT("test uv2.\n"));
+			}
+		}
+	}
+
 	static int boneOffset = 0;
 	{
 		// name dup check
@@ -638,6 +655,10 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		k->SetPreviewMesh(sk);
 #endif
 		k->RecreateBoneTree(sk);
+		{
+			TArray<FName> BonesToRemove;
+			k->RemoveVirtualBones(BonesToRemove);
+		}
 
 		// changet retarget option
 		if (IsImportMode() == false){
@@ -667,8 +688,11 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		}
 #endif
 
+		//sk->CacheDerivedData();
 		sk->AllocateResourceForRendering();
 		FSkeletalMeshRenderData *p = sk->GetResourceForRendering();
+		//p->Cache(sk);
+		//sk->OnPostMeshCached().Broadcast(sk);
 #if	UE_VERSION_OLDER_THAN(4,23,0)
 		FSkeletalMeshLODRenderData *pRd = new(p->LODRenderData) FSkeletalMeshLODRenderData();
 #else
@@ -677,18 +701,19 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 #endif
 
 		{
-			pRd->StaticVertexBuffers.PositionVertexBuffer.Init(10);
-			pRd->StaticVertexBuffers.ColorVertexBuffer.Init(10);
-			pRd->StaticVertexBuffers.StaticMeshVertexBuffer.Init(10, 10);
+			pRd->StaticVertexBuffers.PositionVertexBuffer.Init(allVertex);
+			pRd->StaticVertexBuffers.ColorVertexBuffer.InitFromSingleColor(FColor(255, 255, 255, 255), allVertex);
+			pRd->StaticVertexBuffers.StaticMeshVertexBuffer.Init(allVertex, uvNum);
+
 
 #if WITH_EDITOR
 			TArray<FSoftSkinVertex> Weight;
-			Weight.SetNum(10);
+			Weight.SetNum(allVertex);
 			pRd->SkinWeightVertexBuffer.Init(Weight);
 #else
 			{
 				TArray< TSkinWeightInfo<false> > InWeights;
-				InWeights.SetNum(10);
+				InWeights.SetNum(allVertex);
 				for (auto &a : InWeights) {
 					memset(a.InfluenceBones, 0, sizeof(a.InfluenceBones));
 					memset(a.InfluenceWeights, 0, sizeof(a.InfluenceWeights));
@@ -719,33 +744,17 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		FVector BoundMin(-100, -100, 0);
 		FVector BoundMax(100, 100, 200);
 
-		for (int i = 0; i < sk->Skeleton->GetReferenceSkeleton().GetRawBoneNum(); ++i) {
-			rd.RequiredBones.Add(i);
-			rd.ActiveBoneIndices.Add(i);
+		{
+			int boneNum = sk->Skeleton->GetReferenceSkeleton().GetRawBoneNum();
+			rd.RequiredBones.SetNum(boneNum);
+			rd.ActiveBoneIndices.SetNum(boneNum);
+			for (int i = 0; i < boneNum; ++i) {
+				rd.RequiredBones[i] = i;
+				rd.ActiveBoneIndices[i] = i;
+			}
 		}
 		{
 			FStaticMeshVertexBuffers	 &v = rd.StaticVertexBuffers;
-
-			int allIndex = 0;
-			int allVertex = 0;
-			for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
-				allIndex += result.meshInfo[meshID].Triangles.Num();
-				allVertex += result.meshInfo[meshID].Vertices.Num();
-			}
-			{
-				int uvNum = 1;
-				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
-					auto &mInfo = result.meshInfo[meshID];
-					uvNum = FMath::Max(uvNum, mInfo.UV0.Num());
-					if (uvNum >= 2){
-						UE_LOG(LogTemp, Warning, TEXT("test uv2.\n"));
-					}
-				}
-				v.StaticMeshVertexBuffer.Init(allVertex, uvNum);
-			}
-			
-			v.PositionVertexBuffer.Init(allVertex);
-			//rd.SkinWeightVertexBuffer.Init(allVertex);
 
 			FSoftSkinVertexLocal softSkinVertexLocalZero;
 			{
@@ -1265,6 +1274,14 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 #if WITH_EDITOR
 		if (VRMConverter::IsImportMode()) {
+
+			UProperty* ChangedProperty = FindField<UProperty>(USkeletalMesh::StaticClass(), "Materials");
+			check(ChangedProperty);
+			sk->PreEditChange(ChangedProperty);
+
+			FPropertyChangedEvent PropertyUpdateStruct(ChangedProperty);
+			sk->PostEditChangeProperty(PropertyUpdateStruct);
+
 			sk->PostEditChange();
 		}
 #endif
@@ -1364,7 +1381,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						}
 					}
 					if (bs == nullptr) {
-						bs = NewObject<USkeletalBodySetup>(pa, NAME_None);
+						bs = NewObject<USkeletalBodySetup>(pa, NAME_None, RF_Transactional);
 						bs->InvalidatePhysicsData();
 
 						pa->SkeletalBodySetups.Add(bs);

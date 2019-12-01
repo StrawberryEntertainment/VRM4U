@@ -241,9 +241,15 @@ namespace {
 
 
 bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+
+	if (VRMConverter::Options::Get().IsDebugOneBone()) {
+		return true;
+	}
+
 #if	UE_VERSION_OLDER_THAN(4,20,0)
 #else
 #if WITH_EDITOR
+
 	UNodeMappingContainer* mc = nullptr;
 	{
 		FString name = FString(TEXT("RIG_")) + vrmAssetList->BaseFileName;
@@ -586,7 +592,7 @@ bool VRMConverter::ConvertRig(UVrmAssetListObject *vrmAssetList, const aiScene *
 	vrmAssetList->HumanoidRig = mc;
 
 #if 1
-	{
+	if (VRMConverter::Options::Get().IsDebugOneBone() == false){
 		USkeletalMesh *sk = vrmAssetList->SkeletalMesh;
 
 		FString name = FString(TEXT("POSE_")) + vrmAssetList->BaseFileName;
