@@ -1268,14 +1268,6 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		{
 #if WITH_EDITOR
 			{
-				int uvNum = 1;
-				for (int meshID = 0; meshID < result.meshInfo.Num(); ++meshID) {
-					auto &mInfo = result.meshInfo[meshID];
-					uvNum = FMath::Max(uvNum, mInfo.UV0.Num());
-					if (uvNum >= 2) {
-						UE_LOG(LogTemp, Warning, TEXT("test uv2.\n"));
-					}
-				}
 				sk->GetImportedModel()->LODModels[0].NumTexCoords = uvNum;
 			}
 			if (VRMConverter::IsImportMode()) {
