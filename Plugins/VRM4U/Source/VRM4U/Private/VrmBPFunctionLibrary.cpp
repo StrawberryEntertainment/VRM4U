@@ -334,7 +334,7 @@ void UVrmBPFunctionLibrary::VRMakeCameraTrackingFocusSettings(AActor *ActorToTra
 void UVrmBPFunctionLibrary::VRMGetCameraTransform(const UObject* WorldContextObject, int32 PlayerIndex, bool bGameOnly, FTransform &transform) {
 
 	bool bSet = false;
-	transform.SetScale3D(FVector(1.f));
+	transform.SetIdentity();
 
 	auto *c = UGameplayStatics::GetPlayerCameraManager(WorldContextObject, PlayerIndex);
 
