@@ -81,6 +81,8 @@ public:
 
 		bool IsMobileBone() const;
 
+		bool IsNoTranslucent() const;
+
 		bool IsMergeMaterial() const;
 
 		bool IsOptimizeMaterial() const;

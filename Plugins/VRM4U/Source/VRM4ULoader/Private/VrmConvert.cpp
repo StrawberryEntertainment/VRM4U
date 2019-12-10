@@ -294,6 +294,17 @@ bool VRMConverter::Options::IsSkipPhysics() const {
 #endif
 }
 
+bool VRMConverter::Options::IsNoTranslucent() const {
+	bool ret = false;
+#if WITH_EDITOR
+	if (Window == nullptr) return ret;
+
+	return Window->bNoTranslucent;
+#else
+	return ret;
+#endif
+}
+
 
 bool VRMConverter::Options::IsMergeMaterial() const {
 	bool ret = true;

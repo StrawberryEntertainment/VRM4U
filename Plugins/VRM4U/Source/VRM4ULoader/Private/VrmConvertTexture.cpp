@@ -640,6 +640,10 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 								}
 							}
 						}
+
+						if (Options::Get().IsNoTranslucent()) {
+							bTranslucent = false;
+						}
 					}
 
 					// lit, opaque, twoside
