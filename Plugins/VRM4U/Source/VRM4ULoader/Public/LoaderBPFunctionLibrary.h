@@ -61,7 +61,7 @@ struct FReturnedData
 		TArray<FMeshInfo> meshInfo;
 
 	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
-	TMap<struct aiMesh*, uint32_t> meshToIndex;
+	//TMap<struct aiMesh*, uint32_t> meshToIndex;
 };
 
 

@@ -28,6 +28,8 @@
 
 #include "Animation/AnimSequence.h"
 
+#include "Async/ParallelFor.h"
+
 
 #if WITH_EDITOR
 typedef FSoftSkinVertex FSoftSkinVertexLocal;
@@ -130,7 +132,6 @@ static int GetChildBoneLocal(const USkeleton *skeleton, const int32 ParentBoneIn
 
 static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& result)
 {
-
 	for (uint32 i = 0; i < node->mNumMeshes; i++)
 	{
 		FString Fs = UTF8_TO_TCHAR(node->mName.C_Str());
@@ -138,14 +139,14 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 		aiMesh *mesh = scene->mMeshes[meshidx];
 		FMeshInfo &mi = result.meshInfo[meshidx];
 
-		result.meshToIndex.FindOrAdd(mesh) = mi.Vertices.Num();
+		//result.meshToIndex.FindOrAdd(mesh) = mi.Vertices.Num();
 
 		bool bSkin = true;
 		if (mesh->mNumBones == 0) {
 			bSkin = false;
 		}
 
-		if (0){
+		if (0) {
 			int m = mesh->mNumVertices;
 			mi.Vertices.Reserve(m);
 			mi.Normals.Reserve(m);
@@ -180,10 +181,67 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 		tempMatrix.M[3][0] = tempTrans.a4; tempMatrix.M[3][1] = tempTrans.b4; tempMatrix.M[3][2] = tempTrans.c4; tempMatrix.M[3][3] = tempTrans.d4;
 		mi.RelativeTransform = FTransform(tempMatrix);
 
+		TArray<bool> useFlag;
+		if (mesh->mNumAnimMeshes == 0 && VRMConverter::Options::Get().IsOptimizeVertex()) {
+			// no morphtarget
+			// optimize vertex
+
+			// use flag
+			useFlag.AddZeroed(mesh->mNumVertices);
+			for (uint32_t f = 0; f < mesh->mNumFaces; ++f) {
+				auto &face = mesh->mFaces[f];
+				for (uint32_t d = 0; d < face.mNumIndices; ++d) {
+					auto &ind = face.mIndices[d];
+					useFlag[ind] = true;
+				}
+			}
+
+			// optimize table
+			TArray<uint32_t> useTable;
+			useTable.AddZeroed(useFlag.Num());
+			{
+				int c = 0;
+				for (int t = 0; t < useFlag.Num(); ++t) {
+					useTable[t] = t - c;
+					if (useFlag[t] == false) {
+						++c;
+					}
+				}
+			}
+
+			// replace face index
+			for (uint32_t f = 0; f < mesh->mNumFaces; ++f) {
+				auto &face = mesh->mFaces[f];
+				for (uint32_t d = 0; d < face.mNumIndices; ++d) {
+					auto &ind = face.mIndices[d];
+					face.mIndices[d] = useTable[face.mIndices[d]];
+				}
+			}
+
+			// replace weight index
+			for (uint32_t b = 0; b < mesh->mNumBones; ++b) {
+				auto &bone = mesh->mBones[b];
+				for (uint32_t w = 0; w < bone->mNumWeights; ++w) {
+					auto &weight = bone->mWeights[w];
+
+					uint32_t ind = weight.mVertexId;
+					weight.mVertexId = useTable[ind];
+					if (useFlag[ind] == 0) {
+						weight.mWeight = 0.f;
+					}
+				}
+			}
+		}
 
 		//vet
 		for (uint32 j = 0; j < mesh->mNumVertices; ++j)
 		{
+			if ((int)j < useFlag.Num()) {
+				if (useFlag[j] == false) {
+					continue;
+				}
+			}
+
 			FVector vertex = FVector(
 				mesh->mVertices[j].x,
 				mesh->mVertices[j].y,
@@ -202,10 +260,9 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 
 				//normal = mi.RelativeTransform.TransformFVector4(normal);
 				mi.Normals.Push(normal);
-			}
-			else
+			} else
 			{
-				mi.Normals.Push(FVector(0,1,0));
+				mi.Normals.Push(FVector(0, 1, 0));
 			}
 
 			//UV Coordinates - inconsistent coordinates
@@ -521,7 +578,6 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 
 		FindMesh(mScenePtr, mScenePtr->mRootNode, result);
 
-		int verCount = 0;
 		for (uint32 i = 0; i < mScenePtr->mNumMeshes; ++i)
 		{
 			//Triangle number
@@ -535,7 +591,6 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					result.meshInfo[i].Triangles.Push(mScenePtr->mMeshes[i]->mFaces[l].mIndices[m]);
 				}
 			}
-			verCount += mScenePtr->mMeshes[i]->mNumVertices;
 		}
 		result.bSuccess = true;
 	}

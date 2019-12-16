@@ -328,6 +328,17 @@ bool VRMConverter::Options::IsOptimizeMaterial() const {
 #endif
 }
 
+bool VRMConverter::Options::IsOptimizeVertex() const {
+	bool ret = true;
+#if WITH_EDITOR
+	if (Window == nullptr) return ret;
+
+	return Window->bOptimizeVertex;
+#else
+	return ret;
+#endif
+}
+
 static bool bbVRM = false;
 void VRMConverter::Options::SetVRMModel(bool bVRM) {
 	bbVRM = bVRM;

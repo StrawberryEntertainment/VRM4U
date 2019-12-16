@@ -87,6 +87,7 @@ public:
 
 		bool IsOptimizeMaterial() const;
 
+		bool IsOptimizeVertex() const;
 
 		bool IsVRMModel() const;
 		void SetVRMModel(bool bVRM);
