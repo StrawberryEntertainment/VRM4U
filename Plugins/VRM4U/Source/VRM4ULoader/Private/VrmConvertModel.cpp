@@ -1249,18 +1249,18 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						continue;
 					}
 					auto newBoneMap = s0.BoneMap;
-					for (auto &v : s1.SoftVertices) {
+					for (auto &sv : s1.SoftVertices) {
 						for (int i = 0; i < 8; ++i) {
-							if (v.InfluenceWeights[i] == 0) {
+							if (sv.InfluenceWeights[i] == 0) {
 								continue;
 							}
-							int boneID = s1.BoneMap[v.InfluenceBones[i]];
+							int boneID = s1.BoneMap[sv.InfluenceBones[i]];
 
 							int ind = 0;
 							if (newBoneMap.Find(boneID, ind)) {
-								v.InfluenceBones[i] = ind;
+								sv.InfluenceBones[i] = ind;
 							} else {
-								v.InfluenceBones[i] = newBoneMap.Add(boneID);
+								sv.InfluenceBones[i] = newBoneMap.Add(boneID);
 							}
 						}
 					}
