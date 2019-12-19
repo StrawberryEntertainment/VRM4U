@@ -317,6 +317,17 @@ bool VRMConverter::Options::IsMergeMaterial() const {
 #endif
 }
 
+bool VRMConverter::Options::IsMergePrimitive() const {
+	bool ret = true;
+#if WITH_EDITOR
+	if (Window == nullptr) return ret;
+
+	return Window->bMergePrimitive;
+#else
+	return ret;
+#endif
+}
+
 bool VRMConverter::Options::IsOptimizeMaterial() const {
 	bool ret = true;
 #if WITH_EDITOR

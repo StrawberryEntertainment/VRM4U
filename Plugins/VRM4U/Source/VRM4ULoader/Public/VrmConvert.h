@@ -85,6 +85,8 @@ public:
 
 		bool IsMergeMaterial() const;
 
+		bool IsMergePrimitive() const;
+
 		bool IsOptimizeMaterial() const;
 
 		bool IsOptimizeVertex() const;

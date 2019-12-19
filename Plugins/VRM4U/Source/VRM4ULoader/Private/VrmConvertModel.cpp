@@ -1222,6 +1222,65 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 				//rd.MultiSizeIndexContainer.update
 			} // mesh loop
 
+			if (Options::Get().IsMergePrimitive()) {
+				// merge lod model section
+				auto &LodModel = sk->GetImportedModel()->LODModels[0];
+				for (int meshID = LodModel.Sections.Num() - 1; meshID>0; --meshID) {
+					auto &s0 = LodModel.Sections[meshID-1];
+					auto &s1 = LodModel.Sections[meshID];
+
+					if (mScenePtr->mMeshes[meshID]->mNumAnimMeshes > 0) {
+						// skip skin mesh
+						continue;
+					}
+					if (s1.NumVertices == 0) {
+						continue;
+					}
+
+					if (s0.MaterialIndex != s1.MaterialIndex) {
+						continue;
+					}
+					auto newBoneMap = s0.BoneMap;
+					for (auto &v : s1.SoftVertices) {
+						for (int i = 0; i < 8; ++i) {
+							if (v.InfluenceWeights[i] == 0) {
+								continue;
+							}
+							int boneID = s1.BoneMap[v.InfluenceBones[i]];
+
+							int ind = 0;
+							if (newBoneMap.Find(boneID, ind)) {
+								v.InfluenceBones[i] = ind;
+							} else {
+								v.InfluenceBones[i] = newBoneMap.Add(boneID);
+							}
+						}
+					}
+					if (Options::Get().IsMobileBone()) {
+						if (newBoneMap.Num() > 75) {
+							continue;
+						}
+					}
+
+					s0.SoftVertices.Append(s1.SoftVertices);
+					s0.NumVertices += s1.NumVertices;
+					s0.NumTriangles += s1.NumTriangles;
+
+					s0.BoneMap = newBoneMap;
+
+					s1.SoftVertices.SetNum(0);
+					s1.NumVertices = 0;
+				}
+				for (int meshID = 0; meshID < LodModel.Sections.Num(); ++meshID) {
+					auto &s1 = LodModel.Sections[meshID];
+
+					if (s1.NumVertices > 0) {
+						continue;
+					}
+					LodModel.Sections.RemoveAt(meshID);
+					meshID--;
+				}
+			}
 
 			if (1) {
 				int warnCount = 0;
