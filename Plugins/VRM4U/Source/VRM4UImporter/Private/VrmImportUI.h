@@ -28,15 +28,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Reduce bonemap<=75 for mobile"))
 	bool bMobileBone = false;
 
+	/** Materal Type */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	TEnumAsByte<enum EVRMImportMaterialType> MaterialType;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Model scale"))
 	float ModelScale = 1.0f;
-
-	/** Remove bone has no mesh */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Remove bone used DCC tool"))
-	bool bSimpleRoot = true;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Delete bone without mesh"))
-	bool bSkipNoMeshBone = false;
 
 	/** Duplicate mesh and renamed humanoid bone */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Create renamed humanoid mesh"))
@@ -74,6 +71,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Optimize vertex"))
 	bool bOptimizeVertex = true;
 
+	/** Remove bone has no mesh */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Remove bone used DCC tool"))
+		bool bSimpleRoot = true;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="Delete bone without mesh"))
+	bool bSkipNoMeshBone = false;
+
 	/** for DEBUG. Import root bone only */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = Mesh, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName="[Debug]One bone only"))
 	bool bDebugOneBone = false;
@@ -81,10 +85,6 @@ public:
 	/** Skeleton to use for imported asset. When importing a mesh, leaving this as "None" will create a new skeleton. When importing an animation this MUST be specified to import the asset. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category=Mesh, meta=(ImportType="SkeletalMesh"))
 	class USkeleton* Skeleton;
-
-	/** Materal Type */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
-	TEnumAsByte<enum EVRMImportMaterialType> MaterialType;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = Thumbnail, meta = (ImportType = "StaticMesh|SkeletalMesh", DisplayName = "Thumbnail"))
 	UTexture2D *Thumbnail;
