@@ -28,7 +28,7 @@
 #include "Async/ParallelFor.h"
 
 
-static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetName,const aiScene *mScenePtr) {
+static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetName,const aiScene *mScenePtr, const UVrmAssetListObject *assetList) {
 
 	//return readMorph33(MorphDeltas, targetName, mScenePtr);
 
@@ -41,6 +41,8 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 	morphinit.TangentZDelta = FVector::ZeroVector;
 
 	for (uint32_t m = 0; m < mScenePtr->mNumMeshes; ++m) {
+		const auto &mesh = assetList->MeshReturnedData->meshInfo[m];
+
 		const aiMesh &aiM = *(mScenePtr->mMeshes[m]);
 
 		for (uint32_t a = 0; a < aiM.mNumAnimMeshes; ++a) {
@@ -58,9 +60,16 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 
 			bool bIncludeNormal = VRMConverter::Options::Get().IsEnableMorphTargetNormal();
 
-			ParallelFor(aiA.mNumVertices, [&](int32 i) {
+			uint32_t vertexCount = 0;
+			for (uint32_t i = 0; i < aiA.mNumVertices; ++i) {
+
+				if (mesh.vertexUseFlag.Num() > 0) {
+					if (mesh.vertexUseFlag[i] == false) {
+						continue;
+					}
+				}
 				FMorphTargetDelta &v = tmpData[i];
-				v.SourceIdx = i + currentVertex;
+				v.SourceIdx = vertexCount + currentVertex;
 				v.PositionDelta.Set(
 					-aiA.mVertices[i][0] * 100.f,
 					aiA.mVertices[i][2] * 100.f,
@@ -76,10 +85,16 @@ static bool readMorph2(TArray<FMorphTargetDelta> &MorphDeltas, aiString targetNa
 						v.TangentZDelta = n.GetUnsafeNormal();
 					}
 				}
-			});
+				vertexCount++;
+			} // vertex loop
+			//);
 			MorphDeltas.Append(tmpData);
 		}
-		currentVertex += aiM.mNumVertices;
+		if (mesh.vertexUseFlag.Num() > 0) {
+			currentVertex += mesh.useVertexCount;
+		}else{
+			currentVertex += aiM.mNumVertices;
+		}
 	}
 	return MorphDeltas.Num() != 0;
 }
@@ -127,7 +142,7 @@ bool VRMConverter::ConvertMorphTarget(UVrmAssetListObject *vrmAssetList, const a
 				continue;
 			}
 			MorphNameList.Add(morphName);
-			if (readMorph2(MorphDeltas, aiA.mName, mScenePtr) == false) {
+			if (readMorph2(MorphDeltas, aiA.mName, mScenePtr, vrmAssetList) == false) {
 				continue;
 			}
 

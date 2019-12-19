@@ -121,11 +121,12 @@ public:
 	UPROPERTY()
 	FString BaseFileName;
 
-	//FReturnedData *Result;
-
 	UPROPERTY()
 	USkeletalMesh* HumanoidSkeletalMesh;
 
 	TMap<int, int> MaterialMergeTable;
+
+	TSharedPtr<FReturnedData> MeshReturnedData;
+	//FReturnedData *Result;
 
 };

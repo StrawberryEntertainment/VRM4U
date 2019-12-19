@@ -181,8 +181,8 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 		tempMatrix.M[3][0] = tempTrans.a4; tempMatrix.M[3][1] = tempTrans.b4; tempMatrix.M[3][2] = tempTrans.c4; tempMatrix.M[3][3] = tempTrans.d4;
 		mi.RelativeTransform = FTransform(tempMatrix);
 
-		TArray<bool> useFlag;
-		if (mesh->mNumAnimMeshes == 0 && VRMConverter::Options::Get().IsOptimizeVertex()) {
+		auto &useFlag = mi.vertexUseFlag;
+		if (VRMConverter::Options::Get().IsOptimizeVertex()) {
 			// no morphtarget
 			// optimize vertex
 
@@ -233,6 +233,11 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 			}
 		}
 
+		if (useFlag.Num() > 0) {
+			mi.vertexIndexOptTable.SetNumZeroed(useFlag.Num());
+		}
+
+		mi.useVertexCount = 0;
 		//vet
 		for (uint32 j = 0; j < mesh->mNumVertices; ++j)
 		{
@@ -240,6 +245,9 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 				if (useFlag[j] == false) {
 					continue;
 				}
+
+				mi.vertexIndexOptTable[j] = mi.useVertexCount;
+				mi.useVertexCount++;
 			}
 
 			FVector vertex = FVector(
@@ -559,8 +567,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 		return false;
 	}
 
-	auto a_tmp = new FReturnedData();
-	FReturnedData &result = *(a_tmp);
+	vrmAssetList->MeshReturnedData = MakeShareable(new FReturnedData());
+	FReturnedData &result = *(vrmAssetList->MeshReturnedData);
 	//FReturnedData &result = *(vrmAssetList->Result);
 
 	result.bSuccess = false;

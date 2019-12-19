@@ -507,6 +507,8 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 		LogAndUpdate(TEXT("ConvertHumanoid"));
 #endif
 		UpdateProgress(80);
+
+		OutVrmAsset->MeshReturnedData = nullptr;
 		if (ret == false) {
 			return false;
 		}

@@ -44,6 +44,10 @@ struct FMeshInfo
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		FTransform RelativeTransform;
+
+	TArray<bool> vertexUseFlag;
+	TArray<uint32_t> vertexIndexOptTable;
+	uint32_t useVertexCount = 0;
 };
 
 USTRUCT(BlueprintType)
