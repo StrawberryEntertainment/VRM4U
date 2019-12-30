@@ -1231,6 +1231,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 			} // mesh loop
 
 			if (Options::Get().IsMergePrimitive()) {
+#if WITH_EDITORONLY_DATA
 				// merge lod model section
 				auto &LodModel = sk->GetImportedModel()->LODModels[0];
 				for (int meshID = LodModel.Sections.Num() - 1; meshID>0; --meshID) {
@@ -1288,7 +1289,8 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					LodModel.Sections.RemoveAt(meshID);
 					meshID--;
 				}
-			}
+#endif
+			} // merge primitive
 
 			if (1) {
 				int warnCount = 0;
