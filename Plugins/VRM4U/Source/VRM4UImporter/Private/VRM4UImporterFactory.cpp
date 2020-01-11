@@ -54,11 +54,20 @@ UVRM4UImporterFactory::UVRM4UImporterFactory(const FObjectInitializer& ObjectIni
 	: Super(ObjectInitializer)
 {
 
-	FString table[] = {
+	TArray<FString> table = {
 		TEXT("vrm"),
 		TEXT("glb"),
 		TEXT("bvh"),
 	};
+
+	{
+		const UVrmRuntimeSettings* Settings = GetDefault<UVrmRuntimeSettings>();
+		if (Settings) {
+			table.Append(Settings->extList);
+		}
+	}
+
+
 	for (auto &a : table) {
 		Formats.Add(a + TEXT(";Model VRM4U"));
 	}
@@ -152,7 +161,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		ImportUI->TitleAuthor.Empty();
 		ImportUI->Thumbnail = nullptr;
 
-		{
+		if (1){
 			auto *p = ULoaderBPFunctionLibrary::GetVRMMeta(fullFileName);
 			if (p) {
 				ImportUI->TitleAuthor = TEXT("\"") + p->title + TEXT("\"") + TEXT(" / ") + TEXT("\"") + p->author + TEXT("\"");

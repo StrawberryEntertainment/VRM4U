@@ -38,5 +38,10 @@ class VRM4U_API UVrmRuntimeSettings : public UObject
 		))
 	FSoftObjectPath AssetListObject;
 
+	UPROPERTY(config, EditAnywhere, Category = Settings, meta = (
+		ConfigRestartRequired = true
+		))
+	TArray<FString> extList;
+
 
 };
