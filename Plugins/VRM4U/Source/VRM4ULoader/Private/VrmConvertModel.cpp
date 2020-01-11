@@ -292,9 +292,9 @@ static void FindMeshInfo(const aiScene* scene, aiNode* node, FReturnedData& resu
 			if (mesh->HasTangentsAndBitangents())
 			{
 				FVector v(mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z);
-				FProcMeshTangent meshTangent = FProcMeshTangent(v.X, v.Y, v.Z);
+				//FProcMeshTangent meshTangent = FProcMeshTangent(v.X, v.Y, v.Z);
 				mi.Tangents.Push(v);
-				mi.MeshTangents.Push(meshTangent);
+				//mi.MeshTangents.Push(meshTangent);
 			}
 
 			//Vertex color
@@ -895,7 +895,7 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 					}
 
 					if (i < mInfo.Tangents.Num()){
-						v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
+						//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, FVector(1, 0, 0), FVector(0, 1, 0), FVector(0, 0, 1));
 						//v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, result.meshInfo[meshID].Tangents);
 						auto &n = mInfo.Normals[i];
 						FVector n_tmp(-n.X, n.Z, n.Y);
@@ -907,6 +907,9 @@ bool VRMConverter::ConvertModel(UVrmAssetListObject *vrmAssetList, const aiScene
 						meshS->TangentX = t_tmp;
 						meshS->TangentY = n_tmp ^ t_tmp;
 						meshS->TangentZ = n_tmp;
+
+						v.StaticMeshVertexBuffer.SetVertexTangents(currentVertex + i, meshS->TangentX, meshS->TangentY, meshS->TangentZ);
+
 					}
 
 					if (i < mInfo.VertexColors.Num()) {

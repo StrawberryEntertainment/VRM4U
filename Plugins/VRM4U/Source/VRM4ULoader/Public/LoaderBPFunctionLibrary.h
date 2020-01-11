@@ -22,13 +22,14 @@ struct FMeshInfo
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<FVector> Vertices;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
+		TArray<FVector> Normals;
+
 	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<uint32> Triangles;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<int32> Triangles2;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
-		TArray<FVector> Normals;
 
 //	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 	TArray< TArray<FVector2D> > UV0;
@@ -36,8 +37,8 @@ struct FMeshInfo
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<FLinearColor> VertexColors;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
-		TArray<FProcMeshTangent> MeshTangents;
+//	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
+//		TArray<FProcMeshTangent> MeshTangents;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ReturnedData")
 		TArray<FVector> Tangents;
