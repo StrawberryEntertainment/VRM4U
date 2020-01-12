@@ -461,7 +461,7 @@ bool ULoaderBPFunctionLibrary::LoadVRMFile(const UVrmAssetListObject *InVrmAsset
 	if (s_vrm_package == GetTransientPackage()) {
 		out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, s_vrm_package, NAME_None));
 	}else {
-		out = NewObject<UVrmAssetListObject>(s_vrm_package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+		out = NewObject<UVrmAssetListObject>(s_vrm_package, *(FString(TEXT("VA_")) + VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 		//out = Cast<UVrmAssetListObject>(StaticDuplicateObject(InVrmAsset, package, *(VRMConverter::NormalizeFileName(baseFileName) + FString(TEXT("_VrmAssetList"))), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, UVrmAssetListObject::StaticClass()));
 		//out->Modify();
 		InVrmAsset->CopyMember(out);

@@ -46,8 +46,8 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 			m = NewObject<UVrmMetaObject>(package, NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 			lic = NewObject<UVrmLicenseObject>(package, NAME_None, EObjectFlags::RF_Public | RF_Transient, NULL);
 		} else {
-			m = NewObject<UVrmMetaObject>(package, *(vrmAssetList->BaseFileName + TEXT("_Meta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
-			lic = NewObject<UVrmLicenseObject>(package, *(vrmAssetList->BaseFileName + TEXT("_License")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			m = NewObject<UVrmMetaObject>(package, *(FString(TEXT("VM_")) + vrmAssetList->BaseFileName + TEXT("_VrmMeta")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
+			lic = NewObject<UVrmLicenseObject>(package, *(FString(TEXT("VL_")) + vrmAssetList->BaseFileName + TEXT("_VrmLicense")), EObjectFlags::RF_Public | EObjectFlags::RF_Standalone);
 		}
 
 		if (vrmAssetList) {
