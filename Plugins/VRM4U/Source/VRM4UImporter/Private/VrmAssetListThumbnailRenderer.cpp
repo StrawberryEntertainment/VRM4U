@@ -93,10 +93,14 @@ void UVrmAssetListThumbnailRenderer::GetThumbnailSize(UObject* Object, float Zoo
 
 	if (a) {
 		if (a->VrmLicenseObject) {
-			if (a->VrmLicenseObject->thumbnail) {
-				return Super::GetThumbnailSize(a->VrmLicenseObject->thumbnail, Zoom, OutWidth, OutHeight);
+			auto tex = a->SmallThumbnailTexture;
+			if (tex == nullptr) {
+				tex = a->VrmLicenseObject->thumbnail;
 			}
-		}
+			if (tex) {
+				return Super::GetThumbnailSize(tex, Zoom, OutWidth, OutHeight);
+			}
+	}
 	}
 	Super::GetThumbnailSize(Object, Zoom, OutWidth, OutHeight);
 }
@@ -104,40 +108,53 @@ void UVrmAssetListThumbnailRenderer::GetThumbnailSize(UObject* Object, float Zoo
 
 void UVrmAssetListThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height, FRenderTarget* RenderTarget, FCanvas* Canvas)
 {
-	{
+	UTexture2D *tex = nullptr;
+
+	if (tex == nullptr){
 		UVrmAssetListObject* a = Cast<UVrmAssetListObject>(Object);
 		if (a) {
-			if (a->VrmLicenseObject) {
-				if (a->VrmLicenseObject->thumbnail) {
-					return Super::Draw(a->VrmLicenseObject->thumbnail, X, Y, Width, Height, RenderTarget, Canvas);
+			tex = a->SmallThumbnailTexture;
+			if (tex == nullptr) {
+				if (a->VrmLicenseObject) {
+					tex = a->VrmLicenseObject->thumbnail;
 				}
 			}
 		}
 	}
-	{
-		UVrmLicenseObject* a = Cast<UVrmLicenseObject>(Object);
-		if (a) {
-			if (a->thumbnail) {
-				return Super::Draw(a->thumbnail, X, Y, Width, Height, RenderTarget, Canvas);
+	if (tex == nullptr) {
+		TArray<UObject*> ret;
+		{
+			UVrmMetaObject* a = Cast<UVrmMetaObject>(Object);
+			if (a) {
+				UPackage *pk = a->GetOutermost();
+				GetObjectsWithOuter(pk, ret);
 			}
+		}
+		{
+			UVrmLicenseObject* a = Cast<UVrmLicenseObject>(Object);
+			if (a) {
+				UPackage *pk = a->GetOutermost();
+				GetObjectsWithOuter(pk, ret);
+			}
+		}
+
+		for (auto *obj : ret) {
+			UVrmAssetListObject* t = Cast<UVrmAssetListObject>(obj);
+			if (t == nullptr) {
+				continue;
+			}
+			tex = t->SmallThumbnailTexture;
+			if (tex == nullptr) {
+				if (t->VrmLicenseObject) {
+					tex = t->VrmLicenseObject->thumbnail;
+				}
+			}
+			break;
 		}
 	}
-	{
-		UVrmMetaObject* a = Cast<UVrmMetaObject>(Object);
-		if (a) {
-			TArray<UObject*> ret;
-			UPackage *pk = a->GetOutermost();
-			GetObjectsWithOuter(pk, ret);
-			for (auto *obj : ret) {
-				UVrmLicenseObject* t = Cast<UVrmLicenseObject>(obj);
-				if (t == nullptr) {
-					continue;
-				}
-				if (t->thumbnail) {
-					return Super::Draw(t->thumbnail, X, Y, Width, Height, RenderTarget, Canvas);
-				}
-			}
-		}
+
+	if (tex) {
+		return Super::Draw(tex, X, Y, Width, Height, RenderTarget, Canvas);
 	}
 
 	return Super::Draw(Object, X, Y, Width, Height, RenderTarget, Canvas);

@@ -103,6 +103,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	TArray<UTexture2D*> Textures;
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
+	UTexture2D* SmallThumbnailTexture;
+#endif
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Out")
 	TArray<UMaterialInterface*> Materials;
 

@@ -113,6 +113,120 @@ namespace {
 	}
 
 
+	void createSmallThumbnail(UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
+#if WITH_EDITORONLY_DATA
+		UTexture2D *src = nullptr;
+
+		VRM::VRMMetadata *meta = reinterpret_cast<VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
+		if (meta == nullptr) {
+			return;
+		}
+
+		for (int i = 0; i < meta->license.licensePairNum; ++i) {
+			auto &p = meta->license.licensePair[i];
+
+			if (FString(TEXT("texture")) == p.Key.C_Str()) {
+
+				int t = FCString::Atoi(*FString(p.Value.C_Str()));
+				if (t >= 0 && t < vrmAssetList->Textures.Num()) {
+					src = vrmAssetList->Textures[t];
+					break;
+				}
+			}
+		}
+		if (src == nullptr) {
+			return;
+		}
+
+		
+		const int W = src->GetSurfaceWidth();
+		const int H = src->GetSurfaceHeight();
+
+		int dW = FMath::Min(256, W);
+		int dH = FMath::Min(256, H);
+
+		if (W == dW && H == dH) {
+			vrmAssetList->SmallThumbnailTexture = src;
+			return;
+		}
+		if (W != H) {
+			vrmAssetList->SmallThumbnailTexture = src;
+			return;
+		}
+
+
+		TArray<uint8> sData;
+		sData.SetNum(W * H * 4);
+		TArray<uint8> dData;
+		dData.SetNum(256*256 * 4);
+
+		FString baseName = (src->GetFName()).ToString();
+		baseName += TEXT("_small");
+
+		{
+			const uint8 *sp = (const uint8*)src->PlatformData->Mips[0].BulkData.LockReadOnly();
+			FMemory::Memcpy(sData.GetData(), sp, sData.Num());
+			src->PlatformData->Mips[0].BulkData.Unlock();
+		}
+
+		UTexture2D* NewTexture2D = VRMConverter::CreateTexture(W, H, baseName, vrmAssetList->Package);
+
+		// scale texture
+		{
+			ParallelFor(dH, [&](int32 y){
+			//for (int32 y = 0; y < dH; y++){
+				float s = (float)H / dH;
+
+				for (int32 x = 0; x < dW; x++){
+					int32 xx = (s * (0.5f + x));
+					int32 yy = (s * (0.5f + y));
+					uint8* dp = &dData[(y * dW + x) * sizeof(uint8) * 4];
+
+					int c = 0;
+					int tmp[4] = {};
+					int n = (float)W / dW / 2;
+					for (int ry = yy - n; ry <= yy + n; ry++) {
+						for (int rx = xx - n; rx <= xx + n; rx++) {
+							if (rx < 0 || ry < 0) continue;
+							if (rx >= W || ry >= H) continue;
+
+							const uint8* rp = &sData[(ry * W + rx) * sizeof(uint8) * 4];
+							tmp[0] += rp[0];
+							tmp[1] += rp[1];
+							tmp[2] += rp[2];
+							tmp[3] += rp[3];
+
+							++c;
+						}
+					}
+					dp[0] = tmp[0] / c;
+					dp[1] = tmp[1] / c;
+					dp[2] = tmp[2] / c;
+					dp[3] = tmp[3] / c;
+				}
+			});
+
+			// Set options
+			NewTexture2D->SRGB = true;// bUseSRGB;
+			NewTexture2D->CompressionSettings = TC_Default;
+
+			NewTexture2D->AddressX = TA_Wrap;
+			NewTexture2D->AddressY = TA_Wrap;
+
+			NewTexture2D->CompressionNone = false;
+			NewTexture2D->DeferCompression = true;
+			NewTexture2D->MipGenSettings = TMGS_NoMipmaps;
+			NewTexture2D->Source.Init(dW, dH, 1, 1, ETextureSourceFormat::TSF_BGRA8, dData.GetData());
+			//NewTexture2D->Source.Compress();
+
+			// Update the remote texture data
+			NewTexture2D->UpdateResource();
+			NewTexture2D->PostEditChange();
+			vrmAssetList->SmallThumbnailTexture = NewTexture2D;
+		}
+#endif
+	}
+
 	bool createAndAddMaterial(UMaterialInstanceConstant *dm, int matIndex, UVrmAssetListObject *vrmAssetList, const aiScene *mScenePtr) {
 		auto i = matIndex;
 		const VRM::VRMMetadata *meta = static_cast<const VRM::VRMMetadata*>(mScenePtr->mVRMMeta);
@@ -561,6 +675,11 @@ bool VRMConverter::ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList, 
 			texArray.Push(NewTexture2D);
 		}
 		vrmAssetList->Textures = texArray;
+
+		// small thumbnail
+		{
+			createSmallThumbnail(vrmAssetList, mScenePtr);
+		}
 	}
 
 	const bool bOptimizeMaterial = Options::Get().IsOptimizeMaterial();
