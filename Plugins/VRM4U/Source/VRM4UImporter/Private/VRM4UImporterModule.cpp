@@ -41,9 +41,11 @@ public:
 
 	virtual void ShutdownModule() override
 	{
-		//UThumbnailManager::Get().UnregisterCustomRenderer(UVrmAssetListObject::StaticClass());
-		//UThumbnailManager::Get().UnregisterCustomRenderer(UVrmLicenseObject::StaticClass());
-		//UThumbnailManager::Get().UnregisterCustomRenderer(UVrmMetaObject::StaticClass());
+		if (UObjectInitialized()){
+			UThumbnailManager::Get().UnregisterCustomRenderer(UVrmAssetListObject::StaticClass());
+			UThumbnailManager::Get().UnregisterCustomRenderer(UVrmLicenseObject::StaticClass());
+			UThumbnailManager::Get().UnregisterCustomRenderer(UVrmMetaObject::StaticClass());
+		}
 	}
 };
 
