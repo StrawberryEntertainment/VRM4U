@@ -12,7 +12,7 @@ struct VRM4U_API FVRMSpringMeta{
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
-	float stiffiness = 0.f;
+	float stiffness = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rendering)
 	float gravityPower = 0.f;

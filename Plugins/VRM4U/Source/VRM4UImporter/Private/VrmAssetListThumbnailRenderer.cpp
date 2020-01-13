@@ -151,6 +151,12 @@ void UVrmAssetListThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, uin
 			}
 			break;
 		}
+		if (tex == nullptr) {
+			UVrmLicenseObject* a = Cast<UVrmLicenseObject>(Object);
+			if (a) {
+				tex = a->thumbnail;
+			}
+		}
 	}
 
 	if (tex) {

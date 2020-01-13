@@ -390,14 +390,14 @@ void UVrmAnimInstanceCopy::SetSkeletalMeshCopyData(UVrmAssetListObject *dstAsset
 }
 
 
-void UVrmAnimInstanceCopy::SetVrmSpringBoneParam(float gravityScale, FVector gravityAdd, float stiffinessScale, float stiffinessAdd) {
+void UVrmAnimInstanceCopy::SetVrmSpringBoneParam(float gravityScale, FVector gravityAdd, float stiffnessScale, float stiffnessAdd) {
 	if (myProxy == nullptr) return;
 	auto a = myProxy->SpringBoneNode.Get();
 
 	a->gravityScale = gravityScale;
 	a->gravityAdd = gravityAdd;
-	a->stiffinessScale = stiffinessScale;
-	a->stiffinessAdd = stiffinessAdd;
+	a->stiffnessScale = stiffnessScale;
+	a->stiffnessAdd = stiffnessAdd;
 }
 
 void UVrmAnimInstanceCopy::SetVrmSpringBoneBool(bool bIgnoreVrmSpringBone, bool bIgnorePhysicsCollision, bool bIgnoreVRMCollision) {

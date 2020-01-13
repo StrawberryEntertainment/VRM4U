@@ -108,7 +108,7 @@ namespace VRMSpring {
 
 	class VRMSpring {
 	public:
-		float stiffiness = 0.f;
+		float stiffness = 0.f;
 		float gravityPower = 0.f;
 		FVector gravityDir = { 0,0,0 };
 		float dragForce = 0.f;
@@ -158,13 +158,13 @@ namespace VRMSpring {
 
 		const int MAX_LOOP = FMath::Max(1, animNode->loopc);
 		for (int i = 0; i < MAX_LOOP; ++i) {
-			//const float stiffnessForce = stiffiness * DeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd;
+			//const float stiffnessForce = stiffness * DeltaTime * 10.f * animNode->stiffnessScale + animNode->stiffinessAdd;
 			//FVector external = center.TransformVector(ue4grav) * (gravityPower * DeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * DeltaTime;
 			//external *= 100.f; // to unreal scale
 
 			float CurrentDeltaTime = DeltaTime / (float)MAX_LOOP;
 
-			const float stiffnessForce = stiffiness * CurrentDeltaTime * 10.f * animNode->stiffinessScale + animNode->stiffinessAdd;
+			const float stiffnessForce = stiffness * CurrentDeltaTime * 10.f * animNode->stiffnessScale + animNode->stiffnessAdd;
 			FVector external = center.TransformVector(ue4grav) * (gravityPower * CurrentDeltaTime) * animNode->gravityScale + center.TransformVector(animNode->gravityAdd) * CurrentDeltaTime;
 			external *= 100.f; // to unreal scale
 
@@ -325,7 +325,7 @@ namespace VRMSpring {
 
 			s.skeletalMesh = meta->SkeletalMesh;
 
-			s.stiffiness = metaS.stiffiness;
+			s.stiffness = metaS.stiffness;
 			s.gravityPower = metaS.gravityPower;
 			s.gravityDir = metaS.gravityDir;
 			s.dragForce = metaS.dragForce;

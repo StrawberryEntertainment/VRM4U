@@ -54,7 +54,7 @@ extern "C" {
 
         // physics
         struct ASSIMP_API VRMSpring {
-            float stiffiness = 0.f;
+            float stiffness = 0.f;
             float gravityPower = 0.f;
             vec3 gravityDir = { 0,0,0 };
             float dragForce = 0.f;
@@ -73,7 +73,7 @@ extern "C" {
             }
 
             void CopyFrom(const VRMSpring &src){
-                stiffiness = src.stiffiness;
+                stiffness = src.stiffness;
 				gravityPower = src.gravityPower;
 				gravityDir[0] = src.gravityDir[0];
 				gravityDir[1] = src.gravityDir[1];

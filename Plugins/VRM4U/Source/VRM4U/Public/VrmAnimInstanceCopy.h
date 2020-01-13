@@ -75,7 +75,7 @@ public:
 	void SetSkeletalMeshCopyData(UVrmAssetListObject *dstAssetList, USkeletalMeshComponent *srcSkeletalMesh, UVrmAssetListObject *srcAssetList);
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
-	void SetVrmSpringBoneParam(float gravityScale = 1.f, FVector gravityAdd = FVector::ZeroVector, float stiffinessScale = 1.f, float stiffinessAdd = 0.f);
+	void SetVrmSpringBoneParam(float gravityScale = 1.f, FVector gravityAdd = FVector::ZeroVector, float stiffnessScale = 1.f, float stiffnessAdd = 0.f);
 
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void SetVrmSpringBoneBool(bool bIgnoreVrmSpringBone = false, bool bIgnorePhysicsCollision = false, bool bIgnoreVRMCollision = false);

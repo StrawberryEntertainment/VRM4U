@@ -348,8 +348,8 @@ static UPhysicsConstraintTemplate *createConstraint(USkeletalMesh *sk, UPhysicsA
 	ct->DefaultInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 10);
 	ct->DefaultInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 10);
 
-	ct->DefaultInstance.ProfileInstance.ConeLimit.Stiffness = 100.f * spring.stiffiness;
-	ct->DefaultInstance.ProfileInstance.TwistLimit.Stiffness = 100.f * spring.stiffiness;
+	ct->DefaultInstance.ProfileInstance.ConeLimit.Stiffness = 100.f * spring.stiffness;
+	ct->DefaultInstance.ProfileInstance.TwistLimit.Stiffness = 100.f * spring.stiffness;
 
 	const int32 BoneIndex1 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone1);
 	const int32 BoneIndex2 = sk->RefSkeleton.FindBoneIndex(ct->DefaultInstance.ConstraintBone2);

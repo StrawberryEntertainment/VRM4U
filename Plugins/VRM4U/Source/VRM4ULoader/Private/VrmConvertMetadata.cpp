@@ -92,7 +92,7 @@ bool VRMConverter::ConvertVrmMeta(UVrmAssetListObject *vrmAssetList, const aiSce
 		const auto &vrms = meta->springs[i];
 
 		auto &s = m->VRMSpringMeta[i];
-		s.stiffiness = vrms.stiffiness;
+		s.stiffness = vrms.stiffness;
 		s.gravityPower = vrms.gravityPower;
 		s.gravityDir.Set(vrms.gravityDir[0], vrms.gravityDir[1], vrms.gravityDir[2]);
 		s.dragForce = vrms.dragForce;

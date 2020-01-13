@@ -37,10 +37,10 @@ struct VRM4U_API FAnimNode_VrmSpringBone : public FAnimNode_SkeletalControlBase
 	FVector gravityAdd = FVector::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
-	float stiffinessScale = 1.f;
+	float stiffnessScale = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
-	float stiffinessAdd = 0.f;
+	float stiffnessAdd = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
 	int loopc = 1;
