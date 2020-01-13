@@ -1,15 +1,17 @@
+set V_DATE=%date:~0,4%%date:~5,2%%date:~8,2%
+
 ::4_24
-call build_ver.bat 4.24 Win64 MyProjectBuildScriptEditor VRM4U_4_24.zip
+call build_ver.bat 4.24 Win64 MyProjectBuildScriptEditor VRM4U_4_24_%V_DATE%.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
-call build_ver.bat 4.24 Win64 MyProjectBuildScript VRM4U_4_24_gam.zip
+call build_ver.bat 4.24 Win64 MyProjectBuildScript VRM4U_4_24_%V_DATE%_gam.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
-call build_ver.bat 4.24 Android MyProjectBuildScript VRM4U_4_24_android.zip
+call build_ver.bat 4.24 Android MyProjectBuildScript VRM4U_4_24_%V_DATE%_android.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
@@ -18,18 +20,18 @@ if not %errorlevel% == 0 (
 
 
 ::4_23
-call build_ver.bat 4.23 Win64 MyProjectBuildScriptEditor VRM4U_4_23.zip
+call build_ver.bat 4.23 Win64 MyProjectBuildScriptEditor VRM4U_4_23_%V_DATE%.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
 
-call build_ver.bat 4.23 Win64 MyProjectBuildScript VRM4U_4_23_gam.zip
+call build_ver.bat 4.23 Win64 MyProjectBuildScript VRM4U_4_23_%V_DATE%_gam.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
-call build_ver.bat 4.23 Android MyProjectBuildScript VRM4U_4_23_android.zip
+call build_ver.bat 4.23 Android MyProjectBuildScript VRM4U_4_23_%V_DATE%_android.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
@@ -37,18 +39,13 @@ if not %errorlevel% == 0 (
 
 ::4_22
 
-call build_ver.bat 4.22 Win64 MyProjectBuildScriptEditor VRM4U_4_22.zip
+call build_ver.bat 4.22 Win64 MyProjectBuildScriptEditor VRM4U_4_22_%V_DATE%.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
 
-call build_ver.bat 4.22 Win64 MyProjectBuildScript VRM4U_4_22_gam.zip
-if not %errorlevel% == 0 (
-    echo [ERROR] :P
-    goto err
-)
-call build_ver.bat 4.22 Android MyProjectBuildScript VRM4U_4_22_android.zip
+call build_ver.bat 4.22 Win64 MyProjectBuildScript VRM4U_4_22_%V_DATE%_gam.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
@@ -57,20 +54,20 @@ if not %errorlevel% == 0 (
 ::4_21
 
 
-call build_ver.bat 4.21 Win64 MyProjectBuildScriptEditor VRM4U_4_21.zip
+call build_ver.bat 4.21 Win64 MyProjectBuildScriptEditor VRM4U_4_21_%V_DATE%.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
 
 
-call build_ver.bat 4.20 Win64 MyProjectBuildScriptEditor VRM4U_4_20.zip
+call build_ver.bat 4.20 Win64 MyProjectBuildScriptEditor VRM4U_4_20_%V_DATE%.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
 )
 
-call build_ver.bat 4.19 Win64 MyProjectBuildScriptEditor VRM4U_4_19.zip
+call build_ver.bat 4.19 Win64 MyProjectBuildScriptEditor VRM4U_4_19_%V_DATE%.zip
 if not %errorlevel% == 0 (
     echo [ERROR] :P
     goto err
