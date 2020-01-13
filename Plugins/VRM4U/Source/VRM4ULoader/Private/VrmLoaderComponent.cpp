@@ -1,3 +1,4 @@
+// VRM4U Copyright (c) 2019 Haruyoshi Yamamoto. This software is released under the MIT License.
 // Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 // ApplicationLifecycleComponent.cpp: Component to handle receiving notifications from the OS about application state (activated, suspended, termination, etc)
 
